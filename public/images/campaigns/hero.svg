@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Game On Garb campaign backdrop</title>
+  <desc id="desc">Abstract black and burnt-orange sport-fashion campaign artwork.</desc>
+  <defs>
+    <radialGradient id="glow" cx="72%" cy="40%" r="52%">
+      <stop offset="0" stop-color="#f15a24" stop-opacity=".72"/>
+      <stop offset=".42" stop-color="#5a2c1c" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#080b0b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cloth" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#303433"/>
+      <stop offset=".55" stop-color="#111514"/>
+      <stop offset="1" stop-color="#030505"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="26"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="#070909"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <path d="M1090 52c153 0 267 132 267 313 0 96-35 181-96 233l80 302H835l86-299c-65-55-101-140-101-236 0-181 117-313 270-313Z" fill="url(#cloth)"/>
+  <ellipse cx="1092" cy="172" rx="99" ry="120" fill="#171a19"/>
+  <path d="M922 329c84-54 263-60 341 5l-42 235-127 78-132-72Z" fill="#151918"/>
+  <path d="m1025 330 69 63 70-64 45 23-75 229-80 1-75-231Z" fill="#f15a24" opacity=".88"/>
+  <path d="M854 331 712 585l76 49 177-172Z" fill="#0e1110"/>
+  <path d="m1257 330 145 250-72 52-181-170Z" fill="#0e1110"/>
+  <circle cx="1324" cy="300" r="170" fill="#f15a24" opacity=".09" filter="url(#soft)"/>
+  <path d="M0 780 1600 640v260H0Z" fill="#030505" opacity=".78"/>
+  <g fill="#fff" opacity=".035">
+    <text x="690" y="830" font-family="Arial, sans-serif" font-weight="900" font-size="170">GAME ON</text>
+  </g>
+</svg>
