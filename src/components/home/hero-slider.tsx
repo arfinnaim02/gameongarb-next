@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+
 import {
   useCallback,
   useEffect,
@@ -15,7 +17,10 @@ import {
 export type HeroSlide = {
   id: string;
   title: string;
-  subtitle?: string | null;
+
+  subtitle?:
+    | string
+    | null;
 
   image: string;
 
@@ -59,48 +64,69 @@ type HeroSliderProps = {
   fallback: HeroFallback;
 };
 
-const AUTOPLAY_DELAY = 6500;
+const AUTOPLAY_DELAY =
+  6500;
 
 export function HeroSlider({
   slides,
   fallback,
 }: HeroSliderProps) {
   const preparedSlides =
-    useMemo<HeroSlide[]>(() => {
-      const validSlides =
-        slides.filter(
-          (slide) =>
-            Boolean(
-              slide.image?.trim(),
-            ),
-        );
+    useMemo<HeroSlide[]>(
+      () => {
+        const validSlides =
+          slides.filter(
+            (slide) =>
+              Boolean(
+                slide.image?.trim(),
+              ),
+          );
 
-      if (validSlides.length) {
-        return validSlides;
-      }
+        if (
+          validSlides.length
+        ) {
+          return validSlides;
+        }
 
-      return [
-        {
-          id: "fallback",
-          title:
-            fallback.title,
-          subtitle:
-            fallback.subtitle,
-          image:
-            fallback.image,
-          ctaLabel:
-            fallback.ctaLabel,
-          ctaLink:
-            fallback.ctaLink,
-        },
-      ];
-    }, [slides, fallback]);
+        return [
+          {
+            id: "fallback",
 
-  const [currentIndex, setCurrentIndex] =
-    useState(0);
+            title:
+              fallback.title,
 
-  const [paused, setPaused] =
-    useState(false);
+            subtitle:
+              fallback.subtitle,
+
+            image:
+              fallback.image,
+
+            mobileImage:
+              fallback.mobileImage,
+
+            ctaLabel:
+              fallback.ctaLabel,
+
+            ctaLink:
+              fallback.ctaLink,
+          },
+        ];
+      },
+      [
+        slides,
+        fallback,
+      ],
+    );
+
+  const [
+    currentIndex,
+    setCurrentIndex,
+  ] = useState(0);
+
+  const [
+    paused,
+    setPaused,
+  ] = useState(false);
 
   useEffect(() => {
     if (
@@ -121,7 +147,9 @@ export function HeroSlider({
           (current + 1) %
           preparedSlides.length,
       );
-    }, [preparedSlides.length]);
+    }, [
+      preparedSlides.length,
+    ]);
 
   const previousSlide =
     useCallback(() => {
@@ -132,12 +160,15 @@ export function HeroSlider({
               1
             : current - 1,
       );
-    }, [preparedSlides.length]);
+    }, [
+      preparedSlides.length,
+    ]);
 
   useEffect(() => {
     if (
       paused ||
-      preparedSlides.length <= 1
+      preparedSlides.length <=
+        1
     ) {
       return;
     }
@@ -148,11 +179,10 @@ export function HeroSlider({
         AUTOPLAY_DELAY,
       );
 
-    return () => {
+    return () =>
       window.clearInterval(
         timer,
       );
-    };
   }, [
     nextSlide,
     paused,
@@ -160,26 +190,24 @@ export function HeroSlider({
   ]);
 
   const activeSlide =
-    preparedSlides[currentIndex];
+    preparedSlides[
+      currentIndex
+    ];
 
   if (!activeSlide) {
     return null;
   }
 
-const backgroundStyle =
-  {
-    "--hero-image": `url("${activeSlide.image}")`,
+  const mobileImage =
+    activeSlide.mobileImage ||
+    activeSlide.image;
 
-    "--hero-mobile-image": `url("${
-      activeSlide.mobileImage ||
-      activeSlide.image
-    }")`,
-  } as React.CSSProperties;
+  const hasMultipleSlides =
+    preparedSlides.length > 1;
 
   return (
     <section
       className="premium-hero"
-      style={backgroundStyle}
       aria-roledescription="carousel"
       aria-label="Game On Garb featured promotions"
       onMouseEnter={() =>
@@ -188,16 +216,44 @@ const backgroundStyle =
       onMouseLeave={() =>
         setPaused(false)
       }
+      onFocusCapture={() =>
+        setPaused(true)
+      }
+      onBlurCapture={() =>
+        setPaused(false)
+      }
     >
-      {/* Image transition layer */}
+      <div
+        key={`media-${activeSlide.id}-${currentIndex}`}
+        className="premium-hero-media"
+        aria-hidden="true"
+      >
+        <picture>
+          <source
+            media="(max-width: 700px)"
+            srcSet={
+              mobileImage
+            }
+          />
+
+          <img
+            src={
+              activeSlide.image
+            }
+            alt=""
+          />
+        </picture>
+      </div>
 
       <div
-        key={`${activeSlide.id}-${currentIndex}`}
-        className="premium-hero-image-reveal"
+        className="premium-hero-shade"
         aria-hidden="true"
       />
 
-      {/* Main content */}
+      <div
+        className="premium-hero-glow"
+        aria-hidden="true"
+      />
 
       <div className="container premium-hero-inner">
         <div
@@ -205,11 +261,15 @@ const backgroundStyle =
           className="premium-hero-copy"
         >
           <div className="premium-hero-eyebrow">
+            <span />
+
             Game On Garb
           </div>
 
-          <h1 className="display premium-hero-title">
-            {activeSlide.title}
+          <h1 className="premium-hero-title">
+            {
+              activeSlide.title
+            }
           </h1>
 
           {activeSlide.subtitle ? (
@@ -234,93 +294,123 @@ const backgroundStyle =
                 }
               </span>
 
-              <span
+              <ChevronRight
+                size={15}
+                strokeWidth={
+                  1.8
+                }
                 aria-hidden="true"
-                className="premium-hero-cta-arrow"
-              >
-                →
-              </span>
+              />
             </Link>
           ) : null}
         </div>
       </div>
 
-      {/* Desktop arrows */}
-
-      {preparedSlides.length >
-      1 ? (
+      {hasMultipleSlides ? (
         <>
-          <button
-            type="button"
-            className="premium-hero-arrow premium-hero-arrow-left desktop-only"
-            aria-label="Previous hero slide"
-            onClick={
-              previousSlide
-            }
-          >
-            <ChevronLeft
-              size={21}
-              strokeWidth={1.6}
-            />
-          </button>
+          <div className="premium-hero-navigation desktop-only">
+            <button
+              type="button"
+              className="premium-hero-arrow"
+              aria-label="Previous hero slide"
+              onClick={
+                previousSlide
+              }
+            >
+              <ChevronLeft
+                size={18}
+                strokeWidth={
+                  1.6
+                }
+              />
+            </button>
 
-          <button
-            type="button"
-            className="premium-hero-arrow premium-hero-arrow-right desktop-only"
-            aria-label="Next hero slide"
-            onClick={nextSlide}
+            <button
+              type="button"
+              className="premium-hero-arrow"
+              aria-label="Next hero slide"
+              onClick={
+                nextSlide
+              }
+            >
+              <ChevronRight
+                size={18}
+                strokeWidth={
+                  1.6
+                }
+              />
+            </button>
+          </div>
+
+          <div
+            className="premium-hero-dots"
+            role="tablist"
+            aria-label="Hero slides"
           >
-            <ChevronRight
-              size={21}
-              strokeWidth={1.6}
-            />
-          </button>
+            {preparedSlides.map(
+              (
+                slide,
+                index,
+              ) => {
+                const active =
+                  index ===
+                  currentIndex;
+
+                return (
+                  <button
+                    key={
+                      slide.id
+                    }
+                    type="button"
+                    role="tab"
+                    aria-selected={
+                      active
+                    }
+                    aria-label={`Show slide ${
+                      index + 1
+                    }`}
+                    className={`premium-hero-dot${
+                      active
+                        ? " is-active"
+                        : ""
+                    }`}
+                    onClick={() =>
+                      setCurrentIndex(
+                        index,
+                      )
+                    }
+                  />
+                );
+              },
+            )}
+          </div>
+
+          <div
+            className="premium-hero-counter desktop-only"
+            aria-hidden="true"
+          >
+            <strong>
+              {String(
+                currentIndex +
+                  1,
+              ).padStart(
+                2,
+                "0",
+              )}
+            </strong>
+
+            <span />
+
+            <small>
+              {String(
+                preparedSlides.length,
+              ).padStart(
+                2,
+                "0",
+              )}
+            </small>
+          </div>
         </>
-      ) : null}
-
-      {/* Slider dots */}
-
-      {preparedSlides.length >
-      1 ? (
-        <div
-          className="premium-hero-dots"
-          role="tablist"
-          aria-label="Hero slides"
-        >
-          {preparedSlides.map(
-            (slide, index) => {
-              const active =
-                index ===
-                currentIndex;
-
-              return (
-                <button
-                  key={
-                    slide.id
-                  }
-                  type="button"
-                  role="tab"
-                  aria-selected={
-                    active
-                  }
-                  aria-label={`Show slide ${
-                    index + 1
-                  }`}
-                  className={`premium-hero-dot${
-                    active
-                      ? " is-active"
-                      : ""
-                  }`}
-                  onClick={() =>
-                    setCurrentIndex(
-                      index,
-                    )
-                  }
-                />
-              );
-            },
-          )}
-        </div>
       ) : null}
     </section>
   );

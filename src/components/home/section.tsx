@@ -10,24 +10,30 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="container" style={{ padding: "34px 0" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "end",
-          justifyContent: "space-between",
-          marginBottom: 16,
-        }}
-      >
-        <div>
-          {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-          <h2 className="section-title" style={{ margin: "4px 0 0" }}>
+    <section className="container home-section">
+      <div className="home-section-heading">
+        <div className="home-section-heading-copy">
+          {eyebrow ? (
+            <div className="eyebrow">
+              {eyebrow}
+            </div>
+          ) : null}
+
+          <h2 className="home-section-title">
             {title}
           </h2>
         </div>
-        {action}
+
+        {action ? (
+          <div className="home-section-action">
+            {action}
+          </div>
+        ) : null}
       </div>
-      {children}
+
+      <div className="home-section-content">
+        {children}
+      </div>
     </section>
   );
 }

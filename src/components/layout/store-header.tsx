@@ -1,169 +1,453 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import {
   Heart,
   Menu,
   Search,
-  ShoppingCart,
+  ShoppingBag,
   UserRound,
+  X,
 } from "lucide-react";
-import { useState } from "react";
-import { Logo } from "@/components/shared/logo";
-import { useStore } from "@/components/shared/store-provider";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Logo,
+} from "@/components/shared/logo";
+
+import {
+  useStore,
+} from "@/components/shared/store-provider";
+
+/* =========================================================
+   TYPES
+   ========================================================= */
 
 type NavCategory = {
   name: string;
   slug: string;
 };
 
+type StoreHeaderProps = {
+  navCategories: NavCategory[];
+  onCartOpen: () => void;
+};
+
+/* =========================================================
+   STORE HEADER
+   ========================================================= */
+
 export function StoreHeader({
   navCategories,
-}: {
-  navCategories: NavCategory[];
-}) {
-  const { cartCount, wishlist } = useStore();
-  const [menuOpen, setMenuOpen] = useState(false);
+  onCartOpen,
+}: StoreHeaderProps) {
+  const pathname =
+    usePathname();
+
+  const {
+    cartCount,
+    wishlist,
+  } = useStore();
+
+  const [
+    menuOpen,
+    setMenuOpen,
+  ] = useState(false);
+
+  /* ---------------------------------------------------------
+     Close the mobile menu whenever navigation changes.
+     --------------------------------------------------------- */
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  /* ---------------------------------------------------------
+     Lock page scrolling while mobile menu is open.
+     --------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    function handleEscape(
+      event: KeyboardEvent,
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, [menuOpen]);
 
   return (
     <>
+      {/* =====================================================
+          DESKTOP UTILITY BAR
+          ===================================================== */}
+
       <div className="store-utility-bar desktop-only">
         <div className="container store-utility-inner">
-          <span>Free Delivery Across Bangladesh</span>
-          <span>Easy Exchange &amp; Returns</span>
-          <span>100% Original Products</span>
+          <span>
+            Free Delivery Across
+            Bangladesh
+          </span>
+
+          <span>
+            Easy Exchange &amp;
+            Returns
+          </span>
+
+          <span>
+            100% Original Products
+          </span>
         </div>
       </div>
 
+      {/* =====================================================
+          MAIN HEADER
+          ===================================================== */}
+
       <header className="store-header">
         <div className="container store-header-inner">
+          {/* =========================
+              MOBILE MENU BUTTON
+              ========================= */}
+
           <button
             type="button"
             className="store-icon-button mobile-only"
             aria-label="Open menu"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(true)}
+            aria-expanded={
+              menuOpen
+            }
+            aria-controls="store-mobile-menu"
+            onClick={() =>
+              setMenuOpen(true)
+            }
           >
-            <Menu size={21} />
+            <Menu
+              size={21}
+              strokeWidth={1.7}
+              aria-hidden="true"
+            />
           </button>
+
+          {/* =========================
+              LOGO
+              ========================= */}
 
           <div className="store-logo-wrap">
             <Logo />
           </div>
 
-          <nav className="store-main-nav desktop-only" aria-label="Main navigation">
-            <Link href="/shop?sort=newest">New In</Link>
+          {/* =========================
+              DESKTOP NAVIGATION
+              ========================= */}
 
-            {navCategories.map((category) => (
-              <Link
-                key={category.slug}
-                href={`/shop?category=${category.slug}`}
-              >
-                {category.name}
-              </Link>
-            ))}
+          <nav
+            className="store-main-nav desktop-only"
+            aria-label="Main navigation"
+          >
+            <Link href="/shop?sort=newest">
+              New In
+            </Link>
 
-            <Link href="/shop?offers=1" className="store-offers-link">
+            {navCategories.map(
+              (
+                category,
+              ) => (
+                <Link
+                  key={
+                    category.slug
+                  }
+                  href={`/shop?category=${category.slug}`}
+                >
+                  {
+                    category.name
+                  }
+                </Link>
+              ),
+            )}
+
+            <Link
+              href="/shop?offers=1"
+              className="store-offers-link"
+            >
               Offers
             </Link>
           </nav>
 
+          {/* =========================
+              HEADER ACTIONS
+              ========================= */}
+
           <div className="store-header-actions">
+            {/* Search */}
+
             <Link
               className="store-header-action desktop-only"
               href="/shop"
-              aria-label="Search"
+              aria-label="Search products"
             >
-              <Search size={18} />
+              <Search
+                size={18}
+                strokeWidth={1.65}
+                aria-hidden="true"
+              />
             </Link>
+
+            {/* Account */}
 
             <Link
               className="store-header-action"
               href="/account"
               aria-label="Account"
             >
-              <UserRound size={18} />
+              <UserRound
+                size={18}
+                strokeWidth={1.65}
+                aria-hidden="true"
+              />
             </Link>
+
+            {/* Wishlist */}
 
             <Link
               className="store-header-action desktop-only"
               href="/account/wishlist"
-              aria-label={`Wishlist ${wishlist.length}`}
+              aria-label={`Wishlist with ${wishlist.length} items`}
             >
-              <Heart size={18} />
-            </Link>
+              <Heart
+                size={18}
+                strokeWidth={1.65}
+                aria-hidden="true"
+              />
 
-            <Link
-              className="store-header-action store-cart-link"
-              href="/cart"
-              aria-label={`Cart ${cartCount}`}
-            >
-              <ShoppingCart size={19} />
-
-              {cartCount > 0 ? (
-                <b className="store-cart-count">{cartCount}</b>
+              {wishlist.length >
+              0 ? (
+                <span
+                  className="store-action-indicator"
+                  aria-hidden="true"
+                />
               ) : null}
             </Link>
+
+            {/* Cart
+                IMPORTANT:
+                This is intentionally a BUTTON.
+                It does not navigate to /cart.
+                StoreShell owns the global CartDrawer.
+            */}
+
+            <button
+              type="button"
+              className="store-header-action store-cart-link store-cart-trigger"
+              aria-label={`Open cart with ${cartCount} ${
+                cartCount === 1
+                  ? "item"
+                  : "items"
+              }`}
+              aria-controls="gog-cart-drawer"
+              onClick={
+                onCartOpen
+              }
+            >
+              <ShoppingBag
+                size={19}
+                strokeWidth={1.65}
+                aria-hidden="true"
+              />
+
+              {cartCount >
+              0 ? (
+                <b
+                  className="store-cart-count"
+                  aria-hidden="true"
+                >
+                  {
+                    cartCount
+                  }
+                </b>
+              ) : null}
+            </button>
           </div>
         </div>
       </header>
 
+      {/* =====================================================
+          MOBILE NAVIGATION DRAWER
+          ===================================================== */}
+
       {menuOpen ? (
         <div
           className="mobile-menu-overlay mobile-only"
-          onClick={() => setMenuOpen(false)}
+          role="presentation"
+          onMouseDown={() =>
+            setMenuOpen(false)
+          }
         >
           <aside
+            id="store-mobile-menu"
             className="mobile-menu-panel"
-            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Store navigation"
+            onMouseDown={(
+              event,
+            ) =>
+              event.stopPropagation()
+            }
           >
+            {/* =========================
+                DRAWER HEADER
+                ========================= */}
+
             <div className="mobile-menu-header">
               <Logo />
 
               <button
                 type="button"
                 className="mobile-menu-close"
-                onClick={() => setMenuOpen(false)}
                 aria-label="Close menu"
+                onClick={() =>
+                  setMenuOpen(false)
+                }
               >
-                ×
+                <X
+                  size={20}
+                  strokeWidth={1.7}
+                  aria-hidden="true"
+                />
               </button>
             </div>
 
-            <nav className="mobile-menu-nav" aria-label="Mobile navigation">
+            {/* =========================
+                PRIMARY LINKS
+                ========================= */}
+
+            <nav
+              className="mobile-menu-nav"
+              aria-label="Mobile navigation"
+            >
               <MobileMenuLink
                 href="/shop?sort=newest"
                 label="New In"
-                close={() => setMenuOpen(false)}
+                close={() =>
+                  setMenuOpen(false)
+                }
               />
 
-              {navCategories.map((category) => (
-                <MobileMenuLink
-                  key={category.slug}
-                  href={`/shop?category=${category.slug}`}
-                  label={category.name}
-                  close={() => setMenuOpen(false)}
-                />
-              ))}
+              {navCategories.map(
+                (
+                  category,
+                ) => (
+                  <MobileMenuLink
+                    key={
+                      category.slug
+                    }
+                    href={`/shop?category=${category.slug}`}
+                    label={
+                      category.name
+                    }
+                    close={() =>
+                      setMenuOpen(false)
+                    }
+                  />
+                ),
+              )}
 
               <MobileMenuLink
                 href="/shop?offers=1"
                 label="Offers"
-                close={() => setMenuOpen(false)}
+                highlight
+                close={() =>
+                  setMenuOpen(false)
+                }
+              />
+            </nav>
+
+            {/* =========================
+                SECONDARY LINKS
+                ========================= */}
+
+            <nav
+              className="mobile-menu-secondary"
+              aria-label="Customer links"
+            >
+              <MobileMenuLink
+                href="/account"
+                label="My Account"
+                close={() =>
+                  setMenuOpen(false)
+                }
+              />
+
+              <MobileMenuLink
+                href="/account/wishlist"
+                label={`Wishlist${
+                  wishlist.length >
+                  0
+                    ? ` (${wishlist.length})`
+                    : ""
+                }`}
+                close={() =>
+                  setMenuOpen(false)
+                }
               />
 
               <MobileMenuLink
                 href="/track-order"
                 label="Track Order"
-                close={() => setMenuOpen(false)}
-              />
-
-              <MobileMenuLink
-                href="/account/wishlist"
-                label="Wishlist"
-                close={() => setMenuOpen(false)}
+                close={() =>
+                  setMenuOpen(false)
+                }
               />
             </nav>
+
+            {/* =========================
+                DRAWER FOOTER
+                ========================= */}
+
+            <div className="mobile-menu-footer">
+              <p>
+                Game On Garb
+              </p>
+
+              <span>
+                Experience The Thrill
+              </span>
+            </div>
           </aside>
         </div>
       ) : null}
@@ -171,18 +455,40 @@ export function StoreHeader({
   );
 }
 
+/* =========================================================
+   MOBILE MENU LINK
+   ========================================================= */
+
 function MobileMenuLink({
   href,
   label,
   close,
+  highlight = false,
 }: {
   href: string;
   label: string;
   close: () => void;
+  highlight?: boolean;
 }) {
   return (
-    <Link href={href} onClick={close} className="mobile-menu-link">
-      {label}
+    <Link
+      href={href}
+      onClick={close}
+      className={`mobile-menu-link${
+        highlight
+          ? " is-highlight"
+          : ""
+      }`}
+    >
+      <span>
+        {label}
+      </span>
+
+      <span
+        aria-hidden="true"
+      >
+        →
+      </span>
     </Link>
   );
 }
