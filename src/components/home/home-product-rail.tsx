@@ -1,11 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
-import { ProductCard } from "@/components/product/product-card";
-import type { Product } from "@/lib/data";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-type Direction = "right-to-left" | "left-to-right";
+import {
+  ProductCard,
+} from "@/components/product/product-card";
+
+import type {
+  Product,
+} from "@/lib/data";
+
+type Direction =
+  | "right-to-left"
+  | "left-to-right";
 
 type HomeProductRailProps = {
   products: Product[];
@@ -13,213 +26,549 @@ type HomeProductRailProps = {
   label: string;
 };
 
-type ScrollEdges = {
-  previous: boolean;
-  next: boolean;
-};
+/*
+ * One product changes every 4 seconds.
+ */
+const AUTO_DELAY = 4000;
 
-function getStep(element: HTMLDivElement) {
-  const card = element.firstElementChild;
-  if (!(card instanceof HTMLElement)) return 0;
+/*
+ * Allow the smooth animation to finish
+ * before correcting the infinite-loop position.
+ */
+const NORMALIZE_DELAY = 650;
 
-  const gap = Number.parseFloat(getComputedStyle(element).columnGap) || 0;
-  return card.getBoundingClientRect().width + gap;
-}
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
-function moveRail(element: HTMLDivElement, direction: -1 | 1) {
-  const distance = getStep(element);
-  if (!distance) return;
-
-  const reducedMotion = window.matchMedia(
+function prefersReducedMotion() {
+  return window.matchMedia(
     "(prefers-reduced-motion: reduce)",
   ).matches;
-
-  element.scrollBy({
-    left: distance * direction,
-    behavior: reducedMotion ? "auto" : "smooth",
-  });
 }
+
+function getStep(
+  viewport: HTMLDivElement,
+) {
+  const item =
+    viewport.querySelector<HTMLElement>(
+      ".home-rail-item",
+    );
+
+  if (!item) {
+    return 0;
+  }
+
+  const styles =
+    window.getComputedStyle(
+      viewport,
+    );
+
+  const gap =
+    Number.parseFloat(
+      styles.columnGap ||
+        styles.gap ||
+        "0",
+    ) || 0;
+
+  return (
+    item.getBoundingClientRect()
+      .width + gap
+  );
+}
+
+/* =========================================================
+   PRODUCT RAIL
+   ========================================================= */
 
 export function HomeProductRail({
   products,
   direction,
   label,
 }: HomeProductRailProps) {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const hoveredRef = useRef(false);
-  const [paused, setPaused] = useState(false);
-  const [edges, setEdges] = useState<ScrollEdges>({
-    previous: false,
-    next: false,
-  });
+  const viewportRef =
+    useRef<HTMLDivElement>(
+      null,
+    );
 
-  const productKey = products.map((product) => product.id).join("|");
-  const hasOverflow = edges.previous || edges.next;
+  const normalizeTimerRef =
+    useRef<
+      ReturnType<
+        typeof window.setTimeout
+      > | undefined
+    >(undefined);
 
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
+  const [
+    ready,
+    setReady,
+  ] = useState(false);
 
-    let initialized = false;
+  const [
+    visible,
+    setVisible,
+  ] = useState(false);
 
-    const updateEdges = () => {
-      const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
-      setEdges({
-        previous: viewport.scrollLeft > 2,
-        next: viewport.scrollLeft < maximum - 2,
-      });
-    };
+  /*
+   * Three copies allow the carousel
+   * to continue forever even when
+   * there are only four real products.
+   */
+  const loopProducts =
+    useMemo(() => {
+      if (
+        products.length <= 1
+      ) {
+        return products.map(
+          (product) => ({
+            product,
+            loopKey:
+              `single-${product.id}`,
+          }),
+        );
+      }
 
-    const initialize = () => {
-      const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-      viewport.scrollLeft = direction === "left-to-right" ? maximum : 0;
-      initialized = true;
-      updateEdges();
-    };
+      return [0, 1, 2].flatMap(
+        (copy) =>
+          products.map(
+            (
+              product,
+              index,
+            ) => ({
+              product,
 
-    const observer = new ResizeObserver(() => {
-      if (!initialized) initialize();
-      else updateEdges();
-    });
+              loopKey:
+                `${copy}-${index}-${product.id}`,
+            }),
+          ),
+      );
+    }, [products]);
 
-    observer.observe(viewport);
-    viewport.addEventListener("scroll", updateEdges, { passive: true });
+  const productKey =
+    products
+      .map(
+        (product) =>
+          product.id,
+      )
+      .join("|");
 
-    requestAnimationFrame(initialize);
+  /* =======================================================
+     WIDTH OF ONE REAL PRODUCT SET
+     ======================================================= */
 
-    return () => {
-      observer.disconnect();
-      viewport.removeEventListener("scroll", updateEdges);
-    };
-  }, [direction, productKey]);
-
-  useEffect(() => {
-    if (paused) return;
-
-    const timer = window.setInterval(() => {
-      const viewport = viewportRef.current;
+  const getSingleSetWidth =
+    useCallback(() => {
+      const viewport =
+        viewportRef.current;
 
       if (
         !viewport ||
-        hoveredRef.current ||
-        document.hidden ||
-        viewport.contains(document.activeElement) ||
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        products.length <= 1
+      ) {
+        return 0;
+      }
+
+      const step =
+        getStep(viewport);
+
+      if (!step) {
+        return 0;
+      }
+
+      return (
+        step *
+        products.length
+      );
+    }, [
+      products.length,
+    ]);
+
+  /* =======================================================
+     KEEP CAROUSEL INSIDE MIDDLE COPY
+     ======================================================= */
+
+  const normalizePosition =
+    useCallback(() => {
+      const viewport =
+        viewportRef.current;
+
+      if (
+        !viewport ||
+        products.length <= 1
       ) {
         return;
       }
 
-      const bounds = viewport.getBoundingClientRect();
-      if (bounds.bottom <= 0 || bounds.top >= window.innerHeight) return;
+      const setWidth =
+        getSingleSetWidth();
 
-      const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
-      if (maximum <= 2) return;
-
-      if (direction === "right-to-left") {
-        if (viewport.scrollLeft >= maximum - 2) {
-          viewport.scrollTo({ left: 0, behavior: "auto" });
-        } else {
-          moveRail(viewport, 1);
-        }
-      } else if (viewport.scrollLeft <= 2) {
-        viewport.scrollTo({ left: maximum, behavior: "auto" });
-      } else {
-        moveRail(viewport, -1);
+      if (!setWidth) {
+        return;
       }
-    }, 3800);
 
-    return () => window.clearInterval(timer);
-  }, [direction, paused]);
+      if (
+        viewport.scrollLeft <
+        setWidth * 0.5
+      ) {
+        viewport.scrollLeft +=
+          setWidth;
 
-  function navigate(directionToMove: -1 | 1) {
-    setPaused(true);
+        return;
+      }
 
-    if (viewportRef.current) {
-      moveRail(viewportRef.current, directionToMove);
+      if (
+        viewport.scrollLeft >
+        setWidth * 2.5
+      ) {
+        viewport.scrollLeft -=
+          setWidth;
+      }
+    }, [
+      getSingleSetWidth,
+      products.length,
+    ]);
+
+  /* =======================================================
+     MOVE EXACTLY ONE PRODUCT
+     ======================================================= */
+
+  const moveOne =
+    useCallback(() => {
+      const viewport =
+        viewportRef.current;
+
+      if (
+        !viewport ||
+        products.length <= 1
+      ) {
+        return;
+      }
+
+      const step =
+        getStep(
+          viewport,
+        );
+
+      if (!step) {
+        return;
+      }
+
+      /*
+       * left-to-right:
+       * cards visually move toward the RIGHT.
+       *
+       * right-to-left:
+       * cards visually move toward the LEFT.
+       */
+
+      const visualRight =
+        direction ===
+        "left-to-right";
+
+      viewport.scrollBy({
+        left:
+          visualRight
+            ? -step
+            : step,
+
+        behavior:
+          prefersReducedMotion()
+            ? "auto"
+            : "smooth",
+      });
+
+      setActiveIndex(
+        (current) => {
+          if (
+            visualRight
+          ) {
+            return (
+              current -
+              1 +
+              products.length
+            ) %
+              products.length;
+          }
+
+          return (
+            current + 1
+          ) %
+            products.length;
+        },
+      );
+
+      if (
+        normalizeTimerRef.current
+      ) {
+        window.clearTimeout(
+          normalizeTimerRef.current,
+        );
+      }
+
+      normalizeTimerRef.current =
+        window.setTimeout(
+          normalizePosition,
+          NORMALIZE_DELAY,
+        );
+    }, [
+      direction,
+      normalizePosition,
+      products.length,
+    ]);
+
+  /* =======================================================
+     INITIAL POSITION
+     ======================================================= */
+
+  useEffect(() => {
+    const viewport =
+      viewportRef.current;
+
+    if (!viewport) {
+      return;
     }
-  }
 
-  if (products.length === 0) {
+    let initialized =
+      false;
+
+    const initialize =
+      () => {
+        if (
+          products.length <= 1
+        ) {
+          viewport.scrollLeft =
+            0;
+
+          setActiveIndex(0);
+
+          setReady(true);
+
+          return;
+        }
+
+        const setWidth =
+          getSingleSetWidth();
+
+        if (!setWidth) {
+          return;
+        }
+
+        /*
+         * Start at the middle copy.
+         */
+
+        if (!initialized) {
+          viewport.scrollLeft =
+            setWidth;
+
+          initialized =
+            true;
+
+          setActiveIndex(0);
+        }
+
+        setReady(true);
+      };
+
+    const resizeObserver =
+      new ResizeObserver(
+        initialize,
+      );
+
+    resizeObserver.observe(
+      viewport,
+    );
+
+    const frame =
+      window.requestAnimationFrame(
+        initialize,
+      );
+
+    return () => {
+      resizeObserver.disconnect();
+
+      window.cancelAnimationFrame(
+        frame,
+      );
+    };
+  }, [
+    getSingleSetWidth,
+    productKey,
+    products.length,
+  ]);
+
+  /* =======================================================
+     ONLY AUTOPLAY WHILE SECTION IS VISIBLE
+     ======================================================= */
+
+  useEffect(() => {
+    const viewport =
+      viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const observer =
+      new IntersectionObserver(
+        ([entry]) => {
+          setVisible(
+            entry.isIntersecting &&
+              entry.intersectionRatio >=
+                0.1,
+          );
+        },
+        {
+          threshold: [
+            0,
+            0.1,
+            0.5,
+          ],
+        },
+      );
+
+    observer.observe(
+      viewport,
+    );
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  /* =======================================================
+     AUTOMATIC MOVEMENT
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      !ready ||
+      !visible ||
+      products.length <= 1
+    ) {
+      return;
+    }
+
+    const timer =
+      window.setInterval(
+        () => {
+          if (
+            document.hidden
+          ) {
+            return;
+          }
+
+          moveOne();
+        },
+        AUTO_DELAY,
+      );
+
+    return () => {
+      window.clearInterval(
+        timer,
+      );
+    };
+  }, [
+    moveOne,
+    products.length,
+    ready,
+    visible,
+  ]);
+
+  /* =======================================================
+     CLEANUP
+     ======================================================= */
+
+  useEffect(() => {
+    return () => {
+      if (
+        normalizeTimerRef.current
+      ) {
+        window.clearTimeout(
+          normalizeTimerRef.current,
+        );
+      }
+    };
+  }, []);
+
+  /* =======================================================
+     EMPTY STATE
+     ======================================================= */
+
+  if (
+    products.length === 0
+  ) {
     return (
       <p className="home-rail-empty">
-        New pieces are on the way. Explore the shop for more.
+        New pieces are on the
+        way. Explore the shop
+        for more.
       </p>
     );
   }
 
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
-    <div
-      className="home-product-rail"
-      onMouseEnter={() => {
-        hoveredRef.current = true;
-      }}
-      onMouseLeave={() => {
-        hoveredRef.current = false;
-      }}
-      onFocusCapture={() => setPaused(true)}
-      onPointerDownCapture={(event) => {
-        if (event.pointerType !== "mouse") setPaused(true);
-      }}
-    >
-      {hasOverflow && (
-        <div className="home-rail-controls">
-          <button
-            type="button"
-            className="home-rail-control"
-            aria-label={`Scroll ${label} left`}
-            disabled={!edges.previous}
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-          </button>
-
-          <button
-            type="button"
-            className="home-rail-control home-rail-play"
-            aria-label={`${paused ? "Play" : "Pause"} ${label} automatic scrolling`}
-            onClick={() => setPaused((current) => !current)}
-          >
-            {paused ? (
-              <Play size={14} aria-hidden="true" />
-            ) : (
-              <Pause size={14} aria-hidden="true" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            className="home-rail-control"
-            aria-label={`Scroll ${label} right`}
-            disabled={!edges.next}
-            onClick={() => navigate(1)}
-          >
-            <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
+    <div className="home-product-rail">
       <div
         ref={viewportRef}
         className="home-rail-viewport"
         role="region"
-        aria-label={label}
-        tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.target !== event.currentTarget) return;
-
-          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-            event.preventDefault();
-            navigate(event.key === "ArrowLeft" ? -1 : 1);
-          }
-        }}
+        aria-label={`${label} products`}
       >
-        {products.map((product) => (
-          <div className="home-rail-item" key={product.id}>
-            <ProductCard product={product} />
-          </div>
-        ))}
+        {loopProducts.map(
+          ({
+            product,
+            loopKey,
+          }) => (
+            <div
+              className="home-rail-item"
+              key={loopKey}
+            >
+              <ProductCard
+                product={
+                  product
+                }
+              />
+            </div>
+          ),
+        )}
       </div>
+
+      {products.length >
+      1 ? (
+        <div
+          className="home-rail-dots"
+          aria-label={`${label} carousel position`}
+        >
+          {products.map(
+            (
+              product,
+              index,
+            ) => (
+              <span
+                key={
+                  product.id
+                }
+                className={`home-rail-dot${
+                  index ===
+                  activeIndex
+                    ? " is-active"
+                    : ""
+                }`}
+                aria-hidden="true"
+              />
+            ),
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

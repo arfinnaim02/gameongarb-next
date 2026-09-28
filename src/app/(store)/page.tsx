@@ -94,7 +94,7 @@ export default async function Home() {
                 products,
               ).slice(0, 12)}
               link="/shop?sort=newest"
-              direction="right-to-left"
+              direction="left-to-right"
             />
           );
 

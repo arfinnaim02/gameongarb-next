@@ -2315,55 +2315,64 @@ svg {
 
   color:
     #757a76;
-}
-
-/* =========================================================
-   PRODUCT RAILS
+}/* =========================================================
+   PRODUCT RAILS — PREMIUM AUTO CAROUSEL
    ========================================================= */
 
 .home-product-rail {
   position: relative;
 
   min-width: 0;
+
+  overflow: hidden;
+
+  isolation: isolate;
 }
 
-/*
- * Reference design does not show
- * slider control buttons.
- *
- * Auto-scroll and manual swipe/
- * keyboard scrolling still work.
- */
-.home-rail-controls {
-  display: none;
-}
+/* =========================================================
+   VIEWPORT
+   ========================================================= */
 
 .home-rail-viewport {
+  position: relative;
+
   min-width: 0;
 
   display: flex;
 
+  align-items: stretch;
+
   gap:
     var(--home-gap);
 
-  overflow-x: auto;
+  overflow-x: hidden;
 
-  overscroll-behavior-x:
-    contain;
+  overflow-y: hidden;
 
-  scroll-snap-type:
-    x proximity;
+  scroll-snap-type: none;
 
-  scrollbar-width:
-    none;
+  scrollbar-width: none;
 
   padding:
-    0 0 3px;
+    4px 1px
+    7px;
+
+  /*
+   * Product links/buttons still work,
+   * but the rail itself is no longer
+   * manually draggable.
+   */
+  touch-action:
+    pan-y;
 }
 
 .home-rail-viewport::-webkit-scrollbar {
   display: none;
 }
+
+/* =========================================================
+   DESKTOP — FOUR VISIBLE PRODUCTS
+   ========================================================= */
 
 .home-rail-item {
   min-width: 0;
@@ -2378,9 +2387,6 @@ svg {
       ) /
       4
     );
-
-  scroll-snap-align:
-    start;
 }
 
 .home-rail-item
@@ -2388,18 +2394,102 @@ svg {
   height: 100%;
 }
 
+/* =========================================================
+   PREMIUM CARD DEPTH
+   ========================================================= */
+
+.home-rail-item {
+  transition:
+    transform
+      260ms
+      var(--ease-premium);
+}
+
+@media (
+  hover: hover
+) and (
+  pointer: fine
+) {
+  .home-rail-item:hover {
+    position: relative;
+
+    z-index: 3;
+
+    transform:
+      translateY(-3px);
+  }
+}
+
+/* =========================================================
+   DOTS
+   ========================================================= */
+
+.home-rail-dots {
+  min-height: 24px;
+
+  margin-top: 9px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+}
+
+.home-rail-dot {
+  display: block;
+
+  width: 5px;
+  height: 5px;
+
+  flex: 0 0 auto;
+
+  border-radius:
+    999px;
+
+  background:
+    #c8cbc7;
+
+  transition:
+    width
+      260ms
+      var(--ease-premium),
+    background-color
+      220ms ease,
+    transform
+      220ms
+      var(--ease-premium);
+}
+
+.home-rail-dot.is-active {
+  width: 21px;
+
+  background:
+    var(--orange);
+
+  transform:
+    scaleY(1.08);
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
 .home-rail-empty {
   margin: 0;
 
   padding:
-    26px 0;
+    30px 0;
 
   color:
     var(--muted);
 
   font-size: 11px;
-}
 
+  line-height: 1.55;
+}
 /* =========================================================
    PRODUCT CARD INTERACTIONS
    ========================================================= */
@@ -2437,79 +2527,311 @@ svg {
     transform:
       scale(1.08);
   }
-}
-/* =========================================================
-   CAMPAIGN PAIR
+}/* =========================================================
+   CAMPAIGN PAIR — PDF PAGE 1
    ========================================================= */
 
 .home-campaign-pair {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 6px;
+
+  padding:
+    4px 0
+    10px;
 }
 
 .home-campaign-section {
   min-width: 0;
-  padding: 8px 0;
+
+  padding: 0;
 }
 
 .home-campaign-card {
   position: relative;
+
   isolation: isolate;
-  min-height: clamp(320px, 29vw, 410px);
+
+  min-height:
+    clamp(
+      255px,
+      22vw,
+      315px
+    );
+
   overflow: hidden;
+
   display: flex;
+
   align-items: flex-end;
-  padding: clamp(24px, 3vw, 42px);
-  color: #fff;
+
+  padding:
+    clamp(
+      24px,
+      2.5vw,
+      35px
+    );
+
   background:
-    linear-gradient(90deg, rgb(4 6 6 / 88%), rgb(4 6 6 / 16%)),
-    var(--campaign-image),
-    #171919;
-  background-size: cover;
-  background-position: center;
+    #0c0e0d;
+
+  color: #fff;
 }
 
-.home-campaign-card.is-light {
-  background:
-    linear-gradient(90deg, rgb(4 6 6 / 70%), rgb(4 6 6 / 6%)),
-    var(--campaign-image),
-    #5d493a;
+/* =========================
+   CAMPAIGN IMAGE
+   ========================= */
+
+.home-campaign-card::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: -2;
+
+  background-image:
+    var(--campaign-image);
+
+  background-size:
+    cover;
+
+  background-position:
+    center;
+
+  background-repeat:
+    no-repeat;
+
+  transform:
+    scale(1);
+
+  transition:
+    transform
+    650ms
+    var(--ease-premium);
 }
+
+/* =========================
+   DARK CINEMATIC OVERLAY
+   ========================= */
 
 .home-campaign-card::after {
   content: "";
+
   position: absolute;
+
   inset: 0;
+
   z-index: -1;
-  background: linear-gradient(180deg, transparent 42%, rgb(0 0 0 / 30%));
+
+  background:
+    linear-gradient(
+      90deg,
+      rgb(4 6 5 / 88%)
+        0%,
+      rgb(4 6 5 / 62%)
+        34%,
+      rgb(4 6 5 / 20%)
+        68%,
+      rgb(4 6 5 / 4%)
+        100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent
+        42%,
+      rgb(0 0 0 / 42%)
+        100%
+    );
+
+  pointer-events: none;
 }
 
+/* Polo panel stays slightly softer
+   while maintaining the same layout. */
+
+.home-campaign-card.is-light::after {
+  background:
+    linear-gradient(
+      90deg,
+      rgb(4 6 5 / 80%)
+        0%,
+      rgb(4 6 5 / 51%)
+        38%,
+      rgb(4 6 5 / 14%)
+        72%,
+      rgb(4 6 5 / 2%)
+        100%
+    ),
+    linear-gradient(
+      180deg,
+      transparent
+        46%,
+      rgb(0 0 0 / 36%)
+        100%
+    );
+}
+
+/* =========================
+   CAMPAIGN COPY
+   ========================= */
+
 .home-campaign-copy {
-  max-width: 420px;
+  position: relative;
+
+  z-index: 2;
+
+  width:
+    min(
+      100%,
+      390px
+    );
+
+  color: #fff;
+}
+
+.home-campaign-copy
+.eyebrow {
+  margin-bottom: 7px;
+
+  color:
+    #ff7540;
+
+  font-size: 8px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing:
+    0.25em;
+
+  text-transform:
+    uppercase;
 }
 
 .home-campaign-title {
-  max-width: 9ch;
-  margin: 9px 0 12px;
-  font-size: clamp(2.1rem, 3.5vw, 3.8rem);
-  line-height: 0.92;
+  max-width:
+    8.2ch;
+
+  margin:
+    0 0 18px;
+
+  color: #fff;
+
+  font-size:
+    clamp(
+      2.15rem,
+      3.1vw,
+      3.55rem
+    );
+
+  line-height:
+    0.86;
+
+  font-weight: 950;
+
+  font-style: italic;
+
+  letter-spacing:
+    -0.065em;
+
+  text-transform:
+    uppercase;
+
+  text-wrap:
+    balance;
+
+  text-shadow:
+    0 8px 24px
+    rgb(0 0 0 / 24%);
 }
 
+/*
+ * The approved Page-1 campaign
+ * design does not display a paragraph
+ * between headline and CTA.
+ *
+ * Subtitle data remains in the DB/admin.
+ */
 .home-campaign-copy p {
-  max-width: 30ch;
-  margin: 0 0 18px;
-  color: #e5e6e3;
-  font-size: 13px;
-  line-height: 1.5;
+  display: none;
 }
+
+/* =========================
+   CTA
+   ========================= */
 
 .home-campaign-cta {
-  background: transparent;
+  min-height:
+    38px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    rgb(255 255 255 / 65%);
+
+  background:
+    rgb(0 0 0 / 12%);
+
   color: #fff;
-  border-color: rgb(255 255 255 / 55%);
+
+  font-size: 8px;
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing:
+    0.045em;
+
+  text-transform: none;
+
+  backdrop-filter:
+    blur(4px);
+
+  -webkit-backdrop-filter:
+    blur(4px);
 }
 
+.home-campaign-cta
+span {
+  transition:
+    transform
+    200ms
+    var(--ease-premium);
+}
+
+/* =========================
+   DESKTOP HOVER
+   ========================= */
+
+@media (
+  hover: hover
+) and (
+  pointer: fine
+) {
+  .home-campaign-card:hover::before {
+    transform:
+      scale(1.045);
+  }
+
+  .home-campaign-card:hover
+  .home-campaign-cta
+  span {
+    transform:
+      translateX(4px);
+  }
+}
 /* =========================================================
    CATEGORIES
    ========================================================= */
@@ -3055,7 +3377,20 @@ svg {
 
 @media (max-width: 1023px) {
   .home-rail-item {
-    flex-basis: calc((100% - 2 * var(--home-gap)) / 3);
+    flex-basis:
+      calc(
+        (
+          100% -
+          2 *
+          var(--home-gap)
+        ) /
+        3
+      );
+  }
+
+  .home-rail-viewport {
+    scroll-snap-type:
+      x mandatory;
   }
 
   .grid-products {
@@ -3348,24 +3683,58 @@ svg {
   /* =========================
      PRODUCT RAIL
      ========================= */
-
-  .home-rail-controls {
-    display: none;
-  }
-
   .home-rail-viewport {
     gap: 8px;
 
-    padding-top: 0;
-    padding-bottom: 2px;
+    padding:
+      3px 0
+      6px;
 
-    scroll-snap-type: x mandatory;
+    scroll-snap-type:
+      x mandatory;
+
+    scroll-behavior:
+      smooth;
+
+    touch-action:
+      pan-x;
   }
 
   .home-rail-item {
-    flex: 0 0 calc((100% - 8px) / 2);
+    flex:
+      0 0
+      calc(
+        (
+          100% -
+          8px
+        ) /
+        2
+      );
+
+    scroll-snap-align:
+      start;
   }
 
+  /*
+   * Mobile uses swipe.
+   * We do not need floating arrows.
+   */
+  .home-rail-arrow {
+    display: none;
+  }
+
+  .home-product-rail.is-scrollable::before,
+  .home-product-rail.is-scrollable::after {
+    display: none;
+  }
+
+
+  .home-product-rail.is-scrollable::before,
+  .home-product-rail.is-scrollable::after {
+    width: 10px;
+
+    opacity: 0;
+  }
   /* =========================
      PRODUCT CARD
      ========================= */
@@ -3438,11 +3807,60 @@ svg {
 
   .home-campaign-pair {
     grid-template-columns: 1fr;
-    gap: 0;
+
+    gap: 6px;
+
+    padding:
+      4px 0
+      8px;
+  }
+
+  .home-campaign-section {
+    padding: 0;
   }
 
   .home-campaign-card {
-    min-height: 285px;
+    min-height: 190px;
+
+    padding:
+      20px 18px;
+  }
+
+  .home-campaign-copy {
+    width: 74%;
+  }
+
+  .home-campaign-copy
+  .eyebrow {
+    margin-bottom: 5px;
+
+    font-size: 7px;
+  }
+
+  .home-campaign-title {
+    max-width: 7.5ch;
+
+    margin-bottom:
+      13px;
+
+    font-size:
+      clamp(
+        1.9rem,
+        9.5vw,
+        2.65rem
+      );
+
+    line-height:
+      0.87;
+  }
+
+  .home-campaign-cta {
+    min-height: 34px;
+
+    padding:
+      0 12px;
+
+    font-size: 7px;
   }
 
   .home-categories {
