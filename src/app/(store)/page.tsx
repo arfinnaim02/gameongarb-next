@@ -119,11 +119,16 @@ export default async function Home() {
                 section.ctaLabel ??
                 "Explore Sports"
               }
-              image={section.image}
+              image={
+                section.image
+              }
+              mobileImage={
+                section.mobileImage
+              }
             />
           );
 
-        case "POLO":
+                case "POLO":
           return (
             <Campaign
               key={section.id}
@@ -144,7 +149,12 @@ export default async function Home() {
                 section.ctaLabel ??
                 "Explore Polo"
               }
-              image={section.image}
+              image={
+                section.image
+              }
+              mobileImage={
+                section.mobileImage
+              }
               light
             />
           );
@@ -591,7 +601,6 @@ function ProductsSection({
 /* =========================================================
    CAMPAIGNS
    ========================================================= */
-
 function Campaign({
   eyebrow,
   title,
@@ -599,6 +608,7 @@ function Campaign({
   link,
   cta,
   image,
+  mobileImage,
   light = false,
 }: {
   eyebrow: string;
@@ -606,9 +616,32 @@ function Campaign({
   subtitle: string;
   link: string;
   cta: string;
-  image: string | null;
+
+  image:
+    | string
+    | null;
+
+  mobileImage:
+    | string
+    | null;
+
   light?: boolean;
 }) {
+  const desktopBackground =
+    image
+      ? `url("${image}")`
+      : "none";
+
+  /*
+   * Mobile uses its own image when
+   * available. Otherwise it safely
+   * falls back to the desktop image.
+   */
+  const mobileBackground =
+    mobileImage
+      ? `url("${mobileImage}")`
+      : desktopBackground;
+
   return (
     <section className="home-campaign-section">
       <div
@@ -619,10 +652,11 @@ function Campaign({
         }`}
         style={
           {
-            "--campaign-image":
-              image
-                ? `url("${image}")`
-                : "none",
+            "--campaign-image-desktop":
+              desktopBackground,
+
+            "--campaign-image-mobile":
+              mobileBackground,
           } as React.CSSProperties
         }
       >
@@ -654,7 +688,6 @@ function Campaign({
     </section>
   );
 }
-
 /* =========================================================
    CATEGORIES
    ========================================================= */

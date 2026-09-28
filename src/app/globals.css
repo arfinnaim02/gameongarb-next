@@ -2598,7 +2598,12 @@ svg {
   z-index: -2;
 
   background-image:
-    var(--campaign-image);
+    var(--campaign-image-desktop);
+
+    .home-campaign-card::before {
+  background-image:
+    var(--campaign-image-mobile);
+}
 
   background-size:
     cover;
@@ -4251,7 +4256,8 @@ span {
   }
 
   .home-campaign-pair {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      1fr;
 
     gap: 6px;
 
@@ -4265,10 +4271,26 @@ span {
   }
 
   .home-campaign-card {
-    min-height: 190px;
+    min-height:
+      clamp(
+        190px,
+        52vw,
+        235px
+      );
 
     padding:
       20px 18px;
+  }
+
+  .home-campaign-card::before {
+    background-image:
+      var(--campaign-image-mobile);
+
+    background-position:
+      center;
+
+    background-size:
+      cover;
   }
 
   .home-campaign-copy {

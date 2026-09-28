@@ -2,12 +2,9 @@ import Link from "next/link";
 
 import {
   ArrowRight,
-  Grid2X2,
   Images,
   Layers3,
-  LayoutGrid,
   Shirt,
-  Sparkles,
   Trophy,
 } from "lucide-react";
 
@@ -16,66 +13,59 @@ export const dynamic =
 
 const sections = [
   {
-    title: "Hero Slides",
+    title:
+      "Hero Slides",
+
     description:
       "Manage desktop and mobile hero banners, campaign text, CTA links, visibility and slide order.",
-    href: "/admin/homepage/hero",
-    icon: Images,
-    ready: true,
+
+    href:
+      "/admin/homepage/hero",
+
+    icon:
+      Images,
   },
 
   {
-    title: "New Arrivals",
+    title:
+      "Sports",
+
     description:
-      "Control the products, heading, content and visibility of the New Arrivals section.",
-    href: "/admin/homepage/new-arrivals",
-    icon: Sparkles,
-    ready: false,
+      "Manage the Sports campaign image, headline, CTA and storefront visibility.",
+
+    href:
+      "/admin/homepage/sports",
+
+    icon:
+      Trophy,
   },
 
   {
-    title: "Sports",
+    title:
+      "Polo",
+
     description:
-      "Manage the Sports campaign section, campaign image, CTA and assigned products.",
-    href: "/admin/homepage/sports",
-    icon: Trophy,
-    ready: false,
+      "Manage the Polo campaign image, headline, CTA and storefront visibility.",
+
+    href:
+      "/admin/homepage/polo",
+
+    icon:
+      Shirt,
   },
 
   {
-    title: "Polo",
-    description:
-      "Manage the Polo campaign section, image, text, CTA and product assignment.",
-    href: "/admin/homepage/polo",
-    icon: Shirt,
-    ready: false,
-  },
+    title:
+      "Experience The Thrill",
 
-  {
-    title: "Categories",
     description:
-      "Choose homepage categories, control images and manage their display order.",
-    href: "/admin/homepage/categories",
-    icon: Grid2X2,
-    ready: false,
-  },
+      "Manage the final homepage brand campaign image, copy, CTA and storefront visibility.",
 
-  {
-    title: "Trending Now",
-    description:
-      "Select trending products and manage section heading, visibility and order.",
-    href: "/admin/homepage/trending",
-    icon: LayoutGrid,
-    ready: false,
-  },
+    href:
+      "/admin/homepage/brand-story",
 
-  {
-    title: "Brand Story",
-    description:
-      "Manage the Experience the Thrill campaign image, copy, CTA and storefront visibility.",
-    href: "/admin/homepage/brand-story",
-    icon: Layers3,
-    ready: true,
+    icon:
+      Layers3,
   },
 ];
 
@@ -93,9 +83,10 @@ export default function HomepageBuilderPage() {
           </h1>
 
           <p>
-            Control the main
-            storefront homepage
-            without editing code.
+            Manage the major
+            visual campaigns of
+            the Game On Garb
+            storefront.
           </p>
         </div>
 
@@ -105,6 +96,7 @@ export default function HomepageBuilderPage() {
           className="homepage-admin-preview"
         >
           Preview Store
+
           <ArrowRight
             size={15}
           />
@@ -113,26 +105,35 @@ export default function HomepageBuilderPage() {
 
       <div className="homepage-admin-notice">
         <strong>
-          Homepage sections
+          Homepage campaigns
         </strong>
 
         <span>
-        Hero and Brand Story
-        management are now
-        connected. Remaining
-        homepage sections will
-        be connected next.
+          Hero, Sports, Polo and
+          Experience The Thrill
+          are connected directly
+          to the storefront.
         </span>
       </div>
 
       <div className="homepage-builder-grid">
         {sections.map(
-          (section) => {
+          (
+            section,
+          ) => {
             const Icon =
               section.icon;
 
-            const content = (
-              <>
+            return (
+              <Link
+                key={
+                  section.title
+                }
+                href={
+                  section.href
+                }
+                className="homepage-builder-card"
+              >
                 <div className="homepage-builder-card-top">
                   <div className="homepage-builder-icon">
                     <Icon
@@ -140,16 +141,8 @@ export default function HomepageBuilderPage() {
                     />
                   </div>
 
-                  <span
-                    className={
-                      section.ready
-                        ? "homepage-builder-status is-ready"
-                        : "homepage-builder-status"
-                    }
-                  >
-                    {section.ready
-                      ? "Ready"
-                      : "Coming next"}
+                  <span className="homepage-builder-status is-ready">
+                    Ready
                   </span>
                 </div>
 
@@ -169,44 +162,13 @@ export default function HomepageBuilderPage() {
 
                 <div className="homepage-builder-card-footer">
                   <span>
-                    {section.ready
-                      ? "Manage section"
-                      : "Not connected yet"}
+                    Manage section
                   </span>
 
                   <ArrowRight
                     size={16}
                   />
                 </div>
-              </>
-            );
-
-            if (
-              !section.ready
-            ) {
-              return (
-                <div
-                  key={
-                    section.title
-                  }
-                  className="homepage-builder-card is-disabled"
-                >
-                  {content}
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={
-                  section.title
-                }
-                href={
-                  section.href
-                }
-                className="homepage-builder-card"
-              >
-                {content}
               </Link>
             );
           },
