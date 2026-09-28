@@ -72,10 +72,10 @@ const sections = [
   {
     title: "Brand Story",
     description:
-      "Manage the final brand campaign section, image, copy and call-to-action.",
+      "Manage the Experience the Thrill campaign image, copy, CTA and storefront visibility.",
     href: "/admin/homepage/brand-story",
     icon: Layers3,
-    ready: false,
+    ready: true,
   },
 ];
 
@@ -117,10 +117,11 @@ export default function HomepageBuilderPage() {
         </strong>
 
         <span>
-          Hero management is
-          connected. We will
-          connect the remaining
-          sections one by one.
+        Hero and Brand Story
+        management are now
+        connected. Remaining
+        homepage sections will
+        be connected next.
         </span>
       </div>
 

@@ -531,20 +531,21 @@ model CouponUsage {
 }
 
 model HomepageSection {
-  id        String              @id @default(cuid())
-  type      HomepageSectionType
-  name      String
-  heading   String?
-  subtitle  String?
-  image     String?
-  ctaLabel  String?
-  ctaLink   String?
-  config    Json?
-  enabled   Boolean             @default(true)
-  sortOrder Int                 @default(0)
-  slides    HeroSlide[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id            String              @id @default(cuid())
+  type          HomepageSectionType
+  name          String
+  heading       String?
+  subtitle      String?
+  image         String?
+  imagePublicId String?
+  ctaLabel      String?
+  ctaLink       String?
+  config        Json?
+  enabled       Boolean             @default(true)
+  sortOrder     Int                 @default(0)
+  slides        HeroSlide[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   @@index([enabled, sortOrder])
 }

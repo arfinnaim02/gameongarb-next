@@ -91,12 +91,10 @@ export function HomeProductRail({
       null,
     );
 
-  const normalizeTimerRef =
-    useRef<
-      ReturnType<
-        typeof window.setTimeout
-      > | undefined
-    >(undefined);
+const normalizeTimerRef =
+  useRef<number | null>(
+    null,
+  );
 
   const [
     ready,
@@ -301,13 +299,17 @@ export function HomeProductRail({
         },
       );
 
-      if (
-        normalizeTimerRef.current
-      ) {
-        window.clearTimeout(
-          normalizeTimerRef.current,
-        );
-      }
+if (
+  normalizeTimerRef.current !==
+  null
+) {
+  window.clearTimeout(
+    normalizeTimerRef.current,
+  );
+
+  normalizeTimerRef.current =
+    null;
+}
 
       normalizeTimerRef.current =
         window.setTimeout(
