@@ -143,6 +143,9 @@ export function StoreShell({
 
       <StoreFooter
         settings={settings}
+        navCategories={
+          navCategories
+        }
       />
 
       {/* =====================================================
