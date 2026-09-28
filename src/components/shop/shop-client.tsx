@@ -9,7 +9,6 @@ import {
 import {
   Check,
   ChevronDown,
-  Filter,
   Grid2X2,
   List,
   Search,
@@ -18,24 +17,32 @@ import {
 } from "lucide-react";
 
 import {
+  usePathname,
+  useRouter,
   useSearchParams,
 } from "next/navigation";
 
-import type {
-  Product,
-} from "@/lib/data";
+import type { Product } from "@/lib/data";
 
-import {
-  ProductCard,
-} from "@/components/product/product-card";
+import { ProductCard } from "@/components/product/product-card";
+
+type ShopCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  sortOrder: number;
+};
 
 type ShopClientProps = {
   products: Product[];
 
-  categories: {
-    name: string;
-    slug: string;
-  }[];
+  categories: ShopCategory[];
+
+  productCategoryMap: Record<
+    string,
+    string[]
+  >;
 
   itemsPerPage: number;
 };
@@ -43,39 +50,48 @@ type ShopClientProps = {
 export function ShopClient({
   products,
   categories,
+  productCategoryMap,
   itemsPerPage,
 }: ShopClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams =
     useSearchParams();
 
-  const initialSearch =
-    searchParams.get("q") ??
-    "";
-
-  const initialCategory =
-    searchParams.get(
-      "category",
-    ) ?? "all";
-
-  const initialSort =
-    searchParams.get(
-      "sort",
-    ) ?? "featured";
+  const urlStateKey =
+    searchParams.toString();
 
   const [search, setSearch] =
-    useState(initialSearch);
+    useState(
+      searchParams.get("q") ??
+        "",
+    );
 
-  const [category, setCategory] =
-    useState(initialCategory);
+  const [
+    category,
+    setCategory,
+  ] = useState(
+    searchParams.get(
+      "category",
+    ) ?? "all",
+  );
 
   const [sort, setSort] =
-    useState(initialSort);
+    useState(
+      searchParams.get(
+        "sort",
+      ) ?? "featured",
+    );
 
-  const [onlyStock, setOnlyStock] =
-    useState(false);
+  const [
+    onlyStock,
+    setOnlyStock,
+  ] = useState(false);
 
-  const [filtersOpen, setFiltersOpen] =
-    useState(false);
+  const [
+    filtersOpen,
+    setFiltersOpen,
+  ] = useState(false);
 
   const [size, setSize] =
     useState("all");
@@ -83,17 +99,127 @@ export function ShopClient({
   const [color, setColor] =
     useState("all");
 
-  const [maxPrice, setMaxPrice] =
-    useState("");
+  const [
+    maxPrice,
+    setMaxPrice,
+  ] = useState("");
 
-  const [visibleCount, setVisibleCount] =
-    useState(itemsPerPage);
+  const [
+    visibleCount,
+    setVisibleCount,
+  ] = useState(itemsPerPage);
 
-  const [gridMode, setGridMode] =
-    useState<"grid" | "compact">(
-      "grid",
+  const [
+    gridMode,
+    setGridMode,
+  ] = useState<
+    "grid" | "compact"
+  >("grid");
+
+  /*
+   * Keep React state synchronized
+   * when browser back / forward
+   * changes the URL.
+   */
+  useEffect(() => {
+    setSearch(
+      searchParams.get("q") ??
+        "",
     );
 
+    setCategory(
+      searchParams.get(
+        "category",
+      ) ?? "all",
+    );
+
+    setSort(
+      searchParams.get(
+        "sort",
+      ) ?? "featured",
+    );
+  }, [
+    searchParams,
+    urlStateKey,
+  ]);
+
+  /*
+   * Keep Shop URL synchronized
+   * with search/category/sort.
+   */
+  useEffect(() => {
+    const params =
+      new URLSearchParams(
+        searchParams.toString(),
+      );
+
+    const cleanSearch =
+      search.trim();
+
+    if (cleanSearch) {
+      params.set(
+        "q",
+        cleanSearch,
+      );
+    } else {
+      params.delete("q");
+    }
+
+    if (
+      category !== "all"
+    ) {
+      params.set(
+        "category",
+        category,
+      );
+    } else {
+      params.delete(
+        "category",
+      );
+    }
+
+    if (
+      sort !== "featured"
+    ) {
+      params.set("sort", sort);
+    } else {
+      params.delete("sort");
+    }
+
+    const nextQuery =
+      params.toString();
+
+    const currentQuery =
+      searchParams.toString();
+
+    if (
+      nextQuery ===
+      currentQuery
+    ) {
+      return;
+    }
+
+    router.replace(
+      nextQuery
+        ? `${pathname}?${nextQuery}`
+        : pathname,
+      {
+        scroll: false,
+      },
+    );
+  }, [
+    search,
+    category,
+    sort,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  /*
+   * Reset pagination whenever
+   * filtering changes.
+   */
   useEffect(() => {
     setVisibleCount(
       itemsPerPage,
@@ -108,6 +234,248 @@ export function ShopClient({
     maxPrice,
     itemsPerPage,
   ]);
+
+  /*
+   * Category lookup structures.
+   */
+  const categoryById =
+    useMemo(() => {
+      return new Map(
+        categories.map(
+          (item) => [
+            item.id,
+            item,
+          ],
+        ),
+      );
+    }, [categories]);
+
+  const categoryBySlug =
+    useMemo(() => {
+      return new Map(
+        categories.map(
+          (item) => [
+            item.slug,
+            item,
+          ],
+        ),
+      );
+    }, [categories]);
+
+  const childrenByParent =
+    useMemo(() => {
+      const map = new Map<
+        string | null,
+        ShopCategory[]
+      >();
+
+      for (
+        const item of categories
+      ) {
+        const existing =
+          map.get(
+            item.parentId,
+          ) ?? [];
+
+        existing.push(item);
+
+        map.set(
+          item.parentId,
+          existing,
+        );
+      }
+
+      for (
+        const entries of map.values()
+      ) {
+        entries.sort(
+          (a, b) =>
+            a.sortOrder -
+              b.sortOrder ||
+            a.name.localeCompare(
+              b.name,
+            ),
+        );
+      }
+
+      return map;
+    }, [categories]);
+
+  /*
+   * Main/root categories.
+   */
+  const rootCategories =
+    useMemo(() => {
+      const roots =
+        childrenByParent.get(
+          null,
+        ) ?? [];
+
+      /*
+       * Fallback for legacy data
+       * without parent relationships.
+       */
+      return roots.length
+        ? roots
+        : categories;
+    }, [
+      childrenByParent,
+      categories,
+    ]);
+
+  const selectedCategory =
+    category === "all"
+      ? null
+      : categoryBySlug.get(
+          category,
+        ) ?? null;
+
+  /*
+   * Find the root parent for
+   * whatever category is selected.
+   */
+  const activeRootCategory =
+    useMemo(() => {
+      if (
+        !selectedCategory
+      ) {
+        return null;
+      }
+
+      let current =
+        selectedCategory;
+
+      const visited =
+        new Set<string>();
+
+      while (
+        current.parentId &&
+        !visited.has(
+          current.id,
+        )
+      ) {
+        visited.add(
+          current.id,
+        );
+
+        const parent =
+          categoryById.get(
+            current.parentId,
+          );
+
+        if (!parent) {
+          break;
+        }
+
+        current = parent;
+      }
+
+      return current;
+    }, [
+      selectedCategory,
+      categoryById,
+    ]);
+
+  /*
+   * Flatten descendants of the
+   * selected root so second and
+   * third-level categories can
+   * also be selected.
+   */
+  const activeRootDescendants =
+    useMemo(() => {
+      if (
+        !activeRootCategory
+      ) {
+        return [];
+      }
+
+      const result:
+        ShopCategory[] = [];
+
+      const walk = (
+        parentId: string,
+      ) => {
+        const children =
+          childrenByParent.get(
+            parentId,
+          ) ?? [];
+
+        for (
+          const child of children
+        ) {
+          result.push(child);
+
+          walk(child.id);
+        }
+      };
+
+      walk(
+        activeRootCategory.id,
+      );
+
+      return result;
+    }, [
+      activeRootCategory,
+      childrenByParent,
+    ]);
+
+  /*
+   * When a parent category is
+   * selected, products inside any
+   * child/grandchild categories
+   * must also be included.
+   */
+  const allowedCategoryIds =
+    useMemo(() => {
+      if (
+        category === "all"
+      ) {
+        return null;
+      }
+
+      if (
+        !selectedCategory
+      ) {
+        return new Set<string>();
+      }
+
+      const ids =
+        new Set<string>();
+
+      const walk = (
+        categoryId: string,
+      ) => {
+        if (
+          ids.has(categoryId)
+        ) {
+          return;
+        }
+
+        ids.add(categoryId);
+
+        const children =
+          childrenByParent.get(
+            categoryId,
+          ) ?? [];
+
+        for (
+          const child of children
+        ) {
+          walk(child.id);
+        }
+      };
+
+      walk(
+        selectedCategory.id,
+      );
+
+      return ids;
+    }, [
+      category,
+      selectedCategory,
+      childrenByParent,
+    ]);
 
   const sizes = useMemo(
     () =>
@@ -136,19 +504,17 @@ export function ShopClient({
   );
 
   const highestPrice =
-    useMemo(
-      () =>
-        Math.ceil(
-          Math.max(
-            ...products.map(
-              (product) =>
-                product.price,
-            ),
-            0,
+    useMemo(() => {
+      return Math.ceil(
+        Math.max(
+          ...products.map(
+            (product) =>
+              product.price,
           ),
+          0,
         ),
-      [products],
-    );
+      );
+    }, [products]);
 
   const filteredProducts =
     useMemo(() => {
@@ -164,10 +530,14 @@ export function ShopClient({
               [
                 product.name,
                 product.category,
-                ...(product.variants?.map(
+
+                ...(
+                  product.variants ??
+                  []
+                ).map(
                   (variant) =>
                     variant.sku,
-                ) ?? []),
+                ),
               ]
                 .join(" ")
                 .toLowerCase();
@@ -178,19 +548,27 @@ export function ShopClient({
                 keyword,
               );
 
+            const productCategories =
+              productCategoryMap[
+                product.id
+              ] ?? [];
+
             const matchesCategory =
-              category === "all" ||
-              normalize(
-                product.category,
-              ) ===
-                normalize(
-                  category,
-                );
+              allowedCategoryIds ===
+              null
+                ? true
+                : productCategories.some(
+                    (
+                      categoryId,
+                    ) =>
+                      allowedCategoryIds.has(
+                        categoryId,
+                      ),
+                  );
 
             const matchesStock =
               !onlyStock ||
-              product.stock >
-                0;
+              product.stock > 0;
 
             const matchesSize =
               size === "all" ||
@@ -204,12 +582,18 @@ export function ShopClient({
                 color,
               );
 
+            const numericMaxPrice =
+              Number(
+                maxPrice,
+              );
+
             const matchesPrice =
               !maxPrice ||
+              !Number.isFinite(
+                numericMaxPrice,
+              ) ||
               product.price <=
-                Number(
-                  maxPrice,
-                );
+                numericMaxPrice;
 
             return (
               matchesSearch &&
@@ -280,9 +664,10 @@ export function ShopClient({
       );
     }, [
       products,
+      productCategoryMap,
       search,
-      category,
       sort,
+      allowedCategoryIds,
       onlyStock,
       size,
       color,
@@ -303,6 +688,12 @@ export function ShopClient({
       visibleCount,
     );
 
+  function selectCategory(
+    slug: string,
+  ) {
+    setCategory(slug);
+  }
+
   function resetFilters() {
     setSize("all");
     setColor("all");
@@ -314,6 +705,7 @@ export function ShopClient({
     setSearch("");
     setCategory("all");
     setSort("featured");
+
     resetFilters();
   }
 
@@ -329,7 +721,7 @@ export function ShopClient({
                   "all"
                 }
                 onClick={() =>
-                  setCategory(
+                  selectCategory(
                     "all",
                   )
                 }
@@ -337,22 +729,20 @@ export function ShopClient({
                 All
               </CategoryButton>
 
-              {categories.map(
+              {rootCategories.map(
                 (item) => (
                   <CategoryButton
                     key={
-                      item.slug
+                      item.id
                     }
                     active={
-                      normalize(
-                        category,
-                      ) ===
-                      normalize(
-                        item.slug,
-                      )
+                      activeRootCategory?.id ===
+                        item.id ||
+                      category ===
+                        item.slug
                     }
                     onClick={() =>
-                      setCategory(
+                      selectCategory(
                         item.slug,
                       )
                     }
@@ -372,9 +762,7 @@ export function ShopClient({
 
               <div className="premium-shop-select-wrap">
                 <select
-                  value={
-                    sort
-                  }
+                  value={sort}
                   onChange={(
                     event,
                   ) =>
@@ -395,13 +783,13 @@ export function ShopClient({
                   </option>
 
                   <option value="low">
-                    Price:
-                    Low to High
+                    Price: Low
+                    to High
                   </option>
 
                   <option value="high">
-                    Price:
-                    High to Low
+                    Price: High
+                    to Low
                   </option>
                 </select>
 
@@ -440,6 +828,57 @@ export function ShopClient({
               </button>
             </div>
           </div>
+
+          {activeRootCategory &&
+          activeRootDescendants.length >
+            0 ? (
+            <div
+              className="premium-shop-categories premium-shop-subcategories"
+              style={{
+                paddingTop: 10,
+              }}
+            >
+              <CategoryButton
+                active={
+                  category ===
+                  activeRootCategory.slug
+                }
+                onClick={() =>
+                  selectCategory(
+                    activeRootCategory.slug,
+                  )
+                }
+              >
+                All{" "}
+                {
+                  activeRootCategory.name
+                }
+              </CategoryButton>
+
+              {activeRootDescendants.map(
+                (item) => (
+                  <CategoryButton
+                    key={
+                      item.id
+                    }
+                    active={
+                      category ===
+                      item.slug
+                    }
+                    onClick={() =>
+                      selectCategory(
+                        item.slug,
+                      )
+                    }
+                  >
+                    {
+                      item.name
+                    }
+                  </CategoryButton>
+                ),
+              )}
+            </div>
+          ) : null}
 
           <div className="premium-shop-mobile-actions">
             <button
@@ -508,8 +947,10 @@ export function ShopClient({
         <div className="premium-shop-toolbar">
           <div className="premium-shop-count">
             Showing{" "}
-            {visibleProducts.length}
-            {" "}of{" "}
+            {
+              visibleProducts.length
+            }{" "}
+            of{" "}
             {
               filteredProducts.length
             }{" "}
@@ -523,9 +964,7 @@ export function ShopClient({
               />
 
               <input
-                value={
-                  search
-                }
+                value={search}
                 onChange={(
                   event,
                 ) =>
@@ -543,9 +982,7 @@ export function ShopClient({
                   type="button"
                   aria-label="Clear search"
                   onClick={() =>
-                    setSearch(
-                      "",
-                    )
+                    setSearch("")
                   }
                 >
                   <X
@@ -599,7 +1036,8 @@ export function ShopClient({
           </div>
         </div>
 
-        {filteredProducts.length ? (
+        {filteredProducts.length >
+        0 ? (
           <>
             <div
               className={`premium-shop-grid ${
@@ -610,7 +1048,9 @@ export function ShopClient({
               }`}
             >
               {visibleProducts.map(
-                (product) => (
+                (
+                  product,
+                ) => (
                   <ProductCard
                     key={
                       product.id
@@ -632,9 +1072,9 @@ export function ShopClient({
                   onClick={() =>
                     setVisibleCount(
                       (
-                        count,
+                        current,
                       ) =>
-                        count +
+                        current +
                         itemsPerPage,
                     )
                   }
@@ -653,13 +1093,13 @@ export function ShopClient({
             </div>
 
             <h2>
-              No products
-              found
+              No products found
             </h2>
 
             <p>
               Try changing
-              your search or
+              your search,
+              category or
               filters.
             </p>
 
@@ -720,9 +1160,7 @@ export function ShopClient({
             </div>
 
             <div className="premium-filter-body">
-              <FilterSection
-                title="Size"
-              >
+              <FilterSection title="Size">
                 <div className="premium-filter-size-grid">
                   <FilterChip
                     active={
@@ -765,9 +1203,7 @@ export function ShopClient({
                 </div>
               </FilterSection>
 
-              <FilterSection
-                title="Color"
-              >
+              <FilterSection title="Color">
                 <div className="premium-filter-color-list">
                   <button
                     type="button"
@@ -846,13 +1282,10 @@ export function ShopClient({
                 </div>
               </FilterSection>
 
-              <FilterSection
-                title="Price"
-              >
+              <FilterSection title="Price">
                 <label className="premium-filter-price">
                   <span>
-                    Maximum
-                    price
+                    Maximum price
                   </span>
 
                   <div>
@@ -890,9 +1323,7 @@ export function ShopClient({
                 </label>
               </FilterSection>
 
-              <FilterSection
-                title="Availability"
-              >
+              <FilterSection title="Availability">
                 <label className="premium-filter-checkbox">
                   <input
                     type="checkbox"
@@ -917,8 +1348,7 @@ export function ShopClient({
                   </span>
 
                   <span>
-                    In stock
-                    only
+                    In stock only
                   </span>
                 </label>
               </FilterSection>
@@ -965,7 +1395,8 @@ function CategoryButton({
 }: {
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
     <button
@@ -987,7 +1418,8 @@ function FilterSection({
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
     <section className="premium-filter-section">
@@ -1007,7 +1439,8 @@ function FilterChip({
 }: {
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children:
+    React.ReactNode;
 }) {
   return (
     <button
@@ -1022,15 +1455,4 @@ function FilterChip({
       {children}
     </button>
   );
-}
-
-function normalize(
-  value: string,
-) {
-  return value
-    .toLowerCase()
-    .replace(
-      /[^a-z0-9]/g,
-      "",
-    );
 }

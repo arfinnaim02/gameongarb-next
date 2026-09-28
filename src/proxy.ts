@@ -1,38 +1,120 @@
-import { NextRequest, NextResponse } from "next/server";
-import { readSessionToken } from "@/lib/auth";
-export async function proxy(req: NextRequest) {
-  const path = req.nextUrl.pathname;
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
+import {
+  readSessionToken,
+} from "@/lib/auth";
+
+export async function proxy(
+  req: NextRequest,
+) {
+  const path =
+    req.nextUrl.pathname;
+
+  const publicAuthPaths = [
+    "/account/login",
+    "/account/register",
+    "/account/forgot-password",
+    "/account/reset-password",
+    "/admin/login",
+  ];
+
   if (
-    [
-      "/account/login",
-      "/account/register",
-      "/account/forgot-password",
-      "/account/reset-password",
-      "/admin/login",
-    ].includes(path)
-  )
+    publicAuthPaths.includes(
+      path,
+    )
+  ) {
     return NextResponse.next();
-  const token = req.cookies.get("gog_session")?.value;
+  }
+
+  const token =
+    req.cookies.get(
+      "gog_session",
+    )?.value;
+
   if (!token) {
-    const login = path.startsWith("/admin") ? "/admin/login" : "/account/login";
+    const loginPath =
+      path.startsWith(
+        "/admin",
+      )
+        ? "/admin/login"
+        : "/account/login";
+
+    const loginUrl =
+      new URL(
+        loginPath,
+        req.url,
+      );
+
+    loginUrl.searchParams.set(
+      "next",
+      path,
+    );
+
     return NextResponse.redirect(
-      new URL(`${login}?next=${encodeURIComponent(path)}`, req.url),
+      loginUrl,
     );
   }
+
   try {
-    const session = await readSessionToken(token);
-    if (path.startsWith("/admin") && session.role === "CUSTOMER")
-      return NextResponse.redirect(new URL("/account", req.url));
+    const session =
+      await readSessionToken(
+        token,
+      );
+
+    if (
+      path.startsWith(
+        "/admin",
+      ) &&
+      session.role ===
+        "CUSTOMER"
+    ) {
+      const loginUrl =
+        new URL(
+          "/admin/login",
+          req.url,
+        );
+
+      loginUrl.searchParams.set(
+        "next",
+        path,
+      );
+
+      return NextResponse.redirect(
+        loginUrl,
+      );
+    }
+
     return NextResponse.next();
   } catch {
-    const res = NextResponse.redirect(
-      new URL(
-        path.startsWith("/admin") ? "/admin/login" : "/account/login",
-        req.url,
-      ),
+    const loginPath =
+      path.startsWith(
+        "/admin",
+      )
+        ? "/admin/login"
+        : "/account/login";
+
+    const response =
+      NextResponse.redirect(
+        new URL(
+          loginPath,
+          req.url,
+        ),
+      );
+
+    response.cookies.delete(
+      "gog_session",
     );
-    res.cookies.delete("gog_session");
-    return res;
+
+    return response;
   }
 }
-export const config = { matcher: ["/admin/:path*", "/account/:path*"] };
+
+export const config = {
+  matcher: [
+    "/admin/:path*",
+    "/account/:path*",
+  ],
+};

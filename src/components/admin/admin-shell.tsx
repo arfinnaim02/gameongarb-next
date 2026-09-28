@@ -105,6 +105,11 @@ const navigationGroups: NavigationGroup[] = [
         href: "/admin/homepage/hero",
         icon: Images,
       },
+      {
+        label: "Shop Hero",
+        href: "/admin/shop/hero",
+        icon: Images,
+      },
     ],
   },
 
