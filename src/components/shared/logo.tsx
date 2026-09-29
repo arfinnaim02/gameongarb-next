@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Logo({
@@ -7,7 +8,11 @@ export function Logo({
 }) {
   return (
     <Link
-      href={admin ? "/admin" : "/"}
+      href={
+        admin
+          ? "/admin"
+          : "/"
+      }
       className="brand-logo"
       aria-label={
         admin
@@ -15,10 +20,13 @@ export function Logo({
           : "Game On Garb Home"
       }
     >
-      <img
+      <Image
         src="/brand/game-on-garb-logo.svg"
         alt="Game On Garb - Experience The Thrill"
+        width={587}
+        height={375}
         className="brand-logo-image"
+        priority={!admin}
       />
     </Link>
   );

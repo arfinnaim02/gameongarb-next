@@ -100,7 +100,7 @@ async function readResponse(
       text,
     ) as Record<
       string,
-      any
+      unknown
     >;
   } catch {
     throw new Error(

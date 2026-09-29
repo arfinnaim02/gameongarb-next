@@ -1,7 +1,10 @@
 "use client";
 
+import type {
+  CSSProperties,
+} from "react";
+
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -27,29 +30,33 @@ type HomeProductRailProps = {
 };
 
 /*
- * Continuous rail speed.
+ * Pixels travelled per second.
  *
- * 24 = slow premium movement.
- * 18 = even slower.
- * 30 = slightly faster.
+ * 22 gives a slow premium motion.
+ * This is intentionally much slower
+ * than a normal carousel.
  */
-const RAIL_SPEED = 24;
+const RAIL_SPEED =
+  22;
 
 /*
- * Avoid giant animation jumps
- * after tab switching or lag.
+ * Never make a very short rail
+ * race across the screen.
  */
-const MAX_FRAME_DELTA = 50;
+const MIN_DURATION_SECONDS =
+  36;
+
+/*
+ * Three copies are enough to keep
+ * the viewport filled even when
+ * only 2–3 real products exist.
+ */
+const LOOP_COPIES =
+  3;
 
 /* =========================================================
    HELPERS
    ========================================================= */
-
-function prefersReducedMotion() {
-  return window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-}
 
 function positiveModulo(
   value: number,
@@ -63,36 +70,6 @@ function positiveModulo(
     ((value % modulo) +
       modulo) %
     modulo
-  );
-}
-
-function getStep(
-  track: HTMLDivElement,
-) {
-  const item =
-    track.querySelector<HTMLElement>(
-      ".home-rail-item",
-    );
-
-  if (!item) {
-    return 0;
-  }
-
-  const styles =
-    window.getComputedStyle(
-      track,
-    );
-
-  const gap =
-    Number.parseFloat(
-      styles.columnGap ||
-        styles.gap ||
-        "0",
-    ) || 0;
-
-  return (
-    item.getBoundingClientRect()
-      .width + gap
   );
 }
 
@@ -115,30 +92,10 @@ export function HomeProductRail({
       null,
     );
 
-  const animationFrameRef =
+  const resizeFrameRef =
     useRef<number | null>(
       null,
     );
-
-  const lastFrameRef =
-    useRef<number | null>(
-      null,
-    );
-
-  const offsetRef =
-    useRef(0);
-
-  const stepRef =
-    useRef(0);
-
-  const setWidthRef =
-    useRef(0);
-
-  const initializedRef =
-    useRef(false);
-
-  const activeIndexRef =
-    useRef(0);
 
   const [
     ready,
@@ -148,6 +105,11 @@ export function HomeProductRail({
   const [
     visible,
     setVisible,
+  ] = useState(true);
+
+  const [
+    interactionPaused,
+    setInteractionPaused,
   ] = useState(false);
 
   const [
@@ -155,48 +117,13 @@ export function HomeProductRail({
     setActiveIndex,
   ] = useState(0);
 
-  /*
-   * Four copies make the rail safe
-   * even when only 2–3 real products
-   * exist while 4 cards are visible.
-   */
-  const loopProducts =
-    useMemo(() => {
-      if (
-        products.length <= 1
-      ) {
-        return products.map(
-          (product) => ({
-            product,
-
-            loopKey:
-              `single-${product.id}`,
-          }),
-        );
-      }
-
-      return [
-        0,
-        1,
-        2,
-        3,
-      ].flatMap(
-        (copy) =>
-          products.map(
-            (
-              product,
-              index,
-            ) => ({
-              product,
-
-              loopKey:
-                `${copy}-${index}-${product.id}`,
-            }),
-          ),
-      );
-    }, [
-      products,
-    ]);
+  const [
+    productStepMs,
+    setProductStepMs,
+  ] = useState(
+    MIN_DURATION_SECONDS *
+      1000,
+  );
 
   const productKey =
     products
@@ -207,113 +134,58 @@ export function HomeProductRail({
       .join("|");
 
   /* =======================================================
-     APPLY TRANSFORM
+     LOOP CONTENT
      ======================================================= */
 
-  const applyTransform =
-    useCallback(() => {
-      const track =
-        trackRef.current;
-
-      if (!track) {
-        return;
-      }
-
-      track.style.transform =
-        `translate3d(${-offsetRef.current}px, 0, 0)`;
-    }, []);
-
-  /* =======================================================
-     ACTIVE DOT
-     ======================================================= */
-
-  const updateActiveIndex =
-    useCallback(() => {
-      const step =
-        stepRef.current;
-
+  const loopProducts =
+    useMemo(() => {
       if (
-        !step ||
         products.length <= 1
       ) {
-        return;
+        return products.map(
+          (
+            product,
+            index,
+          ) => ({
+            product,
+            copy: 0,
+            index,
+
+            key:
+              `0-${index}-${product.id}`,
+          }),
+        );
       }
 
-      const position =
-        Math.round(
-          offsetRef.current /
-            step,
-        );
+      return Array.from(
+        {
+          length:
+            LOOP_COPIES,
+        },
+        (
+          _,
+          copy,
+        ) =>
+          products.map(
+            (
+              product,
+              index,
+            ) => ({
+              product,
+              copy,
+              index,
 
-      const nextIndex =
-        positiveModulo(
-          position,
-          products.length,
-        );
-
-      if (
-        nextIndex ===
-        activeIndexRef.current
-      ) {
-        return;
-      }
-
-      activeIndexRef.current =
-        nextIndex;
-
-      setActiveIndex(
-        nextIndex,
-      );
+              key:
+                `${copy}-${index}-${product.id}`,
+            }),
+          ),
+      ).flat();
     }, [
-      products.length,
+      products,
     ]);
 
   /* =======================================================
-     SEAMLESS NORMALIZATION
-     ======================================================= */
-
-  const normalizeOffset =
-    useCallback(() => {
-      const setWidth =
-        setWidthRef.current;
-
-      if (
-        !setWidth ||
-        products.length <= 1
-      ) {
-        return;
-      }
-
-      /*
-       * Keep the animation between
-       * identical copies 1 and 2.
-       *
-       * The jump by exactly one full
-       * product set is invisible
-       * because every set is identical.
-       */
-
-      while (
-        offsetRef.current >=
-        setWidth * 2
-      ) {
-        offsetRef.current -=
-          setWidth;
-      }
-
-      while (
-        offsetRef.current <
-        setWidth
-      ) {
-        offsetRef.current +=
-          setWidth;
-      }
-    }, [
-      products.length,
-    ]);
-
-  /* =======================================================
-     MEASURE AND INITIALIZE
+     MEASURE EXACT LOOP DISTANCE
      ======================================================= */
 
   useEffect(() => {
@@ -330,38 +202,24 @@ export function HomeProductRail({
       return;
     }
 
-    initializedRef.current =
-      false;
-
     setReady(false);
 
     const measure =
       () => {
-        const step =
-          getStep(
-            track,
-          );
-
-        if (!step) {
-          return;
-        }
-
-        stepRef.current =
-          step;
-
         if (
           products.length <= 1
         ) {
-          setWidthRef.current =
-            step;
+          track.style.removeProperty(
+            "--rail-distance",
+          );
 
-          offsetRef.current =
-            0;
+          track.style.removeProperty(
+            "--rail-distance-negative",
+          );
 
-          applyTransform();
-
-          activeIndexRef.current =
-            0;
+          track.style.removeProperty(
+            "--rail-duration",
+          );
 
           setActiveIndex(0);
 
@@ -370,102 +228,143 @@ export function HomeProductRail({
           return;
         }
 
-        const newSetWidth =
-          step *
-          products.length;
+        const firstItem =
+          track.querySelector<HTMLElement>(
+            '[data-rail-copy="0"][data-rail-index="0"]',
+          );
+
+        const secondSetFirstItem =
+          track.querySelector<HTMLElement>(
+            '[data-rail-copy="1"][data-rail-index="0"]',
+          );
 
         if (
-          !initializedRef.current
+          !firstItem ||
+          !secondSetFirstItem
         ) {
-          setWidthRef.current =
-            newSetWidth;
-
-          /*
-           * Start at copy #2.
-           */
-          offsetRef.current =
-            newSetWidth;
-
-          initializedRef.current =
-            true;
-
-          activeIndexRef.current =
-            0;
-
-          setActiveIndex(0);
-
-          applyTransform();
-
-          setReady(true);
-
           return;
         }
 
         /*
-         * Preserve animation progress
-         * when responsive layout changes
-         * from 4 → 3 → 2 cards.
+         * offsetLeft is layout based,
+         * therefore it is unaffected by
+         * the animation transform.
          */
-        const oldSetWidth =
-          setWidthRef.current;
+        const distance =
+          secondSetFirstItem.offsetLeft -
+          firstItem.offsetLeft;
 
-        const progress =
-          oldSetWidth > 0
-            ? positiveModulo(
-                offsetRef.current,
-                oldSetWidth,
-              ) /
-              oldSetWidth
-            : 0;
+        if (
+          !Number.isFinite(
+            distance,
+          ) ||
+          distance <= 0
+        ) {
+          return;
+        }
 
-        setWidthRef.current =
-          newSetWidth;
+        const duration =
+          Math.max(
+            MIN_DURATION_SECONDS,
+            distance /
+              RAIL_SPEED,
+          );
 
-        offsetRef.current =
-          newSetWidth +
-          progress *
-            newSetWidth;
+        /*
+         * Store both positive and
+         * negative values so CSS does
+         * not need experimental
+         * multiplication inside calc().
+         */
+        track.style.setProperty(
+          "--rail-distance",
+          `${distance}px`,
+        );
 
-        normalizeOffset();
+        track.style.setProperty(
+          "--rail-distance-negative",
+          `${-distance}px`,
+        );
 
-        applyTransform();
+        track.style.setProperty(
+          "--rail-duration",
+          `${duration}s`,
+        );
 
-        updateActiveIndex();
+        /*
+         * Approximate one-dot update
+         * per product passing.
+         */
+        const oneProductMs =
+          Math.max(
+            2500,
+            (duration /
+              products.length) *
+              1000,
+          );
+
+        setProductStepMs(
+          oneProductMs,
+        );
 
         setReady(true);
       };
 
+    const scheduleMeasure =
+      () => {
+        if (
+          resizeFrameRef.current !==
+          null
+        ) {
+          window.cancelAnimationFrame(
+            resizeFrameRef.current,
+          );
+        }
+
+        resizeFrameRef.current =
+          window.requestAnimationFrame(
+            () => {
+              resizeFrameRef.current =
+                null;
+
+              measure();
+            },
+          );
+      };
+
     const resizeObserver =
       new ResizeObserver(
-        measure,
+        scheduleMeasure,
       );
 
     resizeObserver.observe(
       viewport,
     );
 
-    const frame =
-      window.requestAnimationFrame(
-        measure,
-      );
+    scheduleMeasure();
 
     return () => {
       resizeObserver.disconnect();
 
-      window.cancelAnimationFrame(
-        frame,
-      );
+      if (
+        resizeFrameRef.current !==
+        null
+      ) {
+        window.cancelAnimationFrame(
+          resizeFrameRef.current,
+        );
+
+        resizeFrameRef.current =
+          null;
+      }
     };
   }, [
-    applyTransform,
-    normalizeOffset,
     productKey,
     products.length,
-    updateActiveIndex,
   ]);
 
   /* =======================================================
-     SECTION VISIBILITY
+     PERFORMANCE — PAUSE OFFSCREEN
      ======================================================= */
 
   useEffect(() => {
@@ -479,15 +378,21 @@ export function HomeProductRail({
     const observer =
       new IntersectionObserver(
         ([entry]) => {
+          /*
+           * Initial state is true.
+           * Therefore an unavailable
+           * observer can never leave
+           * the rail permanently frozen.
+           */
           setVisible(
             entry.isIntersecting,
           );
         },
         {
-          rootMargin:
-            "100px 0px 100px 0px",
-
           threshold: 0,
+
+          rootMargin:
+            "120px 0px 120px 0px",
         },
       );
 
@@ -501,138 +406,74 @@ export function HomeProductRail({
   }, []);
 
   /* =======================================================
-     CONTINUOUS PREMIUM MOVEMENT
+     DOT POSITION
      ======================================================= */
 
   useEffect(() => {
+    setActiveIndex(0);
+
     if (
       !ready ||
       !visible ||
+      interactionPaused ||
       products.length <= 1
     ) {
       return;
     }
 
-    if (
-      prefersReducedMotion()
-    ) {
+    const media =
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+    if (media.matches) {
       return;
     }
 
-    const movementDirection =
+    const change =
       direction ===
       "right-to-left"
         ? 1
         : -1;
 
-    lastFrameRef.current =
-      null;
+    const timer =
+      window.setInterval(
+        () => {
+          if (
+            document.hidden
+          ) {
+            return;
+          }
 
-    const animate =
-      (
-        timestamp: number,
-      ) => {
-        if (
-          document.hidden
-        ) {
-          lastFrameRef.current =
-            timestamp;
-
-          animationFrameRef.current =
-            window.requestAnimationFrame(
-              animate,
-            );
-
-          return;
-        }
-
-        const lastFrame =
-          lastFrameRef.current;
-
-        lastFrameRef.current =
-          timestamp;
-
-        if (
-          lastFrame !== null
-        ) {
-          const delta =
-            Math.min(
-              timestamp -
-                lastFrame,
-              MAX_FRAME_DELTA,
-            );
-
-          const distance =
-            RAIL_SPEED *
-            (delta / 1000);
-
-          offsetRef.current +=
-            movementDirection *
-            distance;
-
-          normalizeOffset();
-
-          applyTransform();
-
-          updateActiveIndex();
-        }
-
-        animationFrameRef.current =
-          window.requestAnimationFrame(
-            animate,
+          setActiveIndex(
+            (current) =>
+              positiveModulo(
+                current +
+                  change,
+                products.length,
+              ),
           );
-      };
-
-    animationFrameRef.current =
-      window.requestAnimationFrame(
-        animate,
+        },
+        productStepMs,
       );
 
     return () => {
-      if (
-        animationFrameRef.current !==
-        null
-      ) {
-        window.cancelAnimationFrame(
-          animationFrameRef.current,
-        );
-
-        animationFrameRef.current =
-          null;
-      }
-
-      lastFrameRef.current =
-        null;
+      window.clearInterval(
+        timer,
+      );
     };
   }, [
-    applyTransform,
     direction,
-    normalizeOffset,
+    interactionPaused,
+    productKey,
+    productStepMs,
     products.length,
     ready,
-    updateActiveIndex,
     visible,
   ]);
 
   /* =======================================================
-     CLEANUP
-     ======================================================= */
-
-  useEffect(() => {
-    return () => {
-      if (
-        animationFrameRef.current !==
-        null
-      ) {
-        window.cancelAnimationFrame(
-          animationFrameRef.current,
-        );
-      }
-    };
-  }, []);
-
-  /* =======================================================
-     EMPTY
+     EMPTY STATE
      ======================================================= */
 
   if (
@@ -647,30 +488,102 @@ export function HomeProductRail({
     );
   }
 
+  const paused =
+    !visible ||
+    interactionPaused;
+
+  const directionClass =
+    direction ===
+    "right-to-left"
+      ? "is-right-to-left"
+      : "is-left-to-right";
+
+  const trackClassName = [
+    "home-rail-track",
+
+    directionClass,
+
+    ready &&
+    products.length > 1
+      ? "is-ready"
+      : "",
+
+    paused
+      ? "is-paused"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   /* =======================================================
      RENDER
      ======================================================= */
 
   return (
-    <div className="home-product-rail">
+    <div
+      className="home-product-rail"
+      onMouseEnter={() =>
+        setInteractionPaused(
+          true,
+        )
+      }
+      onMouseLeave={() =>
+        setInteractionPaused(
+          false,
+        )
+      }
+      onFocusCapture={() =>
+        setInteractionPaused(
+          true,
+        )
+      }
+      onBlurCapture={() =>
+        setInteractionPaused(
+          false,
+        )
+      }
+    >
       <div
         ref={viewportRef}
         className="home-rail-viewport"
         role="region"
         aria-label={`${label} products`}
+        aria-live="off"
       >
         <div
           ref={trackRef}
-          className="home-rail-track"
+          className={
+            trackClassName
+          }
+          style={
+            {
+              "--rail-distance":
+                "0px",
+
+              "--rail-distance-negative":
+                "0px",
+
+              "--rail-duration":
+                `${MIN_DURATION_SECONDS}s`,
+            } as CSSProperties
+          }
         >
           {loopProducts.map(
             ({
               product,
-              loopKey,
+              copy,
+              index,
+              key,
             }) => (
               <div
+                key={key}
                 className="home-rail-item"
-                key={loopKey}
+                data-rail-copy={
+                  copy
+                }
+                data-rail-index={
+                  index
+                }
               >
                 <ProductCard
                   product={
@@ -687,7 +600,7 @@ export function HomeProductRail({
       1 ? (
         <div
           className="home-rail-dots"
-          aria-label={`${label} carousel position`}
+          aria-hidden="true"
         >
           {products.map(
             (
@@ -704,7 +617,6 @@ export function HomeProductRail({
                     ? " is-active"
                     : ""
                 }`}
-                aria-hidden="true"
               />
             ),
           )}

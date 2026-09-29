@@ -2348,17 +2348,18 @@ svg {
 
   scrollbar-width: none;
 
-  /*
-   * Product cards remain fully
-   * interactive. Horizontal dragging
-   * is intentionally disabled because
-   * this is an automatic rail.
-   */
   touch-action:
     pan-y;
 
-  overscroll-behavior:
+  overscroll-behavior-x:
     contain;
+
+  /*
+   * Keep transformed children
+   * clipped to this rail only.
+   */
+  contain:
+    paint;
 }
 
 .home-rail-viewport::-webkit-scrollbar {
@@ -2383,8 +2384,21 @@ svg {
   gap:
     var(--home-gap);
 
+  /*
+   * Prevent every card from
+   * shrinking when multiple loop
+   * copies are rendered.
+   */
+  flex-wrap: nowrap;
+
   will-change:
     transform;
+
+  backface-visibility:
+    hidden;
+
+  -webkit-backface-visibility:
+    hidden;
 
   transform:
     translate3d(
@@ -2392,12 +2406,85 @@ svg {
       0,
       0
     );
+}
 
-  backface-visibility:
-    hidden;
+/* =========================================================
+   ANIMATION STATE
+   ========================================================= */
 
-  -webkit-backface-visibility:
-    hidden;
+.home-rail-track.is-ready.is-right-to-left {
+  animation:
+    homeRailRightToLeft
+    var(
+      --rail-duration,
+      60s
+    )
+    linear
+    infinite;
+}
+
+.home-rail-track.is-ready.is-left-to-right {
+  animation:
+    homeRailLeftToRight
+    var(
+      --rail-duration,
+      60s
+    )
+    linear
+    infinite;
+}
+
+.home-rail-track.is-paused {
+  animation-play-state:
+    paused;
+}
+
+/* =========================================================
+   CONTINUOUS LOOP ANIMATIONS
+   ========================================================= */
+
+@keyframes homeRailRightToLeft {
+  from {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      );
+  }
+
+  to {
+    transform:
+      translate3d(
+        var(
+          --rail-distance-negative
+        ),
+        0,
+        0
+      );
+  }
+}
+
+@keyframes homeRailLeftToRight {
+  from {
+    transform:
+      translate3d(
+        var(
+          --rail-distance-negative
+        ),
+        0,
+        0
+      );
+  }
+
+  to {
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      );
+  }
 }
 
 /* =========================================================
@@ -2485,12 +2572,12 @@ svg {
 
   transition:
     width
-      300ms
+      320ms
       var(--ease-premium),
     background-color
-      250ms ease,
+      260ms ease,
     transform
-      250ms
+      260ms
       var(--ease-premium);
 }
 
@@ -2561,6 +2648,29 @@ svg {
   }
 }
 
+/* =========================================================
+   ACCESSIBILITY — REDUCED MOTION
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .home-rail-track.is-ready {
+    animation:
+      none !important;
+
+    transform:
+      translate3d(
+        0,
+        0,
+        0
+      ) !important;
+
+    will-change:
+      auto;
+  }
+}
 /* =========================================================
    CAMPAIGN PAIR — PDF PAGE 1
    ========================================================= */
