@@ -29,27 +29,38 @@ type HomeProductRailProps = {
   label: string;
 };
 
+type RailMetrics = {
+  key: string;
+  distance: number;
+  duration: number;
+  productStepMs: number;
+};
+
+type RailStyle =
+  CSSProperties & {
+    "--rail-distance-negative":
+      string;
+
+    "--rail-duration":
+      string;
+  };
+
 /*
- * Pixels travelled per second.
+ * Slow continuous premium motion.
  *
- * 22 gives a slow premium motion.
- * This is intentionally much slower
- * than a normal carousel.
+ * 22px/sec gives visible movement
+ * without feeling like a ticker.
  */
 const RAIL_SPEED =
   22;
 
-/*
- * Never make a very short rail
- * race across the screen.
- */
 const MIN_DURATION_SECONDS =
-  36;
+  32;
 
 /*
- * Three copies are enough to keep
- * the viewport filled even when
- * only 2–3 real products exist.
+ * Three identical copies guarantee
+ * seamless movement even if only a
+ * few real products are available.
  */
 const LOOP_COPIES =
   3;
@@ -98,32 +109,17 @@ export function HomeProductRail({
     );
 
   const [
-    ready,
-    setReady,
-  ] = useState(false);
-
-  const [
-    visible,
-    setVisible,
-  ] = useState(true);
-
-  const [
-    interactionPaused,
-    setInteractionPaused,
-  ] = useState(false);
+    metrics,
+    setMetrics,
+  ] =
+    useState<RailMetrics | null>(
+      null,
+    );
 
   const [
     activeIndex,
     setActiveIndex,
   ] = useState(0);
-
-  const [
-    productStepMs,
-    setProductStepMs,
-  ] = useState(
-    MIN_DURATION_SECONDS *
-      1000,
-  );
 
   const productKey =
     products
@@ -133,8 +129,11 @@ export function HomeProductRail({
       )
       .join("|");
 
+  const measurementKey =
+    `${productKey}:${products.length}`;
+
   /* =======================================================
-     LOOP CONTENT
+     DUPLICATED LOOP CONTENT
      ======================================================= */
 
   const loopProducts =
@@ -185,7 +184,7 @@ export function HomeProductRail({
     ]);
 
   /* =======================================================
-     MEASURE EXACT LOOP DISTANCE
+     EXACT LOOP MEASUREMENT
      ======================================================= */
 
   useEffect(() => {
@@ -202,28 +201,25 @@ export function HomeProductRail({
       return;
     }
 
-    setReady(false);
-
     const measure =
       () => {
         if (
           products.length <= 1
         ) {
-          track.style.removeProperty(
-            "--rail-distance",
-          );
+          setMetrics({
+            key:
+              measurementKey,
 
-          track.style.removeProperty(
-            "--rail-distance-negative",
-          );
+            distance:
+              0,
 
-          track.style.removeProperty(
-            "--rail-duration",
-          );
+            duration:
+              MIN_DURATION_SECONDS,
 
-          setActiveIndex(0);
-
-          setReady(true);
+            productStepMs:
+              MIN_DURATION_SECONDS *
+              1000,
+          });
 
           return;
         }
@@ -233,25 +229,28 @@ export function HomeProductRail({
             '[data-rail-copy="0"][data-rail-index="0"]',
           );
 
-        const secondSetFirstItem =
+        const secondCopy =
           track.querySelector<HTMLElement>(
             '[data-rail-copy="1"][data-rail-index="0"]',
           );
 
         if (
           !firstItem ||
-          !secondSetFirstItem
+          !secondCopy
         ) {
           return;
         }
 
         /*
-         * offsetLeft is layout based,
-         * therefore it is unaffected by
-         * the animation transform.
+         * Exact distance between the
+         * first item in copy 1 and the
+         * first item in copy 2.
+         *
+         * offsetLeft is not affected by
+         * transform animations.
          */
         const distance =
-          secondSetFirstItem.offsetLeft -
+          secondCopy.offsetLeft -
           firstItem.offsetLeft;
 
         if (
@@ -266,48 +265,54 @@ export function HomeProductRail({
         const duration =
           Math.max(
             MIN_DURATION_SECONDS,
+
             distance /
               RAIL_SPEED,
           );
 
-        /*
-         * Store both positive and
-         * negative values so CSS does
-         * not need experimental
-         * multiplication inside calc().
-         */
-        track.style.setProperty(
-          "--rail-distance",
-          `${distance}px`,
-        );
-
-        track.style.setProperty(
-          "--rail-distance-negative",
-          `${-distance}px`,
-        );
-
-        track.style.setProperty(
-          "--rail-duration",
-          `${duration}s`,
-        );
-
-        /*
-         * Approximate one-dot update
-         * per product passing.
-         */
-        const oneProductMs =
+        const productStepMs =
           Math.max(
             2500,
+
             (duration /
               products.length) *
               1000,
           );
 
-        setProductStepMs(
-          oneProductMs,
-        );
+        setMetrics(
+          (current) => {
+            /*
+             * Avoid unnecessary React
+             * rerenders when ResizeObserver
+             * reports the same dimensions.
+             */
+            if (
+              current?.key ===
+                measurementKey &&
+              Math.abs(
+                current.distance -
+                  distance,
+              ) < 0.5 &&
+              Math.abs(
+                current.duration -
+                  duration,
+              ) < 0.05
+            ) {
+              return current;
+            }
 
-        setReady(true);
+            return {
+              key:
+                measurementKey,
+
+              distance,
+
+              duration,
+
+              productStepMs,
+            };
+          },
+        );
       };
 
     const scheduleMeasure =
@@ -359,74 +364,41 @@ export function HomeProductRail({
       }
     };
   }, [
-    productKey,
+    measurementKey,
     products.length,
   ]);
 
   /* =======================================================
-     PERFORMANCE — PAUSE OFFSCREEN
+     READY
      ======================================================= */
 
-  useEffect(() => {
-    const viewport =
-      viewportRef.current;
-
-    if (!viewport) {
-      return;
-    }
-
-    const observer =
-      new IntersectionObserver(
-        ([entry]) => {
-          /*
-           * Initial state is true.
-           * Therefore an unavailable
-           * observer can never leave
-           * the rail permanently frozen.
-           */
-          setVisible(
-            entry.isIntersecting,
-          );
-        },
-        {
-          threshold: 0,
-
-          rootMargin:
-            "120px 0px 120px 0px",
-        },
-      );
-
-    observer.observe(
-      viewport,
-    );
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+  const ready =
+    products.length > 1 &&
+    metrics?.key ===
+      measurementKey &&
+    metrics.distance > 0;
 
   /* =======================================================
-     DOT POSITION
+     POSITION DOT
      ======================================================= */
 
   useEffect(() => {
-    setActiveIndex(0);
-
     if (
       !ready ||
-      !visible ||
-      interactionPaused ||
+      !metrics ||
       products.length <= 1
     ) {
       return;
     }
 
-    const media =
+    const reducedMotion =
       window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       );
 
-    if (media.matches) {
+    if (
+      reducedMotion.matches
+    ) {
       return;
     }
 
@@ -450,11 +422,13 @@ export function HomeProductRail({
               positiveModulo(
                 current +
                   change,
+
                 products.length,
               ),
           );
         },
-        productStepMs,
+
+        metrics.productStepMs,
       );
 
     return () => {
@@ -464,16 +438,13 @@ export function HomeProductRail({
     };
   }, [
     direction,
-    interactionPaused,
-    productKey,
-    productStepMs,
+    metrics,
     products.length,
     ready,
-    visible,
   ]);
 
   /* =======================================================
-     EMPTY STATE
+     EMPTY
      ======================================================= */
 
   if (
@@ -488,10 +459,6 @@ export function HomeProductRail({
     );
   }
 
-  const paused =
-    !visible ||
-    interactionPaused;
-
   const directionClass =
     direction ===
     "right-to-left"
@@ -503,46 +470,48 @@ export function HomeProductRail({
 
     directionClass,
 
-    ready &&
-    products.length > 1
+    ready
       ? "is-ready"
-      : "",
-
-    paused
-      ? "is-paused"
       : "",
   ]
     .filter(Boolean)
     .join(" ");
+
+  /*
+   * IMPORTANT:
+   *
+   * Unlike the current implementation,
+   * these values come directly from
+   * React state.
+   *
+   * React therefore cannot overwrite
+   * the measured distance back to 0px.
+   */
+  const trackStyle:
+    RailStyle = {
+      "--rail-distance-negative":
+        ready && metrics
+          ? `${-metrics.distance}px`
+          : "0px",
+
+      "--rail-duration":
+        ready && metrics
+          ? `${metrics.duration}s`
+          : `${MIN_DURATION_SECONDS}s`,
+    };
+
+  const displayedIndex =
+    positiveModulo(
+      activeIndex,
+      products.length,
+    );
 
   /* =======================================================
      RENDER
      ======================================================= */
 
   return (
-    <div
-      className="home-product-rail"
-      onMouseEnter={() =>
-        setInteractionPaused(
-          true,
-        )
-      }
-      onMouseLeave={() =>
-        setInteractionPaused(
-          false,
-        )
-      }
-      onFocusCapture={() =>
-        setInteractionPaused(
-          true,
-        )
-      }
-      onBlurCapture={() =>
-        setInteractionPaused(
-          false,
-        )
-      }
-    >
+    <div className="home-product-rail">
       <div
         ref={viewportRef}
         className="home-rail-viewport"
@@ -556,16 +525,7 @@ export function HomeProductRail({
             trackClassName
           }
           style={
-            {
-              "--rail-distance":
-                "0px",
-
-              "--rail-distance-negative":
-                "0px",
-
-              "--rail-duration":
-                `${MIN_DURATION_SECONDS}s`,
-            } as CSSProperties
+            trackStyle
           }
         >
           {loopProducts.map(
@@ -613,7 +573,7 @@ export function HomeProductRail({
                 }
                 className={`home-rail-dot${
                   index ===
-                  activeIndex
+                  displayedIndex
                     ? " is-active"
                     : ""
                 }`}

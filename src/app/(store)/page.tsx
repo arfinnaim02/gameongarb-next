@@ -94,7 +94,7 @@ export default async function Home() {
                 products,
               ).slice(0, 12)}
               link="/shop?sort=newest"
-              direction="left-to-right"
+              direction="right-to-left"
             />
           );
 
@@ -193,7 +193,7 @@ export default async function Home() {
                 products,
               ).slice(0, 12)}
               link="/shop?sort=featured"
-              direction="right-to-left"
+              direction="left-to-right"
             />
           );
 

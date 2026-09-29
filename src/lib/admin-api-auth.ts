@@ -10,6 +10,7 @@ import {
 
 import {
   isAdminRole,
+  type AdminRole,
 } from "@/lib/roles";
 
 export async function requireAdminApi() {
@@ -67,7 +68,20 @@ export async function requireAdminApi() {
       return null;
     }
 
-    return user;
+    /*
+     * isAdminRole guarantees CUSTOMER
+     * cannot reach this point.
+     *
+     * Returning a narrowed object also
+     * means every API route gets the
+     * correct AdminRole type automatically.
+     */
+    return {
+      ...user,
+
+      role:
+        user.role as AdminRole,
+    };
   } catch {
     return null;
   }

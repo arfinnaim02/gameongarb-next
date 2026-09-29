@@ -26,7 +26,12 @@ export function Logo({
         width={587}
         height={375}
         className="brand-logo-image"
-        priority={!admin}
+                priority={!admin}
+        loading={
+          admin
+            ? "lazy"
+            : "eager"
+        }
       />
     </Link>
   );

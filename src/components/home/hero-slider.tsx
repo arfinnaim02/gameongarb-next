@@ -3,14 +3,18 @@
 import Link from "next/link";
 
 import {
-  ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 
+import type {
+  CSSProperties,
+  TouchEvent,
+} from "react";
+
 import {
-  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -64,8 +68,32 @@ type HeroSliderProps = {
   fallback: HeroFallback;
 };
 
+type HeroStyle =
+  CSSProperties & {
+    "--hero-autoplay-duration":
+      string;
+  };
+
 const AUTOPLAY_DELAY =
-  6500;
+  4000;
+
+const SWIPE_THRESHOLD =
+  45;
+
+function positiveModulo(
+  value: number,
+  modulo: number,
+) {
+  if (!modulo) {
+    return 0;
+  }
+
+  return (
+    ((value % modulo) +
+      modulo) %
+    modulo
+  );
+}
 
 export function HeroSlider({
   slides,
@@ -83,14 +111,16 @@ export function HeroSlider({
           );
 
         if (
-          validSlides.length
+          validSlides.length >
+          0
         ) {
           return validSlides;
         }
 
         return [
           {
-            id: "fallback",
+            id:
+              "fallback",
 
             title:
               fallback.title,
@@ -113,8 +143,8 @@ export function HeroSlider({
         ];
       },
       [
-        slides,
         fallback,
+        slides,
       ],
     );
 
@@ -123,127 +153,321 @@ export function HeroSlider({
     setCurrentIndex,
   ] = useState(0);
 
-  const [
-    paused,
-    setPaused,
-  ] = useState(false);
+  const touchStartXRef =
+    useRef<number | null>(
+      null,
+    );
+
+  const slideCount =
+    preparedSlides.length;
+
+  const activeIndex =
+    positiveModulo(
+      currentIndex,
+      slideCount,
+    );
+
+  const activeSlide =
+    preparedSlides[
+      activeIndex
+    ];
+
+  const hasMultipleSlides =
+    slideCount > 1;
+
+  /* =======================================================
+     PRELOAD NEXT IMAGE
+     ======================================================= */
 
   useEffect(() => {
     if (
-      currentIndex >=
-      preparedSlides.length
-    ) {
-      setCurrentIndex(0);
-    }
-  }, [
-    currentIndex,
-    preparedSlides.length,
-  ]);
-
-  const nextSlide =
-    useCallback(() => {
-      setCurrentIndex(
-        (current) =>
-          (current + 1) %
-          preparedSlides.length,
-      );
-    }, [
-      preparedSlides.length,
-    ]);
-
-  const previousSlide =
-    useCallback(() => {
-      setCurrentIndex(
-        (current) =>
-          current === 0
-            ? preparedSlides.length -
-              1
-            : current - 1,
-      );
-    }, [
-      preparedSlides.length,
-    ]);
-
-  useEffect(() => {
-    if (
-      paused ||
-      preparedSlides.length <=
-        1
+      slideCount <= 1
     ) {
       return;
     }
 
+    const nextIndex =
+      positiveModulo(
+        activeIndex + 1,
+        slideCount,
+      );
+
+    const nextSlide =
+      preparedSlides[
+        nextIndex
+      ];
+
+    if (!nextSlide) {
+      return;
+    }
+
+    const desktopImage =
+      new window.Image();
+
+    desktopImage.src =
+      nextSlide.image;
+
+    if (
+      nextSlide.mobileImage &&
+      nextSlide.mobileImage !==
+        nextSlide.image
+    ) {
+      const mobileImage =
+        new window.Image();
+
+      mobileImage.src =
+        nextSlide.mobileImage;
+    }
+  }, [
+    activeIndex,
+    preparedSlides,
+    slideCount,
+  ]);
+
+  /* =======================================================
+     AUTOMATIC SLIDE — EVERY 4 SECONDS
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      slideCount <= 1
+    ) {
+      return;
+    }
+
+    const media =
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+    if (
+      media.matches
+    ) {
+      return;
+    }
+
+    /*
+     * setTimeout instead of setInterval:
+     *
+     * Every newly selected slide gets
+     * a complete fresh 4-second display
+     * period, including after clicking
+     * a dot or swiping manually.
+     */
     const timer =
-      window.setInterval(
-        nextSlide,
+      window.setTimeout(
+        () => {
+          if (
+            document.hidden
+          ) {
+            setCurrentIndex(
+              (current) =>
+                positiveModulo(
+                  current,
+                  slideCount,
+                ),
+            );
+
+            return;
+          }
+
+          setCurrentIndex(
+            (current) =>
+              positiveModulo(
+                current + 1,
+                slideCount,
+              ),
+          );
+        },
+
         AUTOPLAY_DELAY,
       );
 
-    return () =>
-      window.clearInterval(
+    return () => {
+      window.clearTimeout(
         timer,
       );
+    };
   }, [
-    nextSlide,
-    paused,
-    preparedSlides.length,
+    activeIndex,
+    slideCount,
   ]);
 
-  const activeSlide =
-    preparedSlides[
-      currentIndex
-    ];
+  /* =======================================================
+     MANUAL DOT
+     ======================================================= */
 
-  if (!activeSlide) {
+  function goToSlide(
+    index: number,
+  ) {
+    setCurrentIndex(
+      positiveModulo(
+        index,
+        slideCount,
+      ),
+    );
+  }
+
+  /* =======================================================
+     MOBILE SWIPE
+     ======================================================= */
+
+  function handleTouchStart(
+    event:
+      TouchEvent<HTMLElement>,
+  ) {
+    touchStartXRef.current =
+      event.changedTouches[
+        0
+      ]?.clientX ??
+      null;
+  }
+
+  function handleTouchEnd(
+    event:
+      TouchEvent<HTMLElement>,
+  ) {
+    const startX =
+      touchStartXRef.current;
+
+    touchStartXRef.current =
+      null;
+
+    if (
+      startX === null
+    ) {
+      return;
+    }
+
+    const endX =
+      event.changedTouches[
+        0
+      ]?.clientX;
+
+    if (
+      typeof endX !==
+      "number"
+    ) {
+      return;
+    }
+
+    const movement =
+      endX -
+      startX;
+
+    if (
+      Math.abs(
+        movement,
+      ) <
+      SWIPE_THRESHOLD
+    ) {
+      return;
+    }
+
+    setCurrentIndex(
+      (current) =>
+        positiveModulo(
+          current +
+            (
+              movement < 0
+                ? 1
+                : -1
+            ),
+
+          slideCount,
+        ),
+    );
+  }
+
+  if (
+    !activeSlide
+  ) {
     return null;
   }
 
-  const mobileImage =
-    activeSlide.mobileImage ||
-    activeSlide.image;
+  const heroStyle:
+    HeroStyle = {
+      "--hero-autoplay-duration":
+        `${AUTOPLAY_DELAY}ms`,
+    };
 
-  const hasMultipleSlides =
-    preparedSlides.length > 1;
+  /* =======================================================
+     RENDER
+     ======================================================= */
 
   return (
     <section
       className="premium-hero"
       aria-roledescription="carousel"
       aria-label="Game On Garb featured promotions"
-      onMouseEnter={() =>
-        setPaused(true)
+      style={
+        heroStyle
       }
-      onMouseLeave={() =>
-        setPaused(false)
+      onTouchStart={
+        handleTouchStart
       }
-      onFocusCapture={() =>
-        setPaused(true)
-      }
-      onBlurCapture={() =>
-        setPaused(false)
+      onTouchEnd={
+        handleTouchEnd
       }
     >
-      <div
-        key={`media-${activeSlide.id}-${currentIndex}`}
-        className="premium-hero-media"
-        aria-hidden="true"
-      >
-        <picture>
-          <source
-            media="(max-width: 700px)"
-            srcSet={
-              mobileImage
-            }
-          />
+      {/* ===================================================
+          IMAGE CROSSFADE STACK
+          =================================================== */}
 
-          <img
-            src={
-              activeSlide.image
-            }
-            alt=""
-          />
-        </picture>
-      </div>
+      {preparedSlides.map(
+        (
+          slide,
+          index,
+        ) => {
+          const active =
+            index ===
+            activeIndex;
+
+          const mobileImage =
+            slide.mobileImage ||
+            slide.image;
+
+          return (
+            <div
+              key={
+                slide.id
+              }
+              className={`premium-hero-media${
+                active
+                  ? " is-active"
+                  : ""
+              }`}
+              aria-hidden="true"
+            >
+              <picture>
+                <source
+                  media="(max-width: 700px)"
+                  srcSet={
+                    mobileImage
+                  }
+                />
+
+                <img
+                  src={
+                    slide.image
+                  }
+                  alt=""
+                  loading={
+                    index <= 1
+                      ? "eager"
+                      : "lazy"
+                  }
+                  decoding="async"
+                />
+              </picture>
+            </div>
+          );
+        },
+      )}
+
+      {/* ===================================================
+          OVERLAYS
+          =================================================== */}
 
       <div
         className="premium-hero-shade"
@@ -255,10 +479,15 @@ export function HeroSlider({
         aria-hidden="true"
       />
 
+      {/* ===================================================
+          COPY
+          =================================================== */}
+
       <div className="container premium-hero-inner">
         <div
-          key={`copy-${activeSlide.id}-${currentIndex}`}
+          key={`hero-copy-${activeSlide.id}-${activeIndex}`}
           className="premium-hero-copy"
+          aria-live="polite"
         >
           <div className="premium-hero-eyebrow">
             <span />
@@ -306,42 +535,12 @@ export function HeroSlider({
         </div>
       </div>
 
+      {/* ===================================================
+          DOTS + COUNTER
+          =================================================== */}
+
       {hasMultipleSlides ? (
         <>
-          <div className="premium-hero-navigation desktop-only">
-            <button
-              type="button"
-              className="premium-hero-arrow"
-              aria-label="Previous hero slide"
-              onClick={
-                previousSlide
-              }
-            >
-              <ChevronLeft
-                size={18}
-                strokeWidth={
-                  1.6
-                }
-              />
-            </button>
-
-            <button
-              type="button"
-              className="premium-hero-arrow"
-              aria-label="Next hero slide"
-              onClick={
-                nextSlide
-              }
-            >
-              <ChevronRight
-                size={18}
-                strokeWidth={
-                  1.6
-                }
-              />
-            </button>
-          </div>
-
           <div
             className="premium-hero-dots"
             role="tablist"
@@ -354,7 +553,7 @@ export function HeroSlider({
               ) => {
                 const active =
                   index ===
-                  currentIndex;
+                  activeIndex;
 
                 return (
                   <button
@@ -375,7 +574,7 @@ export function HeroSlider({
                         : ""
                     }`}
                     onClick={() =>
-                      setCurrentIndex(
+                      goToSlide(
                         index,
                       )
                     }
@@ -391,7 +590,7 @@ export function HeroSlider({
           >
             <strong>
               {String(
-                currentIndex +
+                activeIndex +
                   1,
               ).padStart(
                 2,
@@ -403,7 +602,7 @@ export function HeroSlider({
 
             <small>
               {String(
-                preparedSlides.length,
+                slideCount,
               ).padStart(
                 2,
                 "0",
