@@ -27,15 +27,19 @@ type HomeProductRailProps = {
 };
 
 /*
- * One product changes every 4 seconds.
+ * Continuous rail speed.
+ *
+ * 24 = slow premium movement.
+ * 18 = even slower.
+ * 30 = slightly faster.
  */
-const AUTO_DELAY = 4000;
+const RAIL_SPEED = 24;
 
 /*
- * Allow the smooth animation to finish
- * before correcting the infinite-loop position.
+ * Avoid giant animation jumps
+ * after tab switching or lag.
  */
-const NORMALIZE_DELAY = 650;
+const MAX_FRAME_DELTA = 50;
 
 /* =========================================================
    HELPERS
@@ -47,11 +51,26 @@ function prefersReducedMotion() {
   ).matches;
 }
 
+function positiveModulo(
+  value: number,
+  modulo: number,
+) {
+  if (!modulo) {
+    return 0;
+  }
+
+  return (
+    ((value % modulo) +
+      modulo) %
+    modulo
+  );
+}
+
 function getStep(
-  viewport: HTMLDivElement,
+  track: HTMLDivElement,
 ) {
   const item =
-    viewport.querySelector<HTMLElement>(
+    track.querySelector<HTMLElement>(
       ".home-rail-item",
     );
 
@@ -61,7 +80,7 @@ function getStep(
 
   const styles =
     window.getComputedStyle(
-      viewport,
+      track,
     );
 
   const gap =
@@ -91,10 +110,35 @@ export function HomeProductRail({
       null,
     );
 
-const normalizeTimerRef =
-  useRef<number | null>(
-    null,
-  );
+  const trackRef =
+    useRef<HTMLDivElement>(
+      null,
+    );
+
+  const animationFrameRef =
+    useRef<number | null>(
+      null,
+    );
+
+  const lastFrameRef =
+    useRef<number | null>(
+      null,
+    );
+
+  const offsetRef =
+    useRef(0);
+
+  const stepRef =
+    useRef(0);
+
+  const setWidthRef =
+    useRef(0);
+
+  const initializedRef =
+    useRef(false);
+
+  const activeIndexRef =
+    useRef(0);
 
   const [
     ready,
@@ -112,9 +156,9 @@ const normalizeTimerRef =
   ] = useState(0);
 
   /*
-   * Three copies allow the carousel
-   * to continue forever even when
-   * there are only four real products.
+   * Four copies make the rail safe
+   * even when only 2–3 real products
+   * exist while 4 cards are visible.
    */
   const loopProducts =
     useMemo(() => {
@@ -124,13 +168,19 @@ const normalizeTimerRef =
         return products.map(
           (product) => ({
             product,
+
             loopKey:
               `single-${product.id}`,
           }),
         );
       }
 
-      return [0, 1, 2].flatMap(
+      return [
+        0,
+        1,
+        2,
+        3,
+      ].flatMap(
         (copy) =>
           products.map(
             (
@@ -144,7 +194,9 @@ const normalizeTimerRef =
             }),
           ),
       );
-    }, [products]);
+    }, [
+      products,
+    ]);
 
   const productKey =
     products
@@ -155,194 +207,160 @@ const normalizeTimerRef =
       .join("|");
 
   /* =======================================================
-     WIDTH OF ONE REAL PRODUCT SET
+     APPLY TRANSFORM
      ======================================================= */
 
-  const getSingleSetWidth =
+  const applyTransform =
     useCallback(() => {
-      const viewport =
-        viewportRef.current;
+      const track =
+        trackRef.current;
+
+      if (!track) {
+        return;
+      }
+
+      track.style.transform =
+        `translate3d(${-offsetRef.current}px, 0, 0)`;
+    }, []);
+
+  /* =======================================================
+     ACTIVE DOT
+     ======================================================= */
+
+  const updateActiveIndex =
+    useCallback(() => {
+      const step =
+        stepRef.current;
 
       if (
-        !viewport ||
+        !step ||
         products.length <= 1
       ) {
-        return 0;
+        return;
       }
 
-      const step =
-        getStep(viewport);
+      const position =
+        Math.round(
+          offsetRef.current /
+            step,
+        );
 
-      if (!step) {
-        return 0;
+      const nextIndex =
+        positiveModulo(
+          position,
+          products.length,
+        );
+
+      if (
+        nextIndex ===
+        activeIndexRef.current
+      ) {
+        return;
       }
 
-      return (
-        step *
-        products.length
+      activeIndexRef.current =
+        nextIndex;
+
+      setActiveIndex(
+        nextIndex,
       );
     }, [
       products.length,
     ]);
 
   /* =======================================================
-     KEEP CAROUSEL INSIDE MIDDLE COPY
+     SEAMLESS NORMALIZATION
      ======================================================= */
 
-  const normalizePosition =
+  const normalizeOffset =
     useCallback(() => {
-      const viewport =
-        viewportRef.current;
-
-      if (
-        !viewport ||
-        products.length <= 1
-      ) {
-        return;
-      }
-
       const setWidth =
-        getSingleSetWidth();
-
-      if (!setWidth) {
-        return;
-      }
+        setWidthRef.current;
 
       if (
-        viewport.scrollLeft <
-        setWidth * 0.5
-      ) {
-        viewport.scrollLeft +=
-          setWidth;
-
-        return;
-      }
-
-      if (
-        viewport.scrollLeft >
-        setWidth * 2.5
-      ) {
-        viewport.scrollLeft -=
-          setWidth;
-      }
-    }, [
-      getSingleSetWidth,
-      products.length,
-    ]);
-
-  /* =======================================================
-     MOVE EXACTLY ONE PRODUCT
-     ======================================================= */
-
-  const moveOne =
-    useCallback(() => {
-      const viewport =
-        viewportRef.current;
-
-      if (
-        !viewport ||
+        !setWidth ||
         products.length <= 1
       ) {
-        return;
-      }
-
-      const step =
-        getStep(
-          viewport,
-        );
-
-      if (!step) {
         return;
       }
 
       /*
-       * left-to-right:
-       * cards visually move toward the RIGHT.
+       * Keep the animation between
+       * identical copies 1 and 2.
        *
-       * right-to-left:
-       * cards visually move toward the LEFT.
+       * The jump by exactly one full
+       * product set is invisible
+       * because every set is identical.
        */
 
-      const visualRight =
-        direction ===
-        "left-to-right";
+      while (
+        offsetRef.current >=
+        setWidth * 2
+      ) {
+        offsetRef.current -=
+          setWidth;
+      }
 
-      viewport.scrollBy({
-        left:
-          visualRight
-            ? -step
-            : step,
-
-        behavior:
-          prefersReducedMotion()
-            ? "auto"
-            : "smooth",
-      });
-
-      setActiveIndex(
-        (current) => {
-          if (
-            visualRight
-          ) {
-            return (
-              current -
-              1 +
-              products.length
-            ) %
-              products.length;
-          }
-
-          return (
-            current + 1
-          ) %
-            products.length;
-        },
-      );
-
-if (
-  normalizeTimerRef.current !==
-  null
-) {
-  window.clearTimeout(
-    normalizeTimerRef.current,
-  );
-
-  normalizeTimerRef.current =
-    null;
-}
-
-      normalizeTimerRef.current =
-        window.setTimeout(
-          normalizePosition,
-          NORMALIZE_DELAY,
-        );
+      while (
+        offsetRef.current <
+        setWidth
+      ) {
+        offsetRef.current +=
+          setWidth;
+      }
     }, [
-      direction,
-      normalizePosition,
       products.length,
     ]);
 
   /* =======================================================
-     INITIAL POSITION
+     MEASURE AND INITIALIZE
      ======================================================= */
 
   useEffect(() => {
     const viewport =
       viewportRef.current;
 
-    if (!viewport) {
+    const track =
+      trackRef.current;
+
+    if (
+      !viewport ||
+      !track
+    ) {
       return;
     }
 
-    let initialized =
+    initializedRef.current =
       false;
 
-    const initialize =
+    setReady(false);
+
+    const measure =
       () => {
+        const step =
+          getStep(
+            track,
+          );
+
+        if (!step) {
+          return;
+        }
+
+        stepRef.current =
+          step;
+
         if (
           products.length <= 1
         ) {
-          viewport.scrollLeft =
+          setWidthRef.current =
+            step;
+
+          offsetRef.current =
+            0;
+
+          applyTransform();
+
+          activeIndexRef.current =
             0;
 
           setActiveIndex(0);
@@ -352,33 +370,74 @@ if (
           return;
         }
 
-        const setWidth =
-          getSingleSetWidth();
+        const newSetWidth =
+          step *
+          products.length;
 
-        if (!setWidth) {
+        if (
+          !initializedRef.current
+        ) {
+          setWidthRef.current =
+            newSetWidth;
+
+          /*
+           * Start at copy #2.
+           */
+          offsetRef.current =
+            newSetWidth;
+
+          initializedRef.current =
+            true;
+
+          activeIndexRef.current =
+            0;
+
+          setActiveIndex(0);
+
+          applyTransform();
+
+          setReady(true);
+
           return;
         }
 
         /*
-         * Start at the middle copy.
+         * Preserve animation progress
+         * when responsive layout changes
+         * from 4 → 3 → 2 cards.
          */
+        const oldSetWidth =
+          setWidthRef.current;
 
-        if (!initialized) {
-          viewport.scrollLeft =
-            setWidth;
+        const progress =
+          oldSetWidth > 0
+            ? positiveModulo(
+                offsetRef.current,
+                oldSetWidth,
+              ) /
+              oldSetWidth
+            : 0;
 
-          initialized =
-            true;
+        setWidthRef.current =
+          newSetWidth;
 
-          setActiveIndex(0);
-        }
+        offsetRef.current =
+          newSetWidth +
+          progress *
+            newSetWidth;
+
+        normalizeOffset();
+
+        applyTransform();
+
+        updateActiveIndex();
 
         setReady(true);
       };
 
     const resizeObserver =
       new ResizeObserver(
-        initialize,
+        measure,
       );
 
     resizeObserver.observe(
@@ -387,7 +446,7 @@ if (
 
     const frame =
       window.requestAnimationFrame(
-        initialize,
+        measure,
       );
 
     return () => {
@@ -398,13 +457,15 @@ if (
       );
     };
   }, [
-    getSingleSetWidth,
+    applyTransform,
+    normalizeOffset,
     productKey,
     products.length,
+    updateActiveIndex,
   ]);
 
   /* =======================================================
-     ONLY AUTOPLAY WHILE SECTION IS VISIBLE
+     SECTION VISIBILITY
      ======================================================= */
 
   useEffect(() => {
@@ -419,17 +480,14 @@ if (
       new IntersectionObserver(
         ([entry]) => {
           setVisible(
-            entry.isIntersecting &&
-              entry.intersectionRatio >=
-                0.1,
+            entry.isIntersecting,
           );
         },
         {
-          threshold: [
-            0,
-            0.1,
-            0.5,
-          ],
+          rootMargin:
+            "100px 0px 100px 0px",
+
+          threshold: 0,
         },
       );
 
@@ -443,7 +501,7 @@ if (
   }, []);
 
   /* =======================================================
-     AUTOMATIC MOVEMENT
+     CONTINUOUS PREMIUM MOVEMENT
      ======================================================= */
 
   useEffect(() => {
@@ -455,29 +513,104 @@ if (
       return;
     }
 
-    const timer =
-      window.setInterval(
-        () => {
-          if (
-            document.hidden
-          ) {
-            return;
-          }
+    if (
+      prefersReducedMotion()
+    ) {
+      return;
+    }
 
-          moveOne();
-        },
-        AUTO_DELAY,
+    const movementDirection =
+      direction ===
+      "right-to-left"
+        ? 1
+        : -1;
+
+    lastFrameRef.current =
+      null;
+
+    const animate =
+      (
+        timestamp: number,
+      ) => {
+        if (
+          document.hidden
+        ) {
+          lastFrameRef.current =
+            timestamp;
+
+          animationFrameRef.current =
+            window.requestAnimationFrame(
+              animate,
+            );
+
+          return;
+        }
+
+        const lastFrame =
+          lastFrameRef.current;
+
+        lastFrameRef.current =
+          timestamp;
+
+        if (
+          lastFrame !== null
+        ) {
+          const delta =
+            Math.min(
+              timestamp -
+                lastFrame,
+              MAX_FRAME_DELTA,
+            );
+
+          const distance =
+            RAIL_SPEED *
+            (delta / 1000);
+
+          offsetRef.current +=
+            movementDirection *
+            distance;
+
+          normalizeOffset();
+
+          applyTransform();
+
+          updateActiveIndex();
+        }
+
+        animationFrameRef.current =
+          window.requestAnimationFrame(
+            animate,
+          );
+      };
+
+    animationFrameRef.current =
+      window.requestAnimationFrame(
+        animate,
       );
 
     return () => {
-      window.clearInterval(
-        timer,
-      );
+      if (
+        animationFrameRef.current !==
+        null
+      ) {
+        window.cancelAnimationFrame(
+          animationFrameRef.current,
+        );
+
+        animationFrameRef.current =
+          null;
+      }
+
+      lastFrameRef.current =
+        null;
     };
   }, [
-    moveOne,
+    applyTransform,
+    direction,
+    normalizeOffset,
     products.length,
     ready,
+    updateActiveIndex,
     visible,
   ]);
 
@@ -488,17 +621,18 @@ if (
   useEffect(() => {
     return () => {
       if (
-        normalizeTimerRef.current
+        animationFrameRef.current !==
+        null
       ) {
-        window.clearTimeout(
-          normalizeTimerRef.current,
+        window.cancelAnimationFrame(
+          animationFrameRef.current,
         );
       }
     };
   }, []);
 
   /* =======================================================
-     EMPTY STATE
+     EMPTY
      ======================================================= */
 
   if (
@@ -525,23 +659,28 @@ if (
         role="region"
         aria-label={`${label} products`}
       >
-        {loopProducts.map(
-          ({
-            product,
-            loopKey,
-          }) => (
-            <div
-              className="home-rail-item"
-              key={loopKey}
-            >
-              <ProductCard
-                product={
-                  product
-                }
-              />
-            </div>
-          ),
-        )}
+        <div
+          ref={trackRef}
+          className="home-rail-track"
+        >
+          {loopProducts.map(
+            ({
+              product,
+              loopKey,
+            }) => (
+              <div
+                className="home-rail-item"
+                key={loopKey}
+              >
+                <ProductCard
+                  product={
+                    product
+                  }
+                />
+              </div>
+            ),
+          )}
+        </div>
       </div>
 
       {products.length >

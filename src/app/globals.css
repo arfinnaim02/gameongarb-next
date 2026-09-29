@@ -2315,8 +2315,9 @@ svg {
 
   color:
     #757a76;
-}/* =========================================================
-   PRODUCT RAILS — PREMIUM AUTO CAROUSEL
+}
+/* =========================================================
+   PRODUCT RAILS — CONTINUOUS PREMIUM CAROUSEL
    ========================================================= */
 
 .home-product-rail {
@@ -2336,6 +2337,43 @@ svg {
 .home-rail-viewport {
   position: relative;
 
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+
+  padding:
+    4px 1px
+    7px;
+
+  scrollbar-width: none;
+
+  /*
+   * Product cards remain fully
+   * interactive. Horizontal dragging
+   * is intentionally disabled because
+   * this is an automatic rail.
+   */
+  touch-action:
+    pan-y;
+
+  overscroll-behavior:
+    contain;
+}
+
+.home-rail-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================================
+   MOVING TRACK
+   ========================================================= */
+
+.home-rail-track {
+  position: relative;
+
+  width: 100%;
+
   min-width: 0;
 
   display: flex;
@@ -2345,29 +2383,21 @@ svg {
   gap:
     var(--home-gap);
 
-  overflow-x: hidden;
+  will-change:
+    transform;
 
-  overflow-y: hidden;
+  transform:
+    translate3d(
+      0,
+      0,
+      0
+    );
 
-  scroll-snap-type: none;
+  backface-visibility:
+    hidden;
 
-  scrollbar-width: none;
-
-  padding:
-    4px 1px
-    7px;
-
-  /*
-   * Product links/buttons still work,
-   * but the rail itself is no longer
-   * manually draggable.
-   */
-  touch-action:
-    pan-y;
-}
-
-.home-rail-viewport::-webkit-scrollbar {
-  display: none;
+  -webkit-backface-visibility:
+    hidden;
 }
 
 /* =========================================================
@@ -2395,7 +2425,7 @@ svg {
 }
 
 /* =========================================================
-   PREMIUM CARD DEPTH
+   PREMIUM CARD INTERACTION
    ========================================================= */
 
 .home-rail-item {
@@ -2444,7 +2474,8 @@ svg {
   width: 5px;
   height: 5px;
 
-  flex: 0 0 auto;
+  flex:
+    0 0 auto;
 
   border-radius:
     999px;
@@ -2454,12 +2485,12 @@ svg {
 
   transition:
     width
-      260ms
+      300ms
       var(--ease-premium),
     background-color
-      220ms ease,
+      250ms ease,
     transform
-      220ms
+      250ms
       var(--ease-premium);
 }
 
@@ -2490,6 +2521,7 @@ svg {
 
   line-height: 1.55;
 }
+
 /* =========================================================
    PRODUCT CARD INTERACTIONS
    ========================================================= */
@@ -2527,7 +2559,9 @@ svg {
     transform:
       scale(1.08);
   }
-}/* =========================================================
+}
+
+/* =========================================================
    CAMPAIGN PAIR — PDF PAGE 1
    ========================================================= */
 
