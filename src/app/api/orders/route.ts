@@ -730,6 +730,22 @@ export async function POST(
              CUSTOMER
              =============================================== */
 
+          /*
+           * Guest checkout customers are
+           * identified by phone number.
+           *
+           * IMPORTANT:
+           * Customer.email is unique in Prisma.
+           * The checkout email belongs to the
+           * ORDER and must never be allowed to
+           * block order placement because the
+           * same email already exists on another
+           * Customer record.
+           *
+           * Account/customer email ownership can
+           * be managed separately by the account
+           * system.
+           */
           const customer =
             sessionUser?.customer
               ? sessionUser.customer
@@ -742,13 +758,6 @@ export async function POST(
                   update: {
                     name:
                       input.fullName,
-
-                    ...(input.email
-                      ? {
-                          email:
-                            input.email,
-                        }
-                      : {}),
                   },
 
                   create: {
@@ -759,7 +768,7 @@ export async function POST(
                       input.phone,
 
                     email:
-                      input.email,
+                      null,
                   },
                 });
 
@@ -1133,13 +1142,89 @@ export async function POST(
       error,
     );
 
+    const prismaError =
+      error &&
+      typeof error ===
+        "object" &&
+      "code" in error
+        ? (
+            error as {
+              code?: string;
+
+              meta?: {
+                target?:
+                  unknown;
+              };
+            }
+          )
+        : null;
+
+    if (
+      prismaError?.code ===
+      "P2002"
+    ) {
+      const target =
+        prismaError.meta
+          ?.target;
+
+      const fields =
+        Array.isArray(
+          target,
+        )
+          ? target.map(
+              String,
+            )
+          : [];
+
+      if (
+        fields.includes(
+          "number",
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Another order was placed at the same moment. Please press Place Order again.",
+          },
+          {
+            status: 409,
+          },
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error:
+            "We could not finalize the order because some customer information already exists. Please try again.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    if (
+      prismaError?.code ===
+      "P2034"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Stock changed while your order was being processed. Please try placing the order again.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
     return NextResponse.json(
       {
         error:
           error instanceof
           Error
             ? error.message
-            : "Order could not be placed.",
+            : "Order could not be placed. Please try again.",
       },
       {
         status: 400,

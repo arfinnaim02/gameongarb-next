@@ -1,3 +1,11 @@
+import type {
+  AdminSizeChartOption,
+} from "@/lib/size-chart-types";
+
+export type {
+  AdminSizeChartOption,
+};
+
 export type AdminProductImage = {
   id: string;
   url: string;
@@ -48,6 +56,11 @@ export type AdminProductRecord = {
 
   categoryId: string;
   category: string;
+    sizeChartId:
+    string;
+
+  sizeChartName:
+    string;
 
   image: string;
 

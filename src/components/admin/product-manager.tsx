@@ -32,6 +32,7 @@ import {
 import type {
   AdminCategoryOption,
   AdminProductImage,
+  AdminSizeChartOption,
   AdminProductRecord,
   AdminProductVariant,
   ProductUploadResponse,
@@ -49,6 +50,9 @@ type ProductManagerProps = {
 
   categories:
     AdminCategoryOption[];
+
+  sizeCharts:
+    AdminSizeChartOption[];
 };
 
 type EditorImage =
@@ -106,6 +110,9 @@ type ProductFormState = {
     boolean;
 
   categoryId:
+    string;
+
+      sizeChartId:
     string;
 
   seoTitle:
@@ -282,6 +289,9 @@ function emptyForm():
     categoryId:
       "",
 
+          sizeChartId:
+      "",
+
     seoTitle:
       "",
 
@@ -343,6 +353,9 @@ function productToForm(
 
     categoryId:
       product.categoryId,
+
+          sizeChartId:
+      product.sizeChartId,
 
     seoTitle:
       product.seoTitle,
@@ -427,6 +440,9 @@ function formPayload(
 
     categoryId:
       form.categoryId,
+
+          sizeChartId:
+      form.sizeChartId,
 
     seoTitle:
       form.seoTitle.trim(),
@@ -516,6 +532,7 @@ function formPayload(
 export function ProductManager({
   initialProducts,
   categories,
+  sizeCharts,
 }: ProductManagerProps) {
   const [
     products,
@@ -2170,6 +2187,9 @@ export function ProductManager({
                     categories={
                       categories
                     }
+                    sizeCharts={
+                      sizeCharts
+                    }
                     setForm={
                       setForm
                     }
@@ -2321,6 +2341,7 @@ export function ProductManager({
 function BasicTab({
   form,
   categories,
+  sizeCharts,
   setForm,
 }: {
   form:
@@ -2328,6 +2349,9 @@ function BasicTab({
 
   categories:
     AdminCategoryOption[];
+
+  sizeCharts:
+    AdminSizeChartOption[];
 
   setForm:
     React.Dispatch<
@@ -2490,6 +2514,91 @@ function BasicTab({
             ),
           )}
         </select>
+      </Field>
+
+            <Field label="Size Guide">
+        <select
+          value={
+            form.sizeChartId
+          }
+          onChange={(
+            event,
+          ) =>
+            setForm(
+              (
+                current,
+              ) => ({
+                ...current,
+
+                sizeChartId:
+                  event.target
+                    .value,
+              }),
+            )
+          }
+        >
+          <option value="">
+            No Size Guide
+          </option>
+
+          {sizeCharts.map(
+            (
+              chart,
+            ) => (
+              <option
+                key={
+                  chart.id
+                }
+                value={
+                  chart.id
+                }
+                disabled={
+                  !chart.active &&
+                  chart.id !==
+                    form.sizeChartId
+                }
+              >
+                {chart.name}
+                {!chart.active
+                  ? " (Archived)"
+                  : ""}
+              </option>
+            ),
+          )}
+        </select>
+
+        <small
+          style={{
+            color:
+              "#8b908c",
+
+            fontSize:
+              8,
+
+            lineHeight:
+              1.5,
+          }}
+        >
+          Reusable size
+          chart shown on the
+          product details
+          page.{" "}
+
+          <a
+            href="/admin/size-charts"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color:
+                "#f15a24",
+
+              fontWeight:
+                800,
+            }}
+          >
+            Manage Size Charts
+          </a>
+        </small>
       </Field>
 
       <Field label="Short Description">

@@ -28,6 +28,12 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum SizeChartUnit {
+  IN
+  CM
+  NONE
+}
+
 enum OrderStatus {
   NEW
   CONFIRMED
@@ -202,9 +208,27 @@ model Category {
   @@index([active, showInNavigation])
 }
 
+model SizeChart {
+  id        String        @id @default(cuid())
+  name      String
+  nameKey   String        @unique
+  unit      SizeChartUnit @default(IN)
+  note      String?
+  columns   Json
+  rows      Json
+  active    Boolean       @default(true)
+  products  Product[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([active, name])
+}
+
+
 model Product {
   id               String              @id @default(cuid())
   name             String
+  sizeChartId      String?
   slug             String              @unique
   shortDescription String?
   description      String?
@@ -226,11 +250,13 @@ model Product {
   wishlistItems    WishlistItem[]
   cartItems        CartItem[]
   reviews          Review[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  sizeChart        SizeChart?           @relation(fields: [sizeChartId], references: [id], onDelete: SetNull)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   @@index([status, createdAt])
   @@index([featured, newArrival, trending])
+  @@index([sizeChartId])
 }
 
 model ProductCategory {

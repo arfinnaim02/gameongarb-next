@@ -12,12 +12,12 @@ import {
 } from "@/lib/admin-products";
 
 import {
-  db,
-} from "@/lib/db";
-
-import {
   hasPermission,
 } from "@/lib/business";
+
+import {
+  db,
+} from "@/lib/db";
 
 import {
   requireAdmin,
@@ -42,6 +42,7 @@ export default async function ProductsAdminPage() {
   const [
     products,
     categories,
+    sizeCharts,
   ] =
     await Promise.all([
       db.product.findMany({
@@ -65,10 +66,12 @@ export default async function ProductsAdminPage() {
             parentId:
               "asc",
           },
+
           {
             sortOrder:
               "asc",
           },
+
           {
             name:
               "asc",
@@ -86,15 +89,41 @@ export default async function ProductsAdminPage() {
             true,
         },
       }),
+
+      db.sizeChart.findMany({
+        orderBy: {
+          name:
+            "asc",
+        },
+
+        select: {
+          id:
+            true,
+
+          name:
+            true,
+
+          unit:
+            true,
+
+          active:
+            true,
+        },
+      }),
     ]);
 
   return (
     <ProductManager
-      initialProducts={products.map(
-        serializeAdminProduct,
-      )}
+      initialProducts={
+        products.map(
+          serializeAdminProduct,
+        )
+      }
       categories={
         categories
+      }
+      sizeCharts={
+        sizeCharts
       }
     />
   );

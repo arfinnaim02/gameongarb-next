@@ -1,0 +1,462 @@
+.manager {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.header > div > span,
+.editorHeader span {
+  display: block;
+  margin-bottom: 6px;
+  color: #f15a24;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.045em;
+}
+
+.header p {
+  max-width: 600px;
+  margin: 8px 0 0;
+  color: #7c827d;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.primary {
+  min-height: 41px;
+  padding: 0 14px;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #f15a24;
+  color: #fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.error,
+.success {
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.error {
+  border: 1px solid #efc8c4;
+  background: #fff5f4;
+  color: #af3d34;
+}
+
+.success {
+  border: 1px solid #c8e6d3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #f0faf4;
+  color: #25754c;
+}
+
+.panel {
+  border: 1px solid #e1e4e0;
+  background: #fff;
+}
+
+.toolbar {
+  padding: 12px;
+  border-bottom: 1px solid #e5e8e4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbar > span {
+  color: #929792;
+  font-size: 8px;
+}
+
+.search {
+  position: relative;
+  width: min(370px, 100%);
+}
+
+.search svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #969c97;
+}
+
+.search input {
+  width: 100%;
+  height: 39px;
+  padding: 0 10px 0 34px;
+  border: 1px solid #dfe3de;
+  outline: 0;
+  font: inherit;
+  font-size: 9px;
+}
+
+.tableWrap,
+.measurementWrap,
+.previewWrap {
+  overflow-x: auto;
+}
+
+.table,
+.measurementTable,
+.preview table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table {
+  min-width: 850px;
+}
+
+.table th,
+.measurementTable th,
+.preview th {
+  height: 38px;
+  padding: 0 9px;
+  border-bottom: 1px solid #e7eae6;
+  background: #fafbfa;
+  color: #7e847f;
+  text-align: left;
+  font-size: 7px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.table td {
+  padding: 11px 9px;
+  border-bottom: 1px solid #edf0ec;
+  color: #545a55;
+  font-size: 8px;
+}
+
+.table td strong {
+  color: #242825;
+  font-size: 9px;
+}
+
+.active,
+.archived {
+  padding: 4px 6px;
+  font-size: 7px;
+  font-weight: 850;
+}
+
+.active {
+  background: #eaf8ef;
+  color: #187848;
+}
+
+.archived {
+  background: #f2f3f1;
+  color: #777d78;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+}
+
+.actions button,
+.editorHeader button,
+.columnEditor button,
+.removeRow {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #e0e4df;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #555b56;
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgb(0 0 0 / 48%);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.editor {
+  width: min(850px, 100%);
+  height: 100%;
+  background: #f7f8f6;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.editorHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e5e1;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editorHeader h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.editorBody {
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  display: grid;
+  gap: 17px;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span {
+  color: #424743;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.field input,
+.field textarea,
+.field select,
+.columnEditor input,
+.measurementTable input {
+  width: 100%;
+  border: 1px solid #dfe3de;
+  outline: 0;
+  background: #fff;
+  color: #292d2a;
+  font: inherit;
+  font-size: 9px;
+}
+
+.field input,
+.field select {
+  height: 40px;
+  padding: 0 9px;
+}
+
+.field textarea {
+  padding: 9px;
+  resize: vertical;
+}
+
+.activeField {
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #e0e4df;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+.sectionHeading {
+  margin-top: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.sectionHeading h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sectionHeading p {
+  margin: 4px 0 0;
+  color: #888e89;
+  font-size: 8px;
+}
+
+.sectionHeading button {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid #dfe3de;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.columnEditor {
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  gap: 4px;
+}
+
+.columnEditor input {
+  height: 35px;
+  padding: 0 8px;
+}
+
+.measurementWrap {
+  border: 1px solid #e0e4df;
+  background: #fff;
+}
+
+.measurementTable {
+  min-width: 650px;
+}
+
+.measurementTable td {
+  padding: 6px;
+  border-bottom: 1px solid #edf0ec;
+}
+
+.measurementTable input {
+  min-width: 75px;
+  height: 34px;
+  padding: 0 7px;
+}
+
+.removeRow {
+  color: #b53d34;
+}
+
+.preview {
+  padding: 13px;
+  border: 1px solid #e0e4df;
+  background: #fff;
+}
+
+.previewHeading {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #4b514c;
+}
+
+.previewHeading strong {
+  font-size: 9px;
+}
+
+.previewHeading span {
+  margin-left: auto;
+  color: #929792;
+  font-size: 7px;
+}
+
+.preview table {
+  min-width: 500px;
+}
+
+.preview td {
+  padding: 9px;
+  border-bottom: 1px solid #edf0ec;
+  color: #4c524d;
+  font-size: 8px;
+}
+
+.editorFooter {
+  padding: 11px 20px;
+  border-top: 1px solid #e1e4e0;
+  background: #fff;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.cancel {
+  min-height: 41px;
+  padding: 0 14px;
+  border: 1px solid #dfe3de;
+  background: #fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.spin {
+  animation: sizeChartSpin 850ms linear infinite;
+}
+
+@keyframes sizeChartSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .header .primary {
+    width: 100%;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .editorBody {
+    padding: 14px 11px;
+  }
+
+  .twoColumns,
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}

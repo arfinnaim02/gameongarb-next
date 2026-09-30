@@ -36,6 +36,19 @@ export const adminProductInclude =
           true,
       },
     },
+
+      sizeChart: {
+      select: {
+        id:
+          true,
+
+        name:
+          true,
+
+        active:
+          true,
+      },
+    },
   });
 
 export type AdminProductDatabaseRecord =
@@ -175,6 +188,13 @@ export const productEditorSchema =
         z.boolean(),
 
       categoryId:
+        z
+          .string()
+          .trim()
+          .default(""),
+
+
+            sizeChartId:
         z
           .string()
           .trim()
@@ -595,6 +615,15 @@ export function serializeAdminProduct(
         ?.category
         .name ??
       "Uncategorized",
+
+          sizeChartId:
+      product.sizeChartId ??
+      "",
+
+    sizeChartName:
+      product.sizeChart
+        ?.name ??
+      "",
 
     image:
       primaryImage?.url ??

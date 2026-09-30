@@ -23,6 +23,10 @@ import {
   getProducts,
 } from "@/lib/catalog";
 
+import {
+  serializePublicSizeChart,
+} from "@/lib/size-charts";
+
 export const dynamic =
   "force-dynamic";
 
@@ -200,6 +204,13 @@ export default async function ProductPage({
         description={
           raw.description ??
           undefined
+        }
+        sizeChart={
+          raw.sizeChart
+            ? serializePublicSizeChart(
+                raw.sizeChart,
+              )
+            : null
         }
       />
 

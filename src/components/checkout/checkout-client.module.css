@@ -23,15 +23,16 @@
     28px 0
     70px;
 }
-
 /* =========================================================
-   RESPONSIVE PROGRESS
+   RESPONSIVE CHECKOUT PROGRESS
    ========================================================= */
 
 .progress {
-  position: relative;
-
-  max-width: 680px;
+  width:
+    min(
+      100%,
+      720px
+    );
 
   margin:
     0 auto
@@ -53,34 +54,17 @@
   list-style: none;
 }
 
-.progress::before {
-  content: "";
-
-  position: absolute;
-
-  left:
-    calc(
-      12.5% + 14px
-    );
-
-  right:
-    calc(
-      12.5% + 14px
-    );
-
-  top: 14px;
-
-  height: 1px;
-
-  background: #dfe3de;
-}
-
 .progress li {
   position: relative;
 
-  z-index: 1;
+  min-width: 0;
 
   display: grid;
+
+  grid-template-rows:
+    30px auto;
+
+  align-items: start;
 
   justify-items: center;
 
@@ -91,7 +75,35 @@
   text-align: center;
 }
 
+.progress li:not(:last-child)::after {
+  content: "";
+
+  position: absolute;
+
+  z-index: 0;
+
+  top: 14px;
+
+  left:
+    calc(
+      50% + 17px
+    );
+
+  width:
+    calc(
+      100% - 34px
+    );
+
+  height: 1px;
+
+  background: #dfe3de;
+}
+
 .progressNumber {
+  position: relative;
+
+  z-index: 2;
+
   width: 29px;
   height: 29px;
 
@@ -99,34 +111,77 @@
 
   place-items: center;
 
-  border: 1px solid #dfe3de;
+  border:
+    1px solid
+    #dfe3de;
 
-  border-radius: 999px;
+  border-radius:
+    999px;
 
-  background: #f7f8f6;
+  background:
+    #f7f8f6;
 
-  color: #8b908c;
+  color:
+    #8b908c;
 
   font-size: 8px;
+
+  line-height: 1;
 
   font-weight: 900;
 }
 
 .progress li strong {
-  font-size: 8px;
+  width: 100%;
+
+  min-width: 0;
+
+  color: inherit;
+
+  font-size:
+    clamp(
+      7px,
+      .75vw,
+      9px
+    );
+
+  line-height: 1.25;
+
   font-weight: 800;
+
+  white-space: normal;
+
+  overflow-wrap: anywhere;
 }
 
 .progressActive {
-  color: var(--orange) !important;
+  color:
+    var(--orange) !important;
 }
 
-.progressActive .progressNumber {
-  border-color: var(--orange);
-  background: var(--orange);
+.progressActive
+.progressNumber {
+  border-color:
+    var(--orange);
+
+  background:
+    var(--orange);
+
   color: #fff;
 }
 
+.progressActive:not(:last-child)::after {
+  background:
+    linear-gradient(
+      90deg,
+      var(--orange)
+        0%,
+      #dfe3de
+        42%,
+      #dfe3de
+        100%
+    );
+}
 /* =========================================================
    PAGE HEADER
    ========================================================= */
@@ -1419,36 +1474,53 @@
   }
 
   .progress {
-    margin-bottom: 24px;
-  }
+    width: 100%;
 
-  .progress::before {
-    left:
-      calc(
-        12.5% + 12px
-      );
-
-    right:
-      calc(
-        12.5% + 12px
-      );
-
-    top: 12px;
-  }
-
-  .progressNumber {
-    width: 25px;
-    height: 25px;
-
-    font-size: 7px;
+    margin-bottom:
+      24px;
   }
 
   .progress li {
+    grid-template-rows:
+      27px auto;
+
     gap: 5px;
   }
 
-  .progress li strong {
+  .progressNumber {
+    width: 26px;
+    height: 26px;
+
     font-size: 7px;
+  }
+
+  .progress li:not(:last-child)::after {
+    top: 12.5px;
+
+    left:
+      calc(
+        50% + 15px
+      );
+
+    width:
+      calc(
+        100% - 30px
+      );
+  }
+
+  .progress li strong {
+    padding-inline:
+      2px;
+
+    font-size:
+      clamp(
+        6px,
+        2vw,
+        7px
+      );
+
+    line-height:
+      1.18;
   }
 
   .pageHeader {
@@ -1511,17 +1583,50 @@
   }
 
   .progress {
-    margin-bottom: 20px;
+    margin-bottom:
+      20px;
+  }
+
+  .progress li {
+    grid-template-rows:
+      25px auto;
+
+    gap: 4px;
+  }
+
+  .progressNumber {
+    width: 24px;
+    height: 24px;
+
+    font-size: 6px;
+  }
+
+  .progress li:not(:last-child)::after {
+    top: 11.5px;
+
+    left:
+      calc(
+        50% + 13px
+      );
+
+    width:
+      calc(
+        100% - 26px
+      );
   }
 
   .progress li strong {
-    max-width: 60px;
+    max-width: none;
 
-    overflow: hidden;
+    overflow: visible;
 
-    text-overflow: ellipsis;
+    text-overflow: clip;
 
-    white-space: nowrap;
+    white-space: normal;
+
+    font-size: 6px;
+
+    line-height: 1.15;
   }
 
   .card {

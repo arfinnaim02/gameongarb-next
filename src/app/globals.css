@@ -12294,30 +12294,29 @@ b {
   transform:
     rotate(-26deg);
 }
-
 /* =========================================================
-   SIZE CHART
+   PRODUCT SIZE GUIDE
    ========================================================= */
 
-.product-size-chart {
+.product-size-guide {
   margin-top:
-    15px;
+    16px;
 
   border:
     1px solid
-    #e3e6e2;
+    #e2e5e1;
 
   background:
-    #fafbfa;
+    #fff;
 }
 
-.product-size-chart
+.product-size-guide
 > summary {
   min-height:
-    44px;
+    50px;
 
   padding:
-    0 12px;
+    0 13px;
 
   display: flex;
 
@@ -12327,66 +12326,235 @@ b {
   justify-content:
     space-between;
 
-  gap: 12px;
+  gap: 14px;
 
   list-style:
     none;
 
   cursor:
     pointer;
+
+  transition:
+    background-color
+      180ms ease;
 }
 
-.product-size-chart
+.product-size-guide
+> summary:hover {
+  background:
+    #fafbfa;
+}
+
+.product-size-guide
 > summary::-webkit-details-marker {
   display: none;
 }
 
-.product-size-chart
-> summary
-> span {
-  display:
-    inline-flex;
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.product-size-guide-title {
+  min-width: 0;
+
+  display: flex;
 
   align-items:
     center;
 
-  gap: 7px;
+  gap: 9px;
 
   color:
-    #303532;
+    #363b37;
+}
+
+.product-size-guide-title
+svg {
+  flex:
+    0 0 auto;
+
+  color:
+    var(--orange);
+}
+
+.product-size-guide-title
+> div {
+  min-width: 0;
+}
+
+.product-size-guide-title
+strong,
+.product-size-guide-title
+span {
+  display: block;
+}
+
+.product-size-guide-title
+strong {
+  color:
+    #292d2a;
 
   font-size:
     9px;
 
+  line-height: 1;
+
   font-weight:
-    850;
+    900;
 }
 
-.product-size-chart
-> summary
-> svg {
-  color:
-    #777d78;
+.product-size-guide-title
+span {
+  margin-top:
+    4px;
 
+  overflow:
+    hidden;
+
+  color:
+    #8b908c;
+
+  font-size:
+    7px;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   RIGHT
+   ========================================================= */
+
+.product-size-guide-summary-right {
+  flex:
+    0 0 auto;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  gap: 9px;
+
+  color:
+    #8b908c;
+}
+
+.product-size-guide-summary-right
+span {
+  font-size:
+    7px;
+}
+
+.product-size-guide-summary-right
+svg {
   transition:
     transform
       220ms
       var(--ease-premium);
 }
 
-.product-size-chart[open]
-> summary
-> svg {
+.product-size-guide[open]
+.product-size-guide-summary-right
+svg {
   transform:
     rotate(180deg);
 }
 
-.product-size-chart-content {
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.product-size-guide-content {
   padding:
-    0 12px 12px;
+    0 13px
+    13px;
+
+  border-top:
+    1px solid
+    #edf0ec;
 }
 
-.product-size-chart-table-wrap {
+.product-size-guide-top {
+  padding:
+    13px 0
+    10px;
+
+  display: flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap: 15px;
+}
+
+.product-size-guide-top
+span {
+  display: block;
+
+  margin-bottom:
+    4px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    6px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .1em;
+
+  text-transform:
+    uppercase;
+}
+
+.product-size-guide-top
+h3 {
+  margin: 0;
+
+  color:
+    #272b28;
+
+  font-size:
+    13px;
+
+  line-height: 1.1;
+
+  font-weight:
+    900;
+}
+
+.product-size-guide-top
+> strong {
+  color:
+    #8a908b;
+
+  font-size:
+    7px;
+
+  font-weight:
+    750;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.product-size-guide-table-wrap {
+  width: 100%;
+
   overflow-x:
     auto;
 
@@ -12396,114 +12564,224 @@ b {
 
   background:
     #fff;
+
+  -webkit-overflow-scrolling:
+    touch;
 }
 
-.product-size-chart-table {
+.product-size-guide-table {
   width: 100%;
 
   min-width:
-    480px;
+    520px;
 
   border-collapse:
     collapse;
 }
 
-.product-size-chart-table
+.product-size-guide-table
 th {
   height:
-    36px;
+    38px;
 
   padding:
-    0 10px;
+    0 11px;
+
+  border-right:
+    1px solid
+    #e8ebe7;
 
   border-bottom:
     1px solid
-    #e7eae6;
+    #e1e4e0;
 
   background:
-    #f7f8f6;
+    #f6f7f5;
 
   color:
-    #777d78;
+    #676d68;
 
   text-align:
-    left;
+    center;
 
   font-size:
     7px;
+
+  line-height: 1.2;
 
   font-weight:
     900;
 
   letter-spacing:
-    .06em;
+    .045em;
 
   text-transform:
     uppercase;
 }
 
-.product-size-chart-table
+.product-size-guide-table
+th:first-child {
+  position: sticky;
+
+  left: 0;
+
+  z-index: 2;
+
+  background:
+    #f1f3f0;
+
+  text-align:
+    left;
+}
+
+.product-size-guide-table
 td {
+  min-width:
+    85px;
+
   padding:
-    10px;
+    11px;
+
+  border-right:
+    1px solid
+    #edf0ec;
 
   border-bottom:
     1px solid
     #edf0ec;
 
   color:
-    #4e544f;
+    #505651;
+
+  text-align:
+    center;
 
   font-size:
     8px;
+
+  font-weight:
+    650;
 }
 
-.product-size-chart-table
-tbody
+.product-size-guide-table
+td:first-child {
+  position: sticky;
+
+  left: 0;
+
+  z-index: 1;
+
+  min-width:
+    75px;
+
+  background:
+    #fbfcfb;
+
+  color:
+    #242825;
+
+  text-align:
+    left;
+}
+
+.product-size-guide-table
+td:first-child
+strong {
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+}
+
+.product-size-guide-table
 tr:last-child
 td {
   border-bottom: 0;
 }
 
-.product-size-chart-table
-td:first-child {
-  color:
-    #1e221f;
-
-  font-size:
-    9px;
+.product-size-guide-table
+th:last-child,
+.product-size-guide-table
+td:last-child {
+  border-right: 0;
 }
 
-.product-size-chart-table
-.is-available {
-  color:
-    #208052;
+/* =========================================================
+   NOTE
+   ========================================================= */
 
-  font-weight:
-    800;
-}
-
-.product-size-chart-table
-.is-unavailable {
-  color:
-    #b0443b;
-
-  font-weight:
-    800;
-}
-
-.product-size-chart-note {
+.product-size-guide-note {
   margin:
-    9px 0 0;
+    10px 0 0;
 
   color:
-    #888e89;
+    #8b908c;
 
   font-size:
     7px;
 
   line-height:
     1.55;
+}
+
+/* =========================================================
+   MOBILE SIZE GUIDE
+   ========================================================= */
+
+@media (
+  max-width: 700px
+) {
+  .product-size-guide {
+    margin-top:
+      14px;
+  }
+
+  .product-size-guide
+  > summary {
+    min-height:
+      52px;
+
+    padding-inline:
+      11px;
+  }
+
+  .product-size-guide-summary-right
+  span {
+    display: none;
+  }
+
+  .product-size-guide-content {
+    padding:
+      0 9px
+      10px;
+  }
+
+  .product-size-guide-top {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap: 5px;
+  }
+
+  .product-size-guide-table {
+    min-width:
+      max(
+        500px,
+        100%
+      );
+  }
+
+  .product-size-guide-table
+  th,
+  .product-size-guide-table
+  td {
+    padding-inline:
+      10px;
+  }
 }
 
 /* =========================================================

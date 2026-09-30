@@ -199,6 +199,10 @@ export async function PATCH(
               name:
                 input.name,
 
+                              sizeChartId:
+                input.sizeChartId ||
+                null,
+
               slug:
                 input.slug,
 

@@ -367,6 +367,9 @@ export async function getProducts(
       },
 
       include: {
+        sizeChart:
+          true,
+
         images: {
           orderBy: {
             sortOrder:
@@ -429,6 +432,9 @@ export async function getProduct(
       },
 
       include: {
+        sizeChart:
+          true,
+
         images: {
           orderBy: {
             sortOrder:

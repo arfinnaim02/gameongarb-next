@@ -13,6 +13,7 @@ import {
   Images,
   LayoutDashboard,
   Package,
+  Ruler,
   Settings,
   ShoppingBag,
   Tags,
@@ -67,6 +68,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Products",
         href: "/admin/products",
         icon: Package,
+      },
+
+      {
+        label: "Size Charts",
+        href: "/admin/size-charts",
+        icon: Ruler,
       },
       {
         label: "Categories",

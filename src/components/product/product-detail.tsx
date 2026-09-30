@@ -10,7 +10,6 @@ import {
   Minus,
   Plus,
   RefreshCw,
-  Ruler,
   ShieldCheck,
   ShoppingCart,
   Truck,
@@ -41,6 +40,14 @@ import {
   useStore,
 } from "@/components/shared/store-provider";
 
+import {
+  ProductSizeGuide,
+} from "@/components/product/product-size-guide";
+
+import type {
+  PublicSizeChart,
+} from "@/lib/size-chart-types";
+
 /* =========================================================
    CONSTANTS
    ========================================================= */
@@ -60,8 +67,10 @@ type ProductDetailProps = {
 
   description?:
     string;
-};
 
+  sizeChart?:
+    PublicSizeChart | null;
+};
 /* =========================================================
    PRODUCT DETAIL
    ========================================================= */
@@ -70,6 +79,7 @@ export function ProductDetail({
   product,
   shortDescription,
   description,
+  sizeChart,
 }: ProductDetailProps) {
   const {
     add,
@@ -438,94 +448,6 @@ export function ProductDetail({
       product.id,
     );
 
-  /* =======================================================
-     SIZE AVAILABILITY CHART
-     ======================================================= */
-
-  const sizeChartRows =
-    useMemo(
-      () =>
-        sizes.map(
-          (
-            chartSize,
-          ) => {
-            const matching =
-              variants.length >
-              0
-                ? variants.filter(
-                    (
-                      variant,
-                    ) =>
-                      variant.size ===
-                      chartSize,
-                  )
-                : [];
-
-            const available =
-              matching.filter(
-                (
-                  variant,
-                ) =>
-                  variant.stock >
-                  0,
-              );
-
-            const stock =
-              variants.length >
-              0
-                ? available.reduce(
-                    (
-                      total,
-                      variant,
-                    ) =>
-                      total +
-                      variant.stock,
-
-                    0,
-                  )
-                : product.stock;
-
-            const colors =
-              variants.length >
-              0
-                ? [
-                    ...new Set(
-                      available.map(
-                        (
-                          variant,
-                        ) =>
-                          variant.color,
-                      ),
-                    ),
-                  ]
-                : product.colors;
-
-            return {
-              size:
-                chartSize,
-
-              colors,
-
-              stock,
-
-              available:
-                stock >
-                0,
-            };
-          },
-        ),
-
-      [
-        product.colors,
-        product.stock,
-        sizes,
-        variants,
-      ],
-    );
-
-  /* =======================================================
-     SELECTION
-     ======================================================= */
 
   function selectColor(
     nextColor:
@@ -1187,119 +1109,17 @@ export function ProductDetail({
               </div>
             </div>
 
-            {/* =============================================
-                COLLAPSIBLE SIZE CHART
+                        {/* =============================================
+                ASSIGNED SIZE GUIDE
                 ============================================= */}
 
-            <details className="product-size-chart">
-              <summary>
-                <span>
-                  <Ruler
-                    size={15}
-                    strokeWidth={
-                      1.7
-                    }
-                  />
-
-                  Size Chart
-                </span>
-
-                <ChevronDown
-                  size={16}
-                  strokeWidth={
-                    1.7
-                  }
-                />
-              </summary>
-
-              <div className="product-size-chart-content">
-                <div className="product-size-chart-table-wrap">
-                  <table className="product-size-chart-table">
-                    <thead>
-                      <tr>
-                        <th>
-                          Size
-                        </th>
-
-                        <th>
-                          Available Colors
-                        </th>
-
-                        <th>
-                          Stock
-                        </th>
-
-                        <th>
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {sizeChartRows.map(
-                        (
-                          row,
-                        ) => (
-                          <tr
-                            key={
-                              row.size
-                            }
-                          >
-                            <td>
-                              <strong>
-                                {
-                                  row.size
-                                }
-                              </strong>
-                            </td>
-
-                            <td>
-                              {row.colors.length >
-                              0
-                                ? row.colors.join(
-                                    ", ",
-                                  )
-                                : "—"}
-                            </td>
-
-                            <td>
-                              {
-                                row.stock
-                              }
-                            </td>
-
-                            <td>
-                              <span
-                                className={
-                                  row.available
-                                    ? "is-available"
-                                    : "is-unavailable"
-                                }
-                              >
-                                {row.available
-                                  ? "Available"
-                                  : "Unavailable"}
-                              </span>
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                <p className="product-size-chart-note">
-                  Availability is
-                  based on the live
-                  product variants.
-                  Disabled sizes are
-                  currently unavailable
-                  for the selected
-                  product.
-                </p>
-              </div>
-            </details>
-
+            {sizeChart ? (
+              <ProductSizeGuide
+                chart={
+                  sizeChart
+                }
+              />
+            ) : null}
             {/* =============================================
                 QUANTITY + STOCK
                 ============================================= */}

@@ -104,6 +104,9 @@ export async function POST(
             name:
               `${source.name} Copy`,
 
+                          sizeChartId:
+              source.sizeChartId,
+
             slug:
               `${source.slug}-copy-${stamp}`,
 
@@ -306,7 +309,11 @@ export async function POST(
             await tx.product.create({
               data: {
                 name:
-                  input.name,
+                  input.name,               
+                   sizeChartId:
+                  input.sizeChartId ||
+                  null,
+
 
                 slug:
                   input.slug,
