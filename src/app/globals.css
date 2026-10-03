@@ -3886,15 +3886,17 @@ span {
       );
   }
 }
-
-
 /* =========================================================
-   PRODUCT RAILS — CONTINUOUS PREMIUM CAROUSEL
+   PRODUCT RAILS — PREMIUM INFINITE CAROUSEL
    ========================================================= */
 
 .home-product-rail {
+  --rail-gap:
+    var(--home-gap);
+
   position: relative;
 
+  width: 100%;
   min-width: 0;
 
   overflow: hidden;
@@ -3906,6 +3908,7 @@ span {
    VIEWPORT
    ========================================================= */
 
+.home-product-rail
 .home-rail-viewport {
   position: relative;
 
@@ -3915,22 +3918,29 @@ span {
   overflow: hidden;
 
   padding:
-    4px 1px
-    7px;
+    5px 1px
+    8px;
+
+  /*
+   * Allows product-card widths to
+   * be calculated from the actual
+   * carousel viewport rather than
+   * the full browser width.
+   */
+  container-type:
+    inline-size;
 
   scrollbar-width:
     none;
 
-  touch-action:
-    pan-y;
-
   overscroll-behavior-x:
     contain;
 
-  contain:
-    paint;
+  touch-action:
+    pan-y;
 }
 
+.home-product-rail
 .home-rail-viewport::-webkit-scrollbar {
   display: none;
 }
@@ -3939,11 +3949,15 @@ span {
    TRACK
    ========================================================= */
 
+.home-product-rail
 .home-rail-track {
   position: relative;
 
-  width: 100%;
-  min-width: 0;
+  width:
+    max-content;
+
+  min-width:
+    max-content;
 
   display: flex;
 
@@ -3952,9 +3966,6 @@ span {
 
   flex-wrap:
     nowrap;
-
-  gap:
-    var(--home-gap);
 
   transform:
     translate3d(
@@ -3974,15 +3985,52 @@ span {
 }
 
 /* =========================================================
-   RIGHT → LEFT
+   PRODUCT GROUP
    ========================================================= */
 
-.home-rail-track.is-ready.is-right-to-left {
+/*
+ * Each group is EXACTLY identical.
+ *
+ * Padding on the right creates the
+ * same gap between group 1 and
+ * group 2 as between individual
+ * products.
+ *
+ * Because both groups have the same
+ * total width, translateX(-50%)
+ * equals exactly one complete group.
+ */
+.home-product-rail
+.home-rail-group {
+  flex:
+    0 0 auto;
+
+  display: flex;
+
+  align-items:
+    stretch;
+
+  gap:
+    var(--rail-gap);
+
+  padding-right:
+    var(--rail-gap);
+}
+
+/* =========================================================
+   RIGHT → LEFT
+   NEW ARRIVALS
+   ========================================================= */
+
+.home-product-rail.is-right-to-left:not(
+  .is-static
+)
+.home-rail-track {
   animation:
-    homeRailRightToLeft
+    homeProductRailRightToLeft
     var(
       --rail-duration,
-      60s
+      34s
     )
     linear
     infinite;
@@ -3990,24 +4038,28 @@ span {
 
 /* =========================================================
    LEFT → RIGHT
+   TRENDING
    ========================================================= */
 
-.home-rail-track.is-ready.is-left-to-right {
+.home-product-rail.is-left-to-right:not(
+  .is-static
+)
+.home-rail-track {
   animation:
-    homeRailLeftToRight
+    homeProductRailLeftToRight
     var(
       --rail-duration,
-      60s
+      34s
     )
     linear
     infinite;
 }
 
 /* =========================================================
-   LOOP KEYFRAMES
+   SEAMLESS ANIMATION
    ========================================================= */
 
-@keyframes homeRailRightToLeft {
+@keyframes homeProductRailRightToLeft {
   from {
     transform:
       translate3d(
@@ -4020,22 +4072,18 @@ span {
   to {
     transform:
       translate3d(
-        var(
-          --rail-distance-negative
-        ),
+        -50%,
         0,
         0
       );
   }
 }
 
-@keyframes homeRailLeftToRight {
+@keyframes homeProductRailLeftToRight {
   from {
     transform:
       translate3d(
-        var(
-          --rail-distance-negative
-        ),
+        -50%,
         0,
         0
       );
@@ -4052,22 +4100,43 @@ span {
 }
 
 /* =========================================================
-   DESKTOP — FOUR VISIBLE
+   PRODUCT WIDTH — DESKTOP
+   4 PRODUCTS VISIBLE
    ========================================================= */
 
+.home-product-rail
 .home-rail-item {
-  min-width: 0;
+  /*
+   * Fallback for browsers without
+   * container query units.
+   */
+  width:
+    clamp(
+      245px,
+      23vw,
+      310px
+    );
 
-  flex:
-    0 0
+  /*
+   * Actual width:
+   * exactly four products visible.
+   */
+  width:
     calc(
       (
-        100% -
-        3 *
-        var(--home-gap)
+        100cqw -
+        (
+          3 *
+          var(--rail-gap)
+        )
       ) /
       4
     );
+
+  min-width: 0;
+
+  flex:
+    0 0 auto;
 
   backface-visibility:
     hidden;
@@ -4076,6 +4145,7 @@ span {
     hidden;
 }
 
+.home-product-rail
 .home-rail-item
 > .product-card {
   height: 100%;
@@ -4085,113 +4155,123 @@ span {
    CARD INTERACTION
    ========================================================= */
 
+.home-product-rail
 .home-rail-item {
   transition:
     transform
-      260ms
+      240ms
       var(--ease-premium);
 }
 
+/*
+ * Pause while the customer interacts
+ * with a product card.
+ */
 @media (
   hover: hover
 ) and (
   pointer: fine
 ) {
+  .home-product-rail:hover
+  .home-rail-track,
+
+  .home-product-rail:focus-within
+  .home-rail-track {
+    animation-play-state:
+      paused;
+  }
+
+  .home-product-rail
   .home-rail-item:hover {
     position: relative;
 
     z-index: 3;
 
     transform:
-      translateY(-3px);
-  }
-
-  .product-card:hover {
-    transform:
-      translateY(-3px);
-
-    border-color:
-      #eceeea;
-
-    box-shadow:
-      0 12px 28px
-      rgb(
-        0 0 0 /
-        5%
+      translateY(
+        -3px
       );
-  }
-
-  .product-card:hover
-  .product-card-image {
-    transform:
-      scale(1.045);
-  }
-
-  .product-card-wishlist:hover {
-    color:
-      var(--orange);
-
-    transform:
-      scale(1.08);
   }
 }
 
 /* =========================================================
-   DOTS
+   SUBTLE EDGE FADES
    ========================================================= */
 
-.home-rail-dots {
-  min-height:
-    24px;
+.home-product-rail::before,
+.home-product-rail::after {
+  content: "";
 
-  margin-top:
-    9px;
+  position: absolute;
 
-  display: flex;
+  z-index: 5;
 
-  align-items:
-    center;
+  top: 0;
+  bottom: 8px;
 
-  justify-content:
-    center;
+  width:
+    clamp(
+      6px,
+      1.4vw,
+      20px
+    );
 
-  gap: 6px;
+  pointer-events:
+    none;
 }
 
-.home-rail-dot {
-  display: block;
-
-  width: 5px;
-  height: 5px;
-
-  flex:
-    0 0 auto;
-
-  border-radius:
-    999px;
+.home-product-rail::before {
+  left: 0;
 
   background:
-    #c8cbc7;
-
-  transition:
-    width
-      320ms
-      var(--ease-premium),
-    background-color
-      260ms ease,
-    transform
-      260ms
-      var(--ease-premium);
+    linear-gradient(
+      90deg,
+      var(--paper)
+        0%,
+      rgb(
+        247 247 244 /
+        70%
+      )
+        34%,
+      transparent
+        100%
+    );
 }
 
-.home-rail-dot.is-active {
-  width: 21px;
+.home-product-rail::after {
+  right: 0;
 
   background:
-    var(--orange);
+    linear-gradient(
+      270deg,
+      var(--paper)
+        0%,
+      rgb(
+        247 247 244 /
+        70%
+      )
+        34%,
+      transparent
+        100%
+    );
+}
 
-  transform:
-    scaleY(1.08);
+/* =========================================================
+   STATIC SINGLE PRODUCT
+   ========================================================= */
+
+.home-product-rail.is-static
+.home-rail-track {
+  width: 100%;
+
+  animation: none;
+}
+
+.home-product-rail.is-static
+.home-rail-group {
+  width: 100%;
+
+  padding-right: 0;
 }
 
 /* =========================================================
@@ -4207,10 +4287,86 @@ span {
   color:
     var(--muted);
 
-  font-size: 15px;
+  font-size:
+    15px;
 
   line-height:
     1.55;
+}
+
+/* =========================================================
+   TABLET
+   3 PRODUCTS VISIBLE
+   ========================================================= */
+
+@media (
+  max-width: 1023px
+) {
+  .home-product-rail
+  .home-rail-item {
+    width:
+      30vw;
+
+    width:
+      calc(
+        (
+          100cqw -
+          (
+            2 *
+            var(--rail-gap)
+          )
+        ) /
+        3
+      );
+  }
+}
+
+/* =========================================================
+   MOBILE
+   2 PRODUCTS VISIBLE
+   ========================================================= */
+
+@media (
+  max-width: 700px
+) {
+  .home-product-rail {
+    --rail-gap:
+      8px;
+  }
+
+  .home-product-rail
+  .home-rail-viewport {
+    padding:
+      3px 0
+      5px;
+  }
+
+  .home-product-rail
+  .home-rail-item {
+    width:
+      calc(
+        (
+          100vw -
+          40px
+        ) /
+        2
+      );
+
+    width:
+      calc(
+        (
+          100cqw -
+          var(--rail-gap)
+        ) /
+        2
+      );
+  }
+
+  .home-product-rail::before,
+  .home-product-rail::after {
+    width:
+      7px;
+  }
 }
 
 /* =========================================================
@@ -4221,21 +4377,20 @@ span {
   prefers-reduced-motion:
     reduce
 ) {
-  .home-rail-track.is-ready {
+  .home-product-rail
+  .home-rail-track {
     animation:
       none !important;
 
     transform:
-      translate3d(
-        0,
-        0,
-        0
-      ) !important;
+      none !important;
 
     will-change:
       auto;
   }
 }
+
+
 /* =========================================================
    CAMPAIGN PAIR — PDF PAGE 1
    ========================================================= */
@@ -6094,18 +6249,7 @@ span {
 }
 
 @media (max-width: 1023px) {
-  .home-rail-item {
-    flex:
-      0 0
-      calc(
-        (
-          100% -
-          2 *
-          var(--home-gap)
-        ) /
-        3
-      );
-  }
+
 
   .home-rail-viewport {
     scroll-snap-type: none;
@@ -6275,54 +6419,6 @@ span {
     font-size: 15px;
   }
 
-  /* =========================
-     PRODUCT RAIL — MOBILE
-     AUTO ONLY
-     ========================= */
-
-  .home-rail-viewport {
-    gap: 8px;
-
-    overflow-x: hidden;
-
-    padding:
-      3px 0
-      5px;
-
-    scroll-snap-type: none;
-
-    touch-action:
-      pan-y;
-  }
-
-  .home-rail-item {
-    flex:
-      0 0
-      calc(
-        (
-          100% -
-          8px
-        ) /
-        2
-      );
-  }
-
-  .home-rail-dots {
-    min-height: 20px;
-
-    margin-top: 6px;
-
-    gap: 5px;
-  }
-
-  .home-rail-dot {
-    width: 4px;
-    height: 4px;
-  }
-
-  .home-rail-dot.is-active {
-    width: 17px;
-  }
   /* =========================
      PRODUCT CARD
      ========================= */
