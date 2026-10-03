@@ -1226,38 +1226,71 @@ textarea {
     0.2em;
   text-transform:
     uppercase;
-}/* =========================================================
+}
+/* =========================================================
    HERO — PREMIUM HOMEPAGE
+   Fixed frame + smooth crossfade
    ========================================================= */
 
 .premium-hero {
   position: relative;
 
-  min-height:
+  width: 100%;
+
+  /*
+   * Desktop artwork recommendation:
+   * 1920 × 850.
+   *
+   * 850 / 1920 = 44.27vw.
+   *
+   * The frame is controlled here,
+   * NOT by uploaded image dimensions.
+   */
+  height:
     clamp(
-      610px,
-      calc(
-        100svh -
-        107px
-      ),
-      820px
+      520px,
+      44.27vw,
+      700px
     );
+
+  min-height: 0;
 
   overflow: hidden;
 
   isolation: isolate;
-
-  display: flex;
 
   background:
     #080a0a;
 
   color:
     #fff;
+
+  touch-action:
+    pan-y;
+
+  user-select:
+    none;
 }
 
 /* =========================================================
-   HERO MEDIA — CROSSFADE STACK
+   FIXED MEDIA FRAME
+   ========================================================= */
+
+.premium-hero-media-stack {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 0;
+
+  overflow: hidden;
+
+  background:
+    #080a0a;
+}
+
+/* =========================================================
+   SLIDE
    ========================================================= */
 
 .premium-hero-media {
@@ -1265,73 +1298,109 @@ textarea {
 
   inset: 0;
 
-  z-index: -5;
+  z-index: 0;
 
   width: 100%;
   height: 100%;
 
   overflow: hidden;
 
-  background:
-    #080a0a;
-
   opacity: 0;
 
-  visibility: hidden;
+  /*
+   * Important:
+   * Do NOT use visibility:hidden here.
+   *
+   * Both the incoming and outgoing images
+   * must remain rendered during the fade,
+   * otherwise the browser can create a
+   * visible flash between slides.
+   */
+  visibility: visible;
 
   pointer-events: none;
 
+  transform:
+    translateZ(0);
+
+  will-change:
+    opacity;
+
   transition:
     opacity
-      900ms
+      var(
+        --hero-transition-duration,
+        1000ms
+      )
       cubic-bezier(
-        .4,
-        0,
-        .2,
+        .22,
+        .61,
+        .36,
         1
-      ),
-    visibility
-      900ms
-      step-end;
+      );
 }
 
 .premium-hero-media.is-active {
-  z-index: -4;
+  z-index: 1;
+
+  opacity: 1;
+}
+
+/*
+ * New slide sits above the outgoing
+ * slide while the previous image
+ * fades underneath it.
+ */
+.premium-hero-media.is-active {
+  z-index: 1;
 
   opacity: 1;
 
-  visibility: visible;
+  visibility:
+    visible;
 
   transition:
     opacity
-      900ms
+      var(
+        --hero-transition-duration,
+        1100ms
+      )
       cubic-bezier(
-        .4,
-        0,
-        .2,
+        .22,
+        .61,
+        .36,
         1
       ),
     visibility
-      0ms
-      step-start;
+      0s;
 }
 
+/* =========================================================
+   IMAGE
+   ========================================================= */
+
 .premium-hero-media
-picture,
-.premium-hero-media
-img {
+picture {
+  position: absolute;
+
+  inset: 0;
+
+  display: block;
+
   width: 100%;
   height: 100%;
 }
 
 .premium-hero-media
-picture {
-  display: block;
-}
-
-.premium-hero-media
 img {
+  position: absolute;
+
+  inset: 0;
+
   display: block;
+
+  width: 100%;
+  height: 100%;
 
   object-fit:
     cover;
@@ -1339,18 +1408,26 @@ img {
   object-position:
     center center;
 
+  /*
+   * Different original image sizes
+   * are automatically cropped into
+   * the exact same storefront frame.
+   */
   transform:
-    scale(1.035);
+    scale(1.025);
 
   transition:
     transform
-      4400ms
+      6200ms
       cubic-bezier(
-        .17,
-        .67,
-        .3,
+        .16,
+        .65,
+        .29,
         1
       );
+
+  will-change:
+    transform;
 
   backface-visibility:
     hidden;
@@ -1366,7 +1443,7 @@ img {
 }
 
 /* =========================================================
-   CINEMATIC CONTRAST
+   CINEMATIC SHADE
    ========================================================= */
 
 .premium-hero-shade {
@@ -1374,108 +1451,105 @@ img {
 
   inset: 0;
 
-  z-index: -3;
+  z-index: 2;
+
+  pointer-events: none;
 
   background:
     linear-gradient(
       90deg,
       rgb(
         4 5 5 /
-        91%
+        90%
       )
         0%,
       rgb(
         4 5 5 /
-        80%
+        77%
       )
-        18%,
+        20%,
       rgb(
         4 5 5 /
-        60%
+        52%
       )
-        35%,
+        38%,
       rgb(
         4 5 5 /
-        28%
+        22%
       )
-        54%,
+        58%,
       rgb(
         4 5 5 /
-        8%
+        5%
       )
-        75%,
-      rgb(
-        4 5 5 /
-        2%
-      )
+        80%,
+      transparent
         100%
     ),
     linear-gradient(
       180deg,
       rgb(
         0 0 0 /
-        8%
+        5%
       )
         0%,
       transparent
         48%,
       rgb(
         0 0 0 /
-        30%
+        26%
       )
         100%
     );
-
-  pointer-events: none;
 }
 
 /* =========================================================
-   BRAND LIGHT
+   ORANGE BRAND GLOW
    ========================================================= */
 
 .premium-hero-glow {
   position: absolute;
 
-  left: -185px;
+  left: -180px;
+  bottom: -320px;
 
-  bottom: -315px;
+  z-index: 3;
 
-  z-index: -2;
-
-  width: 690px;
-  height: 690px;
+  width: 670px;
+  height: 670px;
 
   border-radius:
     50%;
+
+  pointer-events:
+    none;
 
   background:
     radial-gradient(
       circle,
       rgb(
         255 90 22 /
-        16%
+        15%
       )
         0%,
       rgb(
         255 90 22 /
-        7%
+        6%
       )
-        34%,
+        36%,
       transparent
         70%
     );
-
-  pointer-events: none;
 }
 
 /* =========================================================
-   CONTENT
+   INNER
    ========================================================= */
 
 .premium-hero-inner {
   position: relative;
 
-  min-height: inherit;
+  z-index: 4;
 
   width:
     min(
@@ -1485,6 +1559,8 @@ img {
         48px
       )
     );
+
+  height: 100%;
 
   margin-inline:
     auto;
@@ -1502,6 +1578,10 @@ img {
     center;
 }
 
+/* =========================================================
+   COPY
+   ========================================================= */
+
 .premium-hero-copy {
   width:
     min(
@@ -1510,12 +1590,12 @@ img {
     );
 
   padding:
-    92px 0
-    116px;
+    55px 0
+    86px;
 
   animation:
     premiumHeroCopyIn
-    680ms
+    720ms
     cubic-bezier(
       .22,
       .8,
@@ -1539,19 +1619,20 @@ img {
   gap: 11px;
 
   margin-bottom:
-    20px;
+    18px;
 
   color:
     #ff7540;
 
-  font-size: 13px;
+  font-size:
+    13px;
 
   line-height: 1;
 
   font-weight: 900;
 
   letter-spacing:
-    .3em;
+    .28em;
 
   text-transform:
     uppercase;
@@ -1575,7 +1656,7 @@ img {
 
 .premium-hero-title {
   max-width:
-    8.4ch;
+    8.8ch;
 
   margin: 0;
 
@@ -1584,13 +1665,13 @@ img {
 
   font-size:
     clamp(
-      3.9rem,
-      7vw,
-      7.2rem
+      3.5rem,
+      6.35vw,
+      6.7rem
     );
 
   line-height:
-    .85;
+    .86;
 
   font-weight: 950;
 
@@ -1598,7 +1679,7 @@ img {
     italic;
 
   letter-spacing:
-    -.071em;
+    -.067em;
 
   text-transform:
     uppercase;
@@ -1607,10 +1688,10 @@ img {
     balance;
 
   text-shadow:
-    0 15px 45px
+    0 14px 42px
     rgb(
       0 0 0 /
-      28%
+      26%
     );
 }
 
@@ -1623,23 +1704,19 @@ img {
     440px;
 
   margin:
-    24px 0 0;
+    20px 0 0;
 
   color:
     rgb(
       255 255 255 /
-      76%
+      78%
     );
 
   font-size:
-    clamp(
-      13px,
-      1.15vw,
-      16px
-    );
+    15px;
 
   line-height:
-    1.65;
+    1.6;
 
   letter-spacing:
     .005em;
@@ -1654,13 +1731,13 @@ img {
 
 .premium-hero-cta {
   min-height:
-    49px;
+    48px;
 
   margin-top:
-    29px;
+    25px;
 
   padding:
-    0 22px;
+    0 21px;
 
   display:
     inline-flex;
@@ -1671,7 +1748,7 @@ img {
   justify-content:
     center;
 
-  gap: 13px;
+  gap: 11px;
 
   border:
     1px solid
@@ -1683,14 +1760,15 @@ img {
   color:
     #101212;
 
-  font-size: 13px;
+  font-size:
+    14px;
 
   line-height: 1;
 
   font-weight: 900;
 
   letter-spacing:
-    .09em;
+    .075em;
 
   text-transform:
     uppercase;
@@ -1758,21 +1836,23 @@ svg {
 }
 
 /* =========================================================
-   DOTS / PROGRESS
+   DOTS
    ========================================================= */
 
 .premium-hero-dots {
   position: absolute;
 
   left: 50%;
+  bottom: 24px;
 
-  bottom: 28px;
-
-  z-index: 5;
+  z-index: 6;
 
   display: flex;
 
   align-items:
+    center;
+
+  justify-content:
     center;
 
   gap: 7px;
@@ -1785,11 +1865,12 @@ svg {
   position: relative;
 
   width: 19px;
-  height: 3px;
+  height: 4px;
 
   padding: 0;
 
-  overflow: hidden;
+  overflow:
+    hidden;
 
   border: 0;
 
@@ -1798,6 +1879,9 @@ svg {
       255 255 255 /
       32%
     );
+
+  cursor:
+    pointer;
 
   transition:
     width
@@ -1811,7 +1895,7 @@ svg {
   background:
     rgb(
       255 255 255 /
-      65%
+      68%
     );
 }
 
@@ -1845,7 +1929,7 @@ svg {
     premiumHeroProgress
     var(
       --hero-autoplay-duration,
-      4000ms
+      5200ms
     )
     linear
     both;
@@ -1870,9 +1954,9 @@ svg {
       )
     );
 
-  bottom: 25px;
+  bottom: 21px;
 
-  z-index: 5;
+  z-index: 6;
 
   align-items:
     center;
@@ -1885,7 +1969,8 @@ svg {
 
 .premium-hero-counter
 strong {
-  font-size: 14px;
+  font-size:
+    14px;
 
   font-weight: 900;
 
@@ -1910,10 +1995,11 @@ small {
   color:
     rgb(
       255 255 255 /
-      50%
+      56%
     );
 
-  font-size: 16px;
+  font-size:
+    13px;
 
   font-weight: 800;
 }
@@ -1928,8 +2014,8 @@ small {
 
     transform:
       translate3d(
-        -12px,
-        18px,
+        -14px,
+        15px,
         0
       );
   }
@@ -1966,37 +2052,51 @@ small {
   max-width: 1023px
 ) {
   .premium-hero {
-    min-height:
+    /*
+     * Fixed tablet presentation frame.
+     * Upload dimensions still cannot
+     * change the rendered height.
+     */
+    height:
       clamp(
-        560px,
-        72vw,
-        700px
+        520px,
+        62vw,
+        640px
       );
   }
 
   .premium-hero-inner {
+    width:
+      min(
+        calc(
+          100% -
+          34px
+        ),
+        var(--container)
+      );
+
     padding-inline:
       clamp(
-        24px,
+        18px,
         4vw,
-        44px
+        38px
       );
   }
 
   .premium-hero-copy {
-    width: 66%;
+    width: 68%;
 
     padding:
-      80px 0
-      102px;
+      48px 0
+      82px;
   }
 
   .premium-hero-title {
     font-size:
       clamp(
-        3.45rem,
-        8vw,
-        5.9rem
+        3.15rem,
+        7.8vw,
+        5.5rem
       );
   }
 }
@@ -2009,11 +2109,19 @@ small {
   max-width: 700px
 ) {
   .premium-hero {
-    min-height:
+    /*
+     * Mobile artwork recommendation:
+     * 900 × 1200.
+     *
+     * This keeps a consistent portrait
+     * hero even if the uploaded source
+     * is square, landscape or portrait.
+     */
+    height:
       clamp(
-        560px,
-        145vw,
-        680px
+        520px,
+        133.33vw,
+        660px
       );
   }
 
@@ -2034,54 +2142,53 @@ small {
           0%,
         rgb(
           0 0 0 /
-          7%
+          6%
         )
-          32%,
+          31%,
         rgb(
           0 0 0 /
-          34%
+          28%
         )
-          55%,
+          52%,
         rgb(
           0 0 0 /
-          78%
+          74%
         )
-          75%,
+          74%,
         rgb(
           0 0 0 /
-          95%
+          94%
         )
           100%
       );
   }
 
   .premium-hero-glow {
-    left: -210px;
+    left:
+      -210px;
 
-    bottom: -270px;
+    bottom:
+      -290px;
 
-    width: 520px;
-    height: 520px;
+    width:
+      520px;
 
-    opacity: .7;
+    height:
+      520px;
+
+    opacity:
+      .75;
   }
 
   .premium-hero-inner {
     width:
-      min(
-        calc(
-          100% -
-          24px
-        ),
-        var(--container)
+      calc(
+        100% -
+        24px
       );
 
     padding-inline:
-      clamp(
-        13px,
-        4.2vw,
-        20px
-      );
+      12px;
 
     align-items:
       flex-end;
@@ -2091,18 +2198,19 @@ small {
     width: 100%;
 
     padding:
-      235px 0
-      76px;
+      150px 0
+      67px;
   }
 
   .premium-hero-eyebrow {
     margin-bottom:
-      13px;
+      12px;
 
-    font-size: 16px;
+    font-size:
+      12px;
 
     letter-spacing:
-      .245em;
+      .22em;
   }
 
   .premium-hero-eyebrow
@@ -2115,30 +2223,31 @@ small {
 
   .premium-hero-title {
     max-width:
-      8.8ch;
+      9ch;
 
     font-size:
       clamp(
-        2.75rem,
-        13.2vw,
-        4.35rem
+        2.65rem,
+        12vw,
+        4rem
       );
 
     line-height:
-      .87;
+      .88;
 
     letter-spacing:
-      -.062em;
+      -.058em;
   }
 
   .premium-hero-subtitle {
     max-width:
-      315px;
+      320px;
 
     margin-top:
-      17px;
+      15px;
 
-    font-size: 16px;
+    font-size:
+      14px;
 
     line-height:
       1.55;
@@ -2149,26 +2258,28 @@ small {
       44px;
 
     margin-top:
-      21px;
+      20px;
 
     padding:
       0 17px;
 
-    gap: 10px;
-
-    font-size: 16px;
+    font-size:
+      13px;
   }
 
   .premium-hero-dots {
-    bottom: 23px;
+    bottom:
+      20px;
   }
 
   .premium-hero-dot {
-    width: 15px;
+    width:
+      15px;
   }
 
   .premium-hero-dot.is-active {
-    width: 34px;
+    width:
+      34px;
   }
 }
 
@@ -2179,26 +2290,26 @@ small {
 @media (
   max-width: 390px
 ) {
-  .premium-hero-inner {
-    padding-inline:
-      12px;
+  .premium-hero {
+    height:
+      520px;
   }
 
   .premium-hero-copy {
     padding:
-      225px 0
-      72px;
+      140px 0
+      64px;
   }
 
   .premium-hero-title {
     max-width:
-      8.7ch;
+      9ch;
 
     font-size:
       clamp(
-        2.6rem,
-        13vw,
-        3.85rem
+        2.5rem,
+        12vw,
+        3.55rem
       );
   }
 
@@ -2208,6 +2319,33 @@ small {
   }
 }
 
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .premium-hero-media,
+  .premium-hero-media img,
+  .premium-hero-copy,
+  .premium-hero-dot.is-active::after {
+    animation:
+      none !important;
+
+    transition:
+      none !important;
+  }
+
+  .premium-hero-media
+  img,
+  .premium-hero-media.is-active
+  img {
+    transform:
+      none !important;
+  }
+}
 /* =========================================================
    TRUST STRIP
    ========================================================= */
@@ -6046,49 +6184,6 @@ span {
     gap: 10px;
   }
 
-  .premium-hero {
-    min-height: 535px;
-    background:
-      linear-gradient(
-        180deg,
-        rgb(0 0 0 / 12%) 0%,
-        rgb(0 0 0 / 10%) 34%,
-        rgb(0 0 0 / 91%) 100%
-      ),
-      var(--hero-mobile-image, var(--hero-image));
-    background-position: 65% center;
-  }
-
-  .premium-hero-inner {
-    align-items: flex-end;
-  }
-
-  .premium-hero-copy {
-    width: 100%;
-    padding: 190px 0 70px;
-  }
-
-  .premium-hero-eyebrow {
-    font-size: 15px;
-  }
-
-  .premium-hero-title {
-    max-width: 8ch;
-    font-size: clamp(2.8rem, 14vw, 4.35rem);
-  }
-
-  .premium-hero-subtitle {
-    max-width: 310px;
-    font-size: 13px;
-  }
-
-  .premium-hero-cta {
-    min-height: 43px;
-  }
-
-  .premium-hero-dots {
-    bottom: 24px;
-  }
 
   /* =========================================================
      HOMEPAGE MOBILE — PDF PAGE 1

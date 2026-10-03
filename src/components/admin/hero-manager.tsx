@@ -1108,14 +1108,16 @@ setForm(EMPTY_FORM);
             Recommended sizes
           </strong>
 
-          <span>
-            Desktop:
-            1920 × 850px ·
-            Mobile:
-            900 × 1200px ·
-            JPG/PNG/WebP/AVIF ·
-            max 8MB
-          </span>
+        <span>
+          Desktop frame:
+          1920 × 850px ·
+          Mobile frame:
+          900 × 1200px ·
+          Different image sizes are
+          automatically cropped to fit ·
+          JPG/PNG/WebP/AVIF ·
+          max 8MB
+        </span>
         </div>
       </div>
 
@@ -1502,7 +1504,7 @@ setForm(EMPTY_FORM);
                   >
                     <ImageUploader
                       label="Desktop Hero"
-                      hint="Recommended 1920 × 850px"
+                      hint="Best: 1920 × 850px · other sizes are automatically cropped"
                       icon={
                         <ImageIcon
                           size={18}
@@ -1522,7 +1524,7 @@ setForm(EMPTY_FORM);
 
                     <ImageUploader
                       label="Mobile Hero"
-                      hint="Recommended 900 × 1200px"
+                      hint="Best: 900 × 1200px · other sizes are automatically cropped"
                       icon={
                         <Smartphone
                           size={18}

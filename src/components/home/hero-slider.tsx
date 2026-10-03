@@ -18,8 +18,13 @@ import {
   useState,
 } from "react";
 
+/* =========================================================
+   TYPES
+   ========================================================= */
+
 export type HeroSlide = {
   id: string;
+
   title: string;
 
   subtitle?:
@@ -64,27 +69,50 @@ type HeroFallback = {
 };
 
 type HeroSliderProps = {
-  slides: HeroSlide[];
-  fallback: HeroFallback;
+  slides:
+    HeroSlide[];
+
+  fallback:
+    HeroFallback;
 };
 
 type HeroStyle =
   CSSProperties & {
     "--hero-autoplay-duration":
       string;
+
+    "--hero-transition-duration":
+      string;
   };
 
+/* =========================================================
+   SLIDER SETTINGS
+   ========================================================= */
+
 const AUTOPLAY_DELAY =
-  4000;
+  5000;
+
+const TRANSITION_DURATION =
+  1000;
 
 const SWIPE_THRESHOLD =
   45;
 
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
 function positiveModulo(
-  value: number,
-  modulo: number,
+  value:
+    number,
+
+  modulo:
+    number,
 ) {
-  if (!modulo) {
+  if (
+    modulo <=
+    0
+  ) {
     return 0;
   }
 
@@ -95,16 +123,26 @@ function positiveModulo(
   );
 }
 
+/* =========================================================
+   HERO SLIDER
+   ========================================================= */
+
 export function HeroSlider({
   slides,
   fallback,
 }: HeroSliderProps) {
+  /* =======================================================
+     VALID SLIDES
+     ======================================================= */
+
   const preparedSlides =
     useMemo<HeroSlide[]>(
       () => {
         const validSlides =
           slides.filter(
-            (slide) =>
+            (
+              slide,
+            ) =>
               Boolean(
                 slide.image?.trim(),
               ),
@@ -142,21 +180,38 @@ export function HeroSlider({
           },
         ];
       },
+
       [
         fallback,
         slides,
       ],
     );
 
+  /* =======================================================
+     STATE
+     ======================================================= */
+
   const [
     currentIndex,
     setCurrentIndex,
-  ] = useState(0);
+  ] =
+    useState(0);
 
-  const touchStartXRef =
-    useRef<number | null>(
-      null,
-    );
+  /*
+   * Incrementing this after a manual
+   * interaction restarts the automatic
+   * 5-second interval.
+   */
+  const [
+    timerVersion,
+    setTimerVersion,
+  ] =
+    useState(0);
+
+  const touchStartX =
+    useRef<
+      number | null
+    >(null);
 
   const slideCount =
     preparedSlides.length;
@@ -173,51 +228,101 @@ export function HeroSlider({
     ];
 
   const hasMultipleSlides =
-    slideCount > 1;
+    slideCount >
+    1;
 
   /* =======================================================
-     PRELOAD NEXT IMAGE
+     KEEP INDEX VALID
+     ======================================================= */
+
+  useEffect(() => {
+    setCurrentIndex(
+      (
+        current,
+      ) =>
+        positiveModulo(
+          current,
+          slideCount,
+        ),
+    );
+  }, [
+    slideCount,
+  ]);
+
+  /* =======================================================
+     PRELOAD NEXT + PREVIOUS SLIDES
      ======================================================= */
 
   useEffect(() => {
     if (
-      slideCount <= 1
+      slideCount <=
+      1
     ) {
       return;
     }
 
-    const nextIndex =
+    const preloadIndexes = [
       positiveModulo(
-        activeIndex + 1,
+        activeIndex +
+          1,
         slideCount,
-      );
+      ),
 
-    const nextSlide =
-      preparedSlides[
-        nextIndex
-      ];
+      positiveModulo(
+        activeIndex -
+          1,
+        slideCount,
+      ),
+    ];
 
-    if (!nextSlide) {
-      return;
-    }
+    const urls =
+      new Set<string>();
 
-    const desktopImage =
-      new window.Image();
+    preloadIndexes.forEach(
+      (
+        index,
+      ) => {
+        const slide =
+          preparedSlides[
+            index
+          ];
 
-    desktopImage.src =
-      nextSlide.image;
+        if (!slide) {
+          return;
+        }
 
-    if (
-      nextSlide.mobileImage &&
-      nextSlide.mobileImage !==
-        nextSlide.image
-    ) {
-      const mobileImage =
-        new window.Image();
+        if (
+          slide.image
+        ) {
+          urls.add(
+            slide.image,
+          );
+        }
 
-      mobileImage.src =
-        nextSlide.mobileImage;
-    }
+        if (
+          slide.mobileImage
+        ) {
+          urls.add(
+            slide.mobileImage,
+          );
+        }
+      },
+    );
+
+    urls.forEach(
+      (
+        url,
+      ) => {
+        const image =
+          new window.Image();
+
+        image.decoding =
+          "async";
+
+        image.src =
+          url;
+      },
+    );
   }, [
     activeIndex,
     preparedSlides,
@@ -225,56 +330,44 @@ export function HeroSlider({
   ]);
 
   /* =======================================================
-     AUTOMATIC SLIDE — EVERY 4 SECONDS
+     AUTOMATIC ROTATION — EVERY 5 SECONDS
      ======================================================= */
 
   useEffect(() => {
     if (
-      slideCount <= 1
-    ) {
-      return;
-    }
-
-    const media =
-      window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      );
-
-    if (
-      media.matches
+      !hasMultipleSlides
     ) {
       return;
     }
 
     /*
-     * setTimeout instead of setInterval:
+     * setInterval is intentional here.
      *
-     * Every newly selected slide gets
-     * a complete fresh 4-second display
-     * period, including after clicking
-     * a dot or swiping manually.
+     * If the browser tab becomes hidden,
+     * we simply skip that interval tick.
+     *
+     * The interval itself remains alive,
+     * so the carousel cannot permanently
+     * stop when the tab becomes visible
+     * again.
      */
-    const timer =
-      window.setTimeout(
+    const interval =
+      window.setInterval(
         () => {
           if (
             document.hidden
           ) {
-            setCurrentIndex(
-              (current) =>
-                positiveModulo(
-                  current,
-                  slideCount,
-                ),
-            );
-
             return;
           }
 
           setCurrentIndex(
-            (current) =>
+            (
+              current,
+            ) =>
               positiveModulo(
-                current + 1,
+                current +
+                  1,
+
                 slideCount,
               ),
           );
@@ -284,39 +377,69 @@ export function HeroSlider({
       );
 
     return () => {
-      window.clearTimeout(
-        timer,
+      window.clearInterval(
+        interval,
       );
     };
   }, [
-    activeIndex,
+    hasMultipleSlides,
     slideCount,
+    timerVersion,
   ]);
 
   /* =======================================================
-     MANUAL DOT
+     MANUAL NAVIGATION
      ======================================================= */
 
   function goToSlide(
-    index: number,
+    index:
+      number,
   ) {
-    setCurrentIndex(
+    if (
+      !hasMultipleSlides
+    ) {
+      return;
+    }
+
+    const nextIndex =
       positiveModulo(
         index,
         slideCount,
-      ),
+      );
+
+    if (
+      nextIndex ===
+      activeIndex
+    ) {
+      return;
+    }
+
+    setCurrentIndex(
+      nextIndex,
+    );
+
+    /*
+     * Give the manually selected slide
+     * a fresh complete 5-second period.
+     */
+    setTimerVersion(
+      (
+        current,
+      ) =>
+        current +
+        1,
     );
   }
 
   /* =======================================================
-     MOBILE SWIPE
+     SWIPE
      ======================================================= */
 
   function handleTouchStart(
     event:
       TouchEvent<HTMLElement>,
   ) {
-    touchStartXRef.current =
+    touchStartX.current =
       event.changedTouches[
         0
       ]?.clientX ??
@@ -327,57 +450,74 @@ export function HeroSlider({
     event:
       TouchEvent<HTMLElement>,
   ) {
-    const startX =
-      touchStartXRef.current;
+    const start =
+      touchStartX.current;
 
-    touchStartXRef.current =
+    touchStartX.current =
       null;
 
     if (
-      startX === null
+      start ===
+      null
     ) {
       return;
     }
 
-    const endX =
+    const end =
       event.changedTouches[
         0
       ]?.clientX;
 
     if (
-      typeof endX !==
+      typeof end !==
       "number"
     ) {
       return;
     }
 
-    const movement =
-      endX -
-      startX;
+    const distance =
+      end -
+      start;
 
     if (
       Math.abs(
-        movement,
+        distance,
       ) <
       SWIPE_THRESHOLD
     ) {
       return;
     }
 
+    const direction =
+      distance <
+      0
+        ? 1
+        : -1;
+
     setCurrentIndex(
-      (current) =>
+      (
+        current,
+      ) =>
         positiveModulo(
           current +
-            (
-              movement < 0
-                ? 1
-                : -1
-            ),
+            direction,
 
           slideCount,
         ),
     );
+
+    setTimerVersion(
+      (
+        current,
+      ) =>
+        current +
+        1,
+    );
   }
+
+  /* =======================================================
+     NOTHING TO DISPLAY
+     ======================================================= */
 
   if (
     !activeSlide
@@ -385,10 +525,17 @@ export function HeroSlider({
     return null;
   }
 
+  /* =======================================================
+     CSS VARIABLES
+     ======================================================= */
+
   const heroStyle:
     HeroStyle = {
       "--hero-autoplay-duration":
         `${AUTOPLAY_DELAY}ms`,
+
+      "--hero-transition-duration":
+        `${TRANSITION_DURATION}ms`,
     };
 
   /* =======================================================
@@ -399,7 +546,7 @@ export function HeroSlider({
     <section
       className="premium-hero"
       aria-roledescription="carousel"
-      aria-label="Game On Garb featured promotions"
+      aria-label="Game On Garb featured banners"
       style={
         heroStyle
       }
@@ -411,59 +558,67 @@ export function HeroSlider({
       }
     >
       {/* ===================================================
-          IMAGE CROSSFADE STACK
+          MEDIA STACK
           =================================================== */}
 
-      {preparedSlides.map(
-        (
-          slide,
-          index,
-        ) => {
-          const active =
-            index ===
-            activeIndex;
+      <div
+        className="premium-hero-media-stack"
+        aria-hidden="true"
+      >
+        {preparedSlides.map(
+          (
+            slide,
+            index,
+          ) => {
+            const active =
+              index ===
+              activeIndex;
 
-          const mobileImage =
-            slide.mobileImage ||
-            slide.image;
+            const mobileImage =
+              slide.mobileImage ||
+              slide.image;
 
-          return (
-            <div
-              key={
-                slide.id
-              }
-              className={`premium-hero-media${
-                active
-                  ? " is-active"
-                  : ""
-              }`}
-              aria-hidden="true"
-            >
-              <picture>
-                <source
-                  media="(max-width: 700px)"
-                  srcSet={
-                    mobileImage
-                  }
-                />
+            return (
+              <div
+                key={
+                  slide.id
+                }
+                className={`premium-hero-media${
+                  active
+                    ? " is-active"
+                    : ""
+                }`}
+              >
+                <picture>
+                  <source
+                    media="(max-width: 700px)"
+                    srcSet={
+                      mobileImage
+                    }
+                  />
 
-                <img
-                  src={
-                    slide.image
-                  }
-                  alt=""
-                  loading={
-                    index <= 1
-                      ? "eager"
-                      : "lazy"
-                  }
-                  decoding="async"
-                />
-              </picture>
-            </div>
-          );
-        },
-      )}
+                  <img
+                    src={
+                      slide.image
+                    }
+                    alt=""
+                    loading={
+                      index <=
+                      1
+                        ? "eager"
+                        : "lazy"
+                    }
+                    decoding="async"
+                    draggable={
+                      false
+                    }
+                  />
+                </picture>
+              </div>
+            );
+          },
+        )}
+      </div>
 
       {/* ===================================================
           OVERLAYS
@@ -480,14 +635,15 @@ export function HeroSlider({
       />
 
       {/* ===================================================
-          COPY
+          CONTENT
           =================================================== */}
 
       <div className="container premium-hero-inner">
         <div
-          key={`hero-copy-${activeSlide.id}-${activeIndex}`}
+          key={
+            `hero-copy-${activeSlide.id}-${activeIndex}`
+          }
           className="premium-hero-copy"
-          aria-live="polite"
         >
           <div className="premium-hero-eyebrow">
             <span />
@@ -524,7 +680,7 @@ export function HeroSlider({
               </span>
 
               <ChevronRight
-                size={15}
+                size={16}
                 strokeWidth={
                   1.8
                 }
@@ -536,15 +692,14 @@ export function HeroSlider({
       </div>
 
       {/* ===================================================
-          DOTS + COUNTER
+          SLIDE PROGRESS
           =================================================== */}
 
       {hasMultipleSlides ? (
         <>
           <div
             className="premium-hero-dots"
-            role="tablist"
-            aria-label="Hero slides"
+            aria-label="Hero banners"
           >
             {preparedSlides.map(
               (
@@ -561,18 +716,20 @@ export function HeroSlider({
                       slide.id
                     }
                     type="button"
-                    role="tab"
-                    aria-selected={
-                      active
-                    }
-                    aria-label={`Show slide ${
-                      index + 1
-                    }`}
                     className={`premium-hero-dot${
                       active
                         ? " is-active"
                         : ""
                     }`}
+                    aria-label={`Show banner ${
+                      index +
+                      1
+                    }`}
+                    aria-current={
+                      active
+                        ? "true"
+                        : undefined
+                    }
                     onClick={() =>
                       goToSlide(
                         index,
