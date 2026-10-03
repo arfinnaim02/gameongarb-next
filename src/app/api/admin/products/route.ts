@@ -285,6 +285,41 @@ export async function POST(
         body,
       );
 
+          if (
+      input.sizeChartId
+    ) {
+      const sizeChart =
+        await db.sizeChart.findUnique({
+          where: {
+            id:
+              input.sizeChartId,
+          },
+
+          select: {
+            id:
+              true,
+
+            active:
+              true,
+          },
+        });
+
+      if (
+        !sizeChart ||
+        !sizeChart.active
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "The selected size chart is unavailable.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
     const images =
       normalizeProductImages(
         input.images,

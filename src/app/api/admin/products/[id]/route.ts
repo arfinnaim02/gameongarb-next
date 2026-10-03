@@ -78,6 +78,40 @@ export async function PATCH(
         await request.json(),
       );
 
+          if (
+      input.sizeChartId
+    ) {
+      const sizeChart =
+        await db.sizeChart.findUnique({
+          where: {
+            id:
+              input.sizeChartId,
+          },
+
+          select: {
+            id:
+              true,
+
+            active:
+              true,
+          },
+        });
+
+      if (
+        !sizeChart
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "The selected size chart no longer exists.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
     const existing =
       await db.product.findUniqueOrThrow({
         where: {

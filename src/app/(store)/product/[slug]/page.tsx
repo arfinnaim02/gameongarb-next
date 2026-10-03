@@ -2,6 +2,8 @@ import type {
   Metadata,
 } from "next";
 
+import Link from "next/link";
+
 import {
   notFound,
 } from "next/navigation";
@@ -55,28 +57,54 @@ export async function generateMetadata({
   if (!result) {
     return {
       title:
-        "Product",
+        "Product | Game On Garb",
     };
   }
 
+  const {
+    product,
+    raw,
+  } =
+    result;
+
+  const description =
+    raw.seoDescription ??
+    raw.shortDescription ??
+    raw.description ??
+    undefined;
+
   return {
     title:
-      result.raw
-        .seoTitle ??
-      result.product
-        .name,
+      raw.seoTitle ??
+      `${product.name} | Game On Garb`,
 
-    description:
-      result.raw
-        .seoDescription ??
-      result.raw
-        .shortDescription ??
-      undefined,
+    description,
+
+    openGraph: {
+      title:
+        raw.seoTitle ??
+        product.name,
+
+      description,
+
+      images:
+        product.image
+          ? [
+              {
+                url:
+                  product.image,
+
+                alt:
+                  product.alt,
+              },
+            ]
+          : undefined,
+    },
   };
 }
 
 /* =========================================================
-   PAGE
+   PRODUCT PAGE
    ========================================================= */
 
 export default async function ProductPage({
@@ -102,7 +130,8 @@ export default async function ProductPage({
       ),
 
       getProducts({
-        take: 16,
+        take:
+          20,
       }),
     ]);
 
@@ -117,9 +146,27 @@ export default async function ProductPage({
     result;
 
   /* =======================================================
+     SIZE CHART
+     ======================================================= */
+
+  const sizeChart =
+    raw.sizeChart &&
+    raw.sizeChart.active
+      ? serializePublicSizeChart(
+          raw.sizeChart,
+        )
+      : null;
+
+  /* =======================================================
      RELATED PRODUCTS
      ======================================================= */
 
+  /*
+   * Prioritize products from the same category.
+   *
+   * If fewer than four exist, fill the remaining positions
+   * with other products.
+   */
   const sameCategory =
     allProducts.filter(
       (
@@ -151,7 +198,7 @@ export default async function ProductPage({
   );
 
   /* =======================================================
-     STRUCTURED DATA
+     AVAILABLE VARIANTS
      ======================================================= */
 
   const availableVariants =
@@ -188,8 +235,120 @@ export default async function ProductPage({
         )
       : product.price;
 
+  /* =======================================================
+     PRODUCT STRUCTURED DATA
+     ======================================================= */
+
+  const productSchema = {
+    "@context":
+      "https://schema.org",
+
+    "@type":
+      "Product",
+
+    name:
+      product.name,
+
+    image:
+      product.images.length >
+      0
+        ? product.images.map(
+            (
+              image,
+            ) =>
+              image.url,
+          )
+        : [
+            product.image,
+          ],
+
+    description:
+      raw.shortDescription ??
+      raw.description ??
+      undefined,
+
+    sku:
+      product.variants?.[0]
+        ?.sku,
+
+    brand: {
+      "@type":
+        "Brand",
+
+      name:
+        raw.brand ??
+        "Game On Garb",
+    },
+
+    ...(product.reviewCount &&
+    product.reviewCount >
+      0 &&
+    product.rating
+      ? {
+          aggregateRating: {
+            "@type":
+              "AggregateRating",
+
+            ratingValue:
+              product.rating,
+
+            reviewCount:
+              product.reviewCount,
+          },
+        }
+      : {}),
+
+    offers:
+      availableVariants.length >
+      1
+        ? {
+            "@type":
+              "AggregateOffer",
+
+            priceCurrency:
+              "BDT",
+
+            lowPrice,
+
+            highPrice,
+
+            offerCount:
+              availableVariants.length,
+
+            availability:
+              product.stock >
+              0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          }
+        : {
+            "@type":
+              "Offer",
+
+            priceCurrency:
+              "BDT",
+
+            price:
+              lowPrice,
+
+            availability:
+              product.stock >
+              0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          },
+  };
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
     <>
+      {/* ===================================================
+          MAIN PRODUCT DETAILS
+          =================================================== */}
+
       <ProductDetail
         key={
           product.id
@@ -206,19 +365,33 @@ export default async function ProductPage({
           undefined
         }
         sizeChart={
-          raw.sizeChart
-            ? serializePublicSizeChart(
-                raw.sizeChart,
-              )
-            : null
+          sizeChart
         }
       />
+
+      {/* ===================================================
+          RELATED PRODUCTS
+          =================================================== */}
 
       {related.length >
       0 ? (
         <Section
+          eyebrow="Recommended"
           title="You May Also Like"
-          link="/shop"
+          action={
+            <Link
+              href="/shop"
+              className="home-view-all"
+            >
+              View All
+
+              <span
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </Link>
+          }
         >
           <div className="grid-products">
             {related.map(
@@ -239,58 +412,17 @@ export default async function ProductPage({
         </Section>
       ) : null}
 
+      {/* ===================================================
+          PRODUCT SEO
+          =================================================== */}
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html:
-            JSON.stringify({
-              "@context":
-                "https://schema.org",
-
-              "@type":
-                "Product",
-
-              name:
-                product.name,
-
-              image:
-                product.images.map(
-                  (
-                    image,
-                  ) =>
-                    image.url,
-                ),
-
-              description:
-                raw.shortDescription ??
-                raw.description ??
-                undefined,
-
-              sku:
-                product.variants?.[0]
-                  ?.sku,
-
-              offers: {
-                "@type":
-                  "AggregateOffer",
-
-                priceCurrency:
-                  "BDT",
-
-                lowPrice,
-
-                highPrice,
-
-                offerCount:
-                  availableVariants.length,
-
-                availability:
-                  product.stock >
-                  0
-                    ? "https://schema.org/InStock"
-                    : "https://schema.org/OutOfStock",
-              },
-            }),
+            JSON.stringify(
+              productSchema,
+            ),
         }}
       />
     </>

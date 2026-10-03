@@ -56,11 +56,9 @@ export type AdminProductRecord = {
 
   categoryId: string;
   category: string;
-    sizeChartId:
-    string;
 
-  sizeChartName:
-    string;
+  sizeChartId: string;
+  sizeChartName: string;
 
   image: string;
 

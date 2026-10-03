@@ -1,4 +1,8 @@
 import {
+  Prisma,
+} from "@prisma/client";
+
+import {
   db,
 } from "@/lib/db";
 
@@ -6,12 +10,86 @@ import type {
   Product as StoreProduct,
 } from "@/lib/data";
 
+/* =========================================================
+   BASE PRODUCT TYPE
+   ========================================================= */
+
 type DbProduct =
   Awaited<
     ReturnType<
       typeof db.product.findMany
     >
   >[number];
+
+/* =========================================================
+   PRODUCT DETAILS QUERY
+   ========================================================= */
+
+/*
+ * Keep the complete Product Details include in one place.
+ *
+ * Using `satisfies Prisma.ProductInclude` gives Prisma and
+ * TypeScript an exact relation shape, including `sizeChart`.
+ */
+const productDetailInclude = {
+  sizeChart:
+    true,
+
+  images: {
+    orderBy: {
+      sortOrder:
+        "asc" as const,
+    },
+  },
+
+  variants: {
+    orderBy: {
+      sku:
+        "asc" as const,
+    },
+  },
+
+  categories: {
+    include: {
+      category:
+        true,
+    },
+  },
+
+  reviews: {
+    where: {
+      approved:
+        true,
+    },
+
+    select: {
+      rating:
+        true,
+    },
+  },
+} satisfies Prisma.ProductInclude;
+
+/*
+ * This type explicitly contains:
+ *
+ * raw.sizeChart
+ * raw.images
+ * raw.variants
+ * raw.categories
+ * raw.reviews
+ *
+ * This prevents the Product Details page from being inferred
+ * as a plain Product with only `sizeChartId`.
+ */
+export type ProductDetailRecord =
+  Prisma.ProductGetPayload<{
+    include:
+      typeof productDetailInclude;
+  }>;
+
+/* =========================================================
+   STOREFRONT MAPPER
+   ========================================================= */
 
 export function toStoreProduct(
   product:
@@ -131,11 +209,15 @@ export function toStoreProduct(
       }),
     );
 
+  /* =======================================================
+     PRICE
+     ======================================================= */
+
   /*
-   * Prefer prices from purchasable
-   * variants. If everything is sold
-   * out, continue showing catalog
-   * pricing rather than 0.
+   * Prefer prices from purchasable variants.
+   *
+   * If all variants are sold out, continue displaying the
+   * product's catalog price instead of showing 0.
    */
   const pricedVariants =
     storeVariants.filter(
@@ -184,6 +266,10 @@ export function toStoreProduct(
     uniquePrices.size >
     1;
 
+  /* =======================================================
+     PRIMARY IMAGE
+     ======================================================= */
+
   const primaryImage =
     images.find(
       (
@@ -192,6 +278,10 @@ export function toStoreProduct(
         image.primary,
     ) ??
     images[0];
+
+  /* =======================================================
+     STORE PRODUCT
+     ======================================================= */
 
   return {
     id:
@@ -320,8 +410,7 @@ export function toStoreProduct(
 
             0,
           ) /
-          product.reviews
-            .length
+          product.reviews.length
         : undefined,
   };
 }
@@ -330,6 +419,13 @@ export function toStoreProduct(
    PRODUCTS
    ========================================================= */
 
+/*
+ * Used by Homepage, Shop, related products, etc.
+ *
+ * Important:
+ * Do NOT load the complete reusable SizeChart here.
+ * Listing/product-card pages do not need that JSON.
+ */
 export async function getProducts(
   options?: {
     featured?: boolean;
@@ -367,9 +463,6 @@ export async function getProducts(
       },
 
       include: {
-        sizeChart:
-          true,
-
         images: {
           orderBy: {
             sortOrder:
@@ -419,73 +512,53 @@ export async function getProducts(
 }
 
 /* =========================================================
-   PRODUCT
+   PRODUCT DETAILS
    ========================================================= */
 
 export async function getProduct(
   slug: string,
-) {
-  const row =
-    await db.product.findUnique({
-      where: {
-        slug,
-      },
+): Promise<
+  | {
+      raw:
+        ProductDetailRecord;
 
-      include: {
-        sizeChart:
-          true,
-
-        images: {
-          orderBy: {
-            sortOrder:
-              "asc",
-          },
+      product:
+        StoreProduct;
+    }
+  | null
+> {
+  const row:
+    ProductDetailRecord | null =
+      await db.product.findUnique({
+        where: {
+          slug,
         },
 
-        variants: {
-          orderBy: {
-            sku:
-              "asc",
-          },
-        },
+        include:
+          productDetailInclude,
+      });
 
-        categories: {
-          include: {
-            category:
-              true,
-          },
-        },
+  if (
+    !row ||
+    row.status !==
+      "ACTIVE"
+  ) {
+    return null;
+  }
 
-        reviews: {
-          where: {
-            approved:
-              true,
-          },
+  return {
+    raw:
+      row,
 
-          select: {
-            rating:
-              true,
-          },
-        },
-      },
-    });
-
-  return row?.status ===
-    "ACTIVE"
-    ? {
-        raw:
-          row,
-
-        product:
-          toStoreProduct(
-            row,
-          ),
-      }
-    : null;
+    product:
+      toStoreProduct(
+        row,
+      ),
+  };
 }
 
 /* =========================================================
-   NAVIGATION
+   NAVIGATION CATEGORIES
    ========================================================= */
 
 export async function getNavigationCategories() {
@@ -504,9 +577,14 @@ export async function getNavigationCategories() {
     },
 
     select: {
-      id: true,
-      name: true,
-      slug: true,
+      id:
+        true,
+
+      name:
+        true,
+
+      slug:
+        true,
     },
   });
 }

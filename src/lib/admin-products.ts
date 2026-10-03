@@ -37,7 +37,7 @@ export const adminProductInclude =
       },
     },
 
-      sizeChart: {
+    sizeChart: {
       select: {
         id:
           true,
@@ -193,8 +193,7 @@ export const productEditorSchema =
           .trim()
           .default(""),
 
-
-            sizeChartId:
+      sizeChartId:
         z
           .string()
           .trim()
@@ -616,7 +615,7 @@ export function serializeAdminProduct(
         .name ??
       "Uncategorized",
 
-          sizeChartId:
+    sizeChartId:
       product.sizeChartId ??
       "",
 
