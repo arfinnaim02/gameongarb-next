@@ -17,7 +17,7 @@
   display: block;
   margin-bottom: 6px;
   color: #f15a24;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -35,7 +35,7 @@
   max-width: 600px;
   margin: 8px 0 0;
   color: #7c827d;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
@@ -50,7 +50,7 @@
   background: #f15a24;
   color: #fff;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -59,7 +59,7 @@
 .success {
   margin-bottom: 12px;
   padding: 11px 13px;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
 }
 
@@ -94,7 +94,7 @@
 
 .toolbar > span {
   color: #929792;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .search {
@@ -117,7 +117,7 @@
   border: 1px solid #dfe3de;
   outline: 0;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .tableWrap,
@@ -146,7 +146,7 @@
   background: #fafbfa;
   color: #7e847f;
   text-align: left;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -155,18 +155,18 @@
   padding: 11px 9px;
   border-bottom: 1px solid #edf0ec;
   color: #545a55;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .table td strong {
   color: #242825;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .active,
 .archived {
   padding: 4px 6px;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 850;
 }
 
@@ -253,7 +253,7 @@
 
 .field > span {
   color: #424743;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 850;
 }
 
@@ -268,7 +268,7 @@
   background: #fff;
   color: #292d2a;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .field input,
@@ -290,7 +290,7 @@
   align-items: center;
   gap: 8px;
   background: #fff;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 750;
 }
 
@@ -304,14 +304,14 @@
 
 .sectionHeading h3 {
   margin: 0;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 900;
 }
 
 .sectionHeading p {
   margin: 4px 0 0;
   color: #888e89;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .sectionHeading button {
@@ -323,7 +323,7 @@
   gap: 5px;
   background: #fff;
   font: inherit;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -384,13 +384,13 @@
 }
 
 .previewHeading strong {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .previewHeading span {
   margin-left: auto;
   color: #929792;
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .preview table {
@@ -401,7 +401,7 @@
   padding: 9px;
   border-bottom: 1px solid #edf0ec;
   color: #4c524d;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .editorFooter {
@@ -419,7 +419,7 @@
   border: 1px solid #dfe3de;
   background: #fff;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
 }
 

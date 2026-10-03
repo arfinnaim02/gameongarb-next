@@ -16,7 +16,7 @@
 .eyebrow {
   margin: 0 0 7px;
   color: #f15a24;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -58,7 +58,7 @@
   gap: 8px;
   padding: 0 16px;
   font: inherit;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
@@ -108,7 +108,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 650;
 }
 
@@ -155,7 +155,7 @@
 
 .metric span {
   color: #747a76;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -190,13 +190,13 @@
 }
 
 .infoBar strong {
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .infoBar span {
   margin-top: 3px;
   color: #85604d;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -224,7 +224,7 @@
 .panelHeader p {
   margin: 5px 0 0;
   color: #7a7f7b;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .savingStatus {
@@ -232,7 +232,7 @@
   align-items: center;
   gap: 7px;
   color: #777c78;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -290,7 +290,7 @@
 
 .slideNumber {
   color: #a3a8a4;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 900;
   letter-spacing: 0.08em;
 }
@@ -317,7 +317,7 @@
   padding: 4px 7px;
   background: rgba(8, 10, 10, 0.82);
   color: white;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -346,7 +346,7 @@
   margin: 5px 0 0;
   overflow: hidden;
   color: #797e7a;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -355,7 +355,7 @@
 .statusBadge {
   flex: 0 0 auto;
   padding: 5px 8px;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -377,7 +377,7 @@
   flex-wrap: wrap;
   gap: 7px 18px;
   color: #8a8f8b;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -397,7 +397,7 @@
   align-items: center;
   gap: 8px;
   color: #565b57;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -489,7 +489,7 @@
 .empty p {
   margin: 7px 0 18px;
   color: #7e837f;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .editorBackdrop {
@@ -523,7 +523,7 @@
   display: block;
   margin-bottom: 4px;
   color: #f15a24;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -576,7 +576,7 @@
   display: block;
   margin-bottom: 7px;
   color: #353936;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -591,7 +591,7 @@
   background: white;
   color: #111413;
   font: inherit;
-  font-size: 12px;
+  font-size: 16px;
   outline: none;
   transition:
     border-color 150ms ease,
@@ -635,13 +635,13 @@
 
 .toggleRow strong {
   display: block;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .toggleRow p {
   margin: 4px 0 0;
   color: #828783;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .uploadBlock + .uploadBlock {
@@ -661,21 +661,21 @@
 }
 
 .uploadHeading strong {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
 }
 
 .uploadHeading span {
   margin-top: 3px;
   color: #898e8a;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .removeMedia {
   border: 0;
   background: transparent;
   color: #b74747;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -705,12 +705,12 @@
 }
 
 .uploadDrop strong {
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .uploadDrop span {
   color: #959a96;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .uploadPreview {
@@ -737,7 +737,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
   backdrop-filter: blur(6px);
@@ -750,7 +750,7 @@
 .mobileFallback {
   margin-top: 10px;
   color: #878c88;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -770,13 +770,13 @@
 }
 
 .previewHeading strong {
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .previewHeading span {
   margin-top: 3px;
   color: #898e8a;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .heroPreview {
@@ -798,7 +798,7 @@
 
 .heroPreviewContent > span {
   color: #ff7841;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.23em;
   text-transform: uppercase;
@@ -819,7 +819,7 @@
   max-width: 390px;
   margin: 14px 0 0;
   color: #ddd;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1.55;
 }
 
@@ -833,7 +833,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -856,7 +856,7 @@
   justify-content: center;
   gap: 11px;
   color: #777c78;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .spinner {

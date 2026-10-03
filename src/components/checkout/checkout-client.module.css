@@ -124,7 +124,7 @@
   color:
     #8b908c;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -197,7 +197,7 @@
 
   color: var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 
@@ -233,7 +233,7 @@
 
   color: #7c827d;
 
-  font-size: 10px;
+  font-size: 14px;
 
   line-height: 1.6;
 }
@@ -261,7 +261,7 @@
 
   color: #a6362f;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 750;
 }
@@ -344,7 +344,7 @@
 
   color: #fff;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 }
@@ -368,7 +368,7 @@
 
   color: #8b908c;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.45;
 }
@@ -413,7 +413,7 @@
 
   color: #464b47;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 }
@@ -427,7 +427,7 @@
 
   color: #a0a5a1;
 
-  font-size: 7px;
+  font-size: 15px;
 
   font-style: normal;
 
@@ -454,7 +454,7 @@
 
   font: inherit;
 
-  font-size: 10px;
+  font-size: 14px;
 
   transition:
     border-color 160ms ease,
@@ -511,7 +511,7 @@
 .fieldError {
   color: #bd3c34;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.4;
 
@@ -521,7 +521,7 @@
 .fieldHint {
   color: #969b97;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.45;
 }
@@ -593,7 +593,7 @@
 .deliveryCopy strong {
   color: #2e332f;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 850;
 }
@@ -603,7 +603,7 @@
 
   color: #858b86;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.4;
 }
@@ -633,7 +633,7 @@
 
   color: #8b908c;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.4;
 }
@@ -743,7 +743,7 @@
 .paymentCopy strong {
   color: #303532;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 850;
 }
@@ -753,7 +753,7 @@
 
   color: #8b908c;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.4;
 }
@@ -780,7 +780,7 @@
 
   color: #a63d34;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 /* =========================================================
@@ -817,7 +817,7 @@
 .safeNote strong {
   color: #3d433e;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .safeNote span {
@@ -825,7 +825,7 @@
 
   color: #888e89;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.5;
 }
@@ -878,7 +878,7 @@
 
   color: var(--orange);
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -904,7 +904,7 @@
 .summaryHeader > strong {
   color: #7e847f;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 800;
 }
@@ -984,7 +984,7 @@
 
   color: #fff;
 
-  font-size: 6px;
+  font-size: 14px;
 
   font-weight: 900;
 }
@@ -1000,7 +1000,7 @@
 
   color: #292d2a;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1.35;
 
@@ -1018,7 +1018,7 @@
 
   color: #979c98;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.35;
 }
@@ -1026,7 +1026,7 @@
 .summaryItemPrice {
   color: #373c38;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 
@@ -1040,7 +1040,7 @@
 
   text-align: center;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .emptyCart a {
@@ -1078,7 +1078,7 @@
 
   color: #5e645f;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 }
@@ -1113,7 +1113,7 @@
 
   font: inherit;
 
-  font-size: 8px;
+  font-size: 16px;
 
   text-transform: uppercase;
 }
@@ -1133,7 +1133,7 @@
 
   font: inherit;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 
@@ -1152,7 +1152,7 @@
 
   color: #ba3c34;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.4;
 }
@@ -1187,13 +1187,13 @@
 }
 
 .couponSuccess strong {
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .couponSuccess span {
   margin-top: 2px;
 
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .couponSuccess button {
@@ -1207,7 +1207,7 @@
 
   font: inherit;
 
-  font-size: 7px;
+  font-size: 15px;
 
   text-decoration: underline;
 
@@ -1237,13 +1237,13 @@
 
   color: #727873;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .totals strong {
   color: #343935;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 850;
 }
@@ -1278,7 +1278,7 @@
 .totalRow span {
   color: #252925;
 
-  font-size: 12px;
+  font-size: 16px;
 
   font-weight: 900;
 }
@@ -1288,7 +1288,7 @@
 
   color: #9a9f9b;
 
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .totalRow > strong {
@@ -1337,7 +1337,7 @@
 
   font: inherit;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 
@@ -1359,7 +1359,7 @@
 .placeOrder strong {
   margin-left: auto;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .placeOrder:not(:disabled):hover {
@@ -1392,7 +1392,7 @@
 
   color: #999e9a;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.5;
 
@@ -1491,7 +1491,7 @@
     width: 26px;
     height: 26px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .progress li:not(:last-child)::after {
@@ -1598,7 +1598,7 @@
     width: 24px;
     height: 24px;
 
-    font-size: 6px;
+    font-size: 14px;
   }
 
   .progress li:not(:last-child)::after {
@@ -1624,7 +1624,7 @@
 
     white-space: normal;
 
-    font-size: 6px;
+    font-size: 14px;
 
     line-height: 1.15;
   }

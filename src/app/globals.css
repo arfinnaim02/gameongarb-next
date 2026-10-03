@@ -32,6 +32,18 @@
   --shadow-md: 0 22px 60px rgb(0 0 0 / 12%);
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   --container: 1280px;
+
+    /* =======================================================
+     TYPOGRAPHY SCALE
+     ======================================================= */
+
+  --text-micro: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-ui: 14px;
+  --text-body: 15px;
+  --text-md: 16px;
+  --text-lg: 18px;
 }
 
 /* =========================================================
@@ -54,10 +66,21 @@ body {
   min-width: 320px;
   background: var(--paper);
   color: var(--ink);
+
   font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
     Arial,
     Helvetica,
     sans-serif;
+
+  font-size: 16px;
+  line-height: 1.5;
+
+  font-weight: 400;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -113,9 +136,12 @@ textarea {
 .eyebrow {
   color: var(--orange);
   text-transform: uppercase;
-  font-size: 0.69rem;
-  line-height: 1;
-  letter-spacing: 0.24em;
+
+  font-size: 12px;
+  line-height: 1.15;
+
+  letter-spacing: 0.16em;
+
   font-weight: 850;
 }
 
@@ -174,7 +200,7 @@ textarea {
   background: transparent;
   color: inherit;
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 14px;
   transition:
     transform 180ms var(--ease-premium),
     background-color 180ms ease,
@@ -218,15 +244,23 @@ textarea {
   border-color: var(--ink);
   transform: translateY(-1px);
 }
-
 .field {
   width: 100%;
-  min-height: 44px;
+
+  min-height: 46px;
+
   border: 1px solid #dfe1dd;
+
   padding: 0.72rem 0.8rem;
+
   background: #fff;
   color: var(--ink);
+
   outline: none;
+
+  font-size: 14px;
+  line-height: 1.4;
+
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -244,8 +278,11 @@ textarea {
 
 .label {
   display: block;
-  margin-bottom: 0.38rem;
-  font-size: 0.75rem;
+  margin-bottom: 0.42rem;
+
+  font-size: 13px;
+  line-height: 1.35;
+
   font-weight: 800;
 }
 
@@ -253,9 +290,14 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.28rem 0.5rem;
+
+  padding: 0.3rem 0.55rem;
+
   border-radius: 999px;
-  font-size: 0.68rem;
+
+  font-size: 11px;
+  line-height: 1;
+
   font-weight: 850;
 }
 
@@ -360,7 +402,7 @@ textarea {
   background: #050606;
   color: #b9beb9;
   border-bottom: 1px solid #1c1f1e;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.045em;
 }
@@ -545,7 +587,7 @@ textarea {
       29px
     );
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -745,7 +787,7 @@ textarea {
 
   color: white;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -886,7 +928,7 @@ textarea {
     auto;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 650;
   transition:
     border-color
@@ -922,7 +964,7 @@ textarea {
   gap: 16px;
   color:
     #eceeec;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 800;
   letter-spacing:
@@ -978,7 +1020,7 @@ textarea {
   min-height: 46px;
   color:
     #8d948f;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .mobile-menu-secondary
@@ -997,7 +1039,7 @@ textarea {
 .mobile-menu-footer p {
   margin: 0;
   color: white;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing:
     -0.02em;
@@ -1010,7 +1052,7 @@ textarea {
   margin-top: 6px;
   color:
     var(--orange);
-  font-size: 7px;
+  font-size: 15px;
   line-height: 1;
   font-weight: 800;
   letter-spacing:
@@ -1335,7 +1377,7 @@ img {
   color:
     #ff7540;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -1474,7 +1516,7 @@ img {
   color:
     #101212;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -1676,7 +1718,7 @@ svg {
 
 .premium-hero-counter
 strong {
-  font-size: 10px;
+  font-size: 14px;
 
   font-weight: 900;
 
@@ -1704,7 +1746,7 @@ small {
       50%
     );
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 800;
 }
@@ -1890,7 +1932,7 @@ small {
     margin-bottom:
       13px;
 
-    font-size: 8px;
+    font-size: 16px;
 
     letter-spacing:
       .245em;
@@ -1929,7 +1971,7 @@ small {
     margin-top:
       17px;
 
-    font-size: 12px;
+    font-size: 16px;
 
     line-height:
       1.55;
@@ -1947,7 +1989,7 @@ small {
 
     gap: 10px;
 
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .premium-hero-dots {
@@ -2090,7 +2132,7 @@ small {
   color:
     #181b19;
 
-  font-size: 10px;
+  font-size: 14px;
 
   line-height: 1.2;
 
@@ -2108,7 +2150,7 @@ small {
   color:
     #858b86;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.25;
 
@@ -2214,7 +2256,7 @@ section:not(
   color:
     #526a80;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -2369,7 +2411,7 @@ span {
   color:
     #f15a24;
 
-  font-size: 6px;
+  font-size: 14px;
 
   line-height: 1;
 
@@ -2448,7 +2490,7 @@ span {
   color:
     #9a9f9b;
 
-  font-size: 6px;
+  font-size: 14px;
 
   line-height: 1;
 
@@ -2515,7 +2557,7 @@ span {
   color:
     #8c918d;
 
-  font-size: 7px;
+  font-size: 15px;
 
   font-weight: 700;
 }
@@ -2541,7 +2583,7 @@ span {
   color:
     #9a9e9a;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 /* =========================================================
@@ -2592,7 +2634,7 @@ span {
   color:
     #858a86;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -2638,7 +2680,7 @@ span {
 
   font: inherit;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -2835,7 +2877,7 @@ span {
   color:
     var(--orange);
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -2948,7 +2990,7 @@ img {
   color:
     #979c98;
 
-  font-size: 7px;
+  font-size: 15px;
 
   font-weight: 850;
 
@@ -2992,7 +3034,7 @@ small {
   color:
     #929793;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 700;
 }
@@ -3026,7 +3068,7 @@ span {
   color:
     #3d423e;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 
@@ -3039,7 +3081,7 @@ strong {
   color:
     #777d78;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 700;
 }
@@ -3103,7 +3145,7 @@ strong {
 
 .quick-add-color
 b {
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 750;
 }
@@ -3154,7 +3196,7 @@ b {
 
   font: inherit;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 
@@ -3236,7 +3278,7 @@ b {
   color:
     #667069;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .quick-add-stock-dot {
@@ -3255,7 +3297,7 @@ strong {
   color:
     #287c4e;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .quick-add-stock
@@ -3303,7 +3345,7 @@ strong {
 
   font: inherit;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 
@@ -3361,7 +3403,7 @@ span {
   color:
     #8c918d;
 
-  font-size: 7px;
+  font-size: 15px;
 }
 
 /* =========================================================
@@ -3422,23 +3464,23 @@ span {
   }
 
   .product-card-category {
-    font-size: 6px;
+    font-size: 14px;
   }
 
   .product-card-title {
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .product-card
   .price {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .product-card-quick-add {
     min-height:
       30px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .quick-add-overlay {
@@ -3862,7 +3904,7 @@ span {
   color:
     var(--muted);
 
-  font-size: 11px;
+  font-size: 15px;
 
   line-height:
     1.55;
@@ -4073,7 +4115,7 @@ span {
   color:
     #ff7540;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -4154,7 +4196,7 @@ span {
 
   color: #fff;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -4349,7 +4391,7 @@ span {
 
   color: white;
 
-  font-size: 12px;
+  font-size: 16px;
 
   line-height: 1.1;
 
@@ -4635,7 +4677,7 @@ span {
   color:
     var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 
@@ -4698,7 +4740,7 @@ span {
   color:
     rgb(255 255 255 / 72%);
 
-  font-size: 12px;
+  font-size: 16px;
 
   line-height: 1.65;
 }
@@ -4723,7 +4765,7 @@ span {
 
   color: #fff;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 
@@ -4897,7 +4939,7 @@ span {
   color:
     #858b87;
 
-  font-size: 10px;
+  font-size: 14px;
 
   line-height: 1.72;
 
@@ -4914,7 +4956,7 @@ span {
   color:
     var(--orange);
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -4965,7 +5007,7 @@ div {
   color:
     #858b87;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.5;
 }
@@ -5017,7 +5059,7 @@ a:hover {
   color:
     #fff;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -5045,7 +5087,7 @@ a {
   color:
     #8d938f;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1.3;
 
@@ -5122,7 +5164,7 @@ a::before {
   color:
     var(--orange);
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -5169,7 +5211,7 @@ h3 {
   color:
     #858b87;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1.62;
 }
@@ -5236,7 +5278,7 @@ input {
 
   color: #fff;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .store-footer-form
@@ -5311,7 +5353,7 @@ svg {
   color:
     #b1b7b2;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.4;
 }
@@ -5334,7 +5376,7 @@ svg {
   color:
     #777d78;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1;
 
@@ -5450,7 +5492,7 @@ span {
   color:
     #686e69;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.4;
 
@@ -5486,7 +5528,7 @@ span {
   justify-items: center;
   gap: 3px;
   color: #202321;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
 }
 
@@ -5782,7 +5824,7 @@ span {
 @media (max-width: 1100px) {
   .store-main-nav {
     gap: 12px;
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .store-header-actions {
@@ -6002,7 +6044,7 @@ span {
   }
 
   .premium-hero-eyebrow {
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .premium-hero-title {
@@ -6069,7 +6111,7 @@ span {
   }
 
   .home-trust-item b {
-    font-size: 7px;
+    font-size: 15px;
     line-height: 1.15;
 
     white-space: nowrap;
@@ -6106,11 +6148,11 @@ span {
 
     gap: 5px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .home-view-all span {
-    font-size: 11px;
+    font-size: 15px;
   }
 
   /* =========================
@@ -6195,17 +6237,17 @@ span {
 
     margin: 1px 0 4px;
 
-    font-size: 9px;
+    font-size: 13px;
 
     line-height: 1.2;
   }
 
   .product-card .price {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .product-card-old-price {
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .product-card-colors {
@@ -6228,7 +6270,7 @@ span {
 
     padding: 4px 6px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .home-campaign-pair {
@@ -6277,7 +6319,7 @@ span {
   .eyebrow {
     margin-bottom: 5px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .home-campaign-title {
@@ -6303,7 +6345,7 @@ span {
     padding:
       0 12px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   /* =========================
@@ -6336,7 +6378,7 @@ span {
   > span {
     gap: 7px;
 
-    font-size: 9px;
+    font-size: 13px;
 
     line-height: 1.15;
   }
@@ -6355,7 +6397,7 @@ span {
     flex:
       0 0 23px;
 
-    font-size: 11px;
+    font-size: 15px;
   }
 
   /* =========================
@@ -6408,7 +6450,7 @@ span {
   .eyebrow {
     margin-bottom: 8px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .home-brand-story-copy
@@ -6433,7 +6475,7 @@ span {
     margin-bottom:
       18px;
 
-    font-size: 10px;
+    font-size: 14px;
 
     line-height: 1.55;
   }
@@ -6445,7 +6487,7 @@ span {
     padding:
       0 13px;
 
-    font-size: 7px;
+    font-size: 15px;
   }
 
   /* =========================
@@ -6495,7 +6537,7 @@ span {
     max-width:
       300px;
 
-    font-size: 9px;
+    font-size: 13px;
   }
 
   .store-footer-brand-line {
@@ -6507,7 +6549,7 @@ span {
     margin-bottom:
       13px;
 
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .store-footer-column
@@ -6515,7 +6557,7 @@ span {
     margin-top:
       9px;
 
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .store-footer-newsletter {
@@ -6726,14 +6768,14 @@ span {
 }
 
 .admin-sidebar-brand-copy strong {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 850;
 }
 
 .admin-sidebar-brand-copy span {
   margin-top: 2px;
   color: #737a75;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 /* =========================
@@ -6752,7 +6794,7 @@ span {
 .admin-nav-group-title {
   margin: 0 11px 8px;
   color: #5f6661;
-  font-size: 8px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -6774,7 +6816,7 @@ span {
   padding: 0 11px;
   color: #abb0ac;
   text-decoration: none;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 750;
   transition:
     color 160ms ease,
@@ -6832,7 +6874,7 @@ span {
   gap: 10px;
   padding: 0 10px;
   color: #aeb3af;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
   transition:
     color 160ms ease,
@@ -6878,14 +6920,14 @@ span {
 
 .admin-sidebar-user-copy strong {
   color: white;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .admin-sidebar-user-copy span {
   margin-top: 3px;
   color: #737a75;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
@@ -6942,7 +6984,7 @@ span {
 
 .admin-header-eyebrow {
   color: #979c98;
-  font-size: 7px;
+  font-size: 15px;
   line-height: 1;
   font-weight: 850;
   letter-spacing: 0.09em;
@@ -6952,7 +6994,7 @@ span {
 .admin-header-page-title {
   margin-top: 3px;
   color: #111413;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1;
   font-weight: 850;
 }
@@ -6972,7 +7014,7 @@ span {
   border: 1px solid #dfe2de;
   background: white;
   color: #313632;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   transition:
     border-color 160ms ease,
@@ -7001,7 +7043,7 @@ span {
 
 .admin-header-user-copy strong {
   color: #202421;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
 }
 
@@ -7010,7 +7052,7 @@ span {
   max-width: 180px;
   overflow: hidden;
   color: #919692;
-  font-size: 8px;
+  font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -7023,7 +7065,7 @@ span {
   place-items: center;
   background: #111413;
   color: white;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 900;
 }
 
@@ -7058,7 +7100,7 @@ span {
   display: block;
   margin-bottom: 7px;
   color: var(--orange);
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -7076,7 +7118,7 @@ span {
 .homepage-admin-heading p {
   margin: 10px 0 0;
   color: #777d78;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -7089,7 +7131,7 @@ span {
   border: 1px solid #dce0dc;
   background: white;
   color: #191d1a;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
 }
 
@@ -7111,13 +7153,13 @@ span {
 
 .homepage-admin-notice strong {
   color: #663823;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .homepage-admin-notice span {
   margin-top: 4px;
   color: #8a6757;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .homepage-builder-grid {
@@ -7172,7 +7214,7 @@ a.homepage-builder-card:hover {
   padding: 5px 7px;
   background: #f0f1ef;
   color: #858a86;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -7196,7 +7238,7 @@ a.homepage-builder-card:hover {
 .homepage-builder-card-copy p {
   margin: 7px 0 0;
   color: #818682;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.65;
 }
 
@@ -7208,7 +7250,7 @@ a.homepage-builder-card:hover {
   justify-content: space-between;
   gap: 12px;
   color: #5d625e;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -7378,7 +7420,7 @@ a.homepage-builder-card:hover
   display: block;
   margin-bottom: 8px;
   color: #858981;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 850;
   letter-spacing: 0.2em;
@@ -7500,7 +7542,7 @@ a.homepage-builder-card:hover
   border: 1px solid transparent;
   background: #f5f6f4;
   color: #454a46;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 760;
   cursor: pointer;
   transition:
@@ -7529,7 +7571,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-sort-label {
   color: #686d69;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -7558,7 +7600,7 @@ a.homepage-builder-card:hover
   padding: 0 31px 0 11px;
   background: transparent;
   color: #232724;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -7572,7 +7614,7 @@ a.homepage-builder-card:hover
   align-items: center;
   gap: 7px;
   color: #222623;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -7594,7 +7636,7 @@ a.homepage-builder-card:hover
   color: white;
   display: grid;
   place-items: center;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -7622,7 +7664,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-count {
   color: #7b807c;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -7655,7 +7697,7 @@ a.homepage-builder-card:hover
   outline: none;
   padding: 0 8px;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-search button {
@@ -7754,7 +7796,7 @@ a.homepage-builder-card:hover
   .product-card-title {
   margin: 0;
   color: #202421;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 650;
 }
@@ -7766,14 +7808,14 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid .price {
   color: #1c201d;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 900;
 }
 
 .premium-shop-grid
   .product-card-old-price {
   color: #a5aaa6;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-grid
@@ -7804,14 +7846,14 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid
   .product-card-badge {
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .premium-shop-grid
   .product-card-quick-add {
   margin: 0 10px 10px;
   min-height: 37px;
-  font-size: 9px;
+  font-size: 13px;
   opacity: 0;
   transform: translateY(4px);
   transition:
@@ -7837,7 +7879,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid.is-compact
   .product-card-title {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-grid.is-compact
@@ -7858,7 +7900,7 @@ a.homepage-builder-card:hover
   background: white;
   color: #111413;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
   cursor: pointer;
   transition:
@@ -7899,7 +7941,7 @@ a.homepage-builder-card:hover
 .premium-shop-empty p {
   margin: 8px 0 20px;
   color: #858a86;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 /* =========================
@@ -7953,7 +7995,7 @@ a.homepage-builder-card:hover
 .premium-filter-header span {
   display: block;
   color: var(--orange);
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7990,7 +8032,7 @@ a.homepage-builder-card:hover
 .premium-filter-section-title {
   margin-bottom: 13px;
   color: #242824;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 900;
 }
 
@@ -8008,7 +8050,7 @@ a.homepage-builder-card:hover
   background: white;
   color: #474c48;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -8041,7 +8083,7 @@ a.homepage-builder-card:hover
   text-align: left;
   color: #4c514d;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -8076,7 +8118,7 @@ a.homepage-builder-card:hover
   display: block;
   margin-bottom: 7px;
   color: #777d78;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .premium-filter-price > div {
@@ -8089,7 +8131,7 @@ a.homepage-builder-card:hover
 .premium-filter-price > div > span {
   padding-left: 11px;
   color: #666b67;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .premium-filter-price input {
@@ -8108,7 +8150,7 @@ a.homepage-builder-card:hover
   gap: 9px;
   cursor: pointer;
   color: #414642;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -8149,7 +8191,7 @@ a.homepage-builder-card:hover
 .premium-filter-apply {
   border: 0;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -8303,7 +8345,7 @@ a.homepage-builder-card:hover
     justify-content: center;
     gap: 7px;
     color: #252925;
-    font-size: 9px;
+    font-size: 13px;
     font-weight: 800;
   }
 
@@ -8330,7 +8372,7 @@ a.homepage-builder-card:hover
     place-items: center;
     background: var(--orange);
     color: white;
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .premium-shop-toolbar {
@@ -8363,7 +8405,7 @@ a.homepage-builder-card:hover
 
   .premium-shop-hero p {
     max-width: 190px;
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .premium-shop-hero-art {
@@ -8383,7 +8425,7 @@ a.homepage-builder-card:hover
   .premium-shop-category-chip {
     min-height: 32px;
     padding: 0 13px;
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .premium-shop-main {
@@ -8397,7 +8439,7 @@ a.homepage-builder-card:hover
   }
 
   .premium-shop-count {
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .premium-shop-search {
@@ -8439,7 +8481,7 @@ a.homepage-builder-card:hover
 
   .premium-shop-grid
     .price {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .premium-shop-grid
@@ -8524,7 +8566,7 @@ a.homepage-builder-card:hover
   display: block;
   margin-bottom: 8px;
   color: #858981;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 850;
   letter-spacing: 0.2em;
@@ -8646,7 +8688,7 @@ a.homepage-builder-card:hover
   border: 1px solid transparent;
   background: #f5f6f4;
   color: #454a46;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 760;
   cursor: pointer;
   transition:
@@ -8675,7 +8717,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-sort-label {
   color: #686d69;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -8704,7 +8746,7 @@ a.homepage-builder-card:hover
   padding: 0 31px 0 11px;
   background: transparent;
   color: #232724;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -8718,7 +8760,7 @@ a.homepage-builder-card:hover
   align-items: center;
   gap: 7px;
   color: #222623;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -8740,7 +8782,7 @@ a.homepage-builder-card:hover
   color: white;
   display: grid;
   place-items: center;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -8768,7 +8810,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-count {
   color: #7b807c;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -8801,7 +8843,7 @@ a.homepage-builder-card:hover
   outline: none;
   padding: 0 8px;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-search button {
@@ -8900,7 +8942,7 @@ a.homepage-builder-card:hover
   .product-card-title {
   margin: 0;
   color: #202421;
-  font-size: 10px;
+  font-size: 14px;
   line-height: 1.35;
   font-weight: 650;
 }
@@ -8912,14 +8954,14 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid .price {
   color: #1c201d;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 900;
 }
 
 .premium-shop-grid
   .product-card-old-price {
   color: #a5aaa6;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-grid
@@ -8950,14 +8992,14 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid
   .product-card-badge {
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .premium-shop-grid
   .product-card-quick-add {
   margin: 0 10px 10px;
   min-height: 37px;
-  font-size: 9px;
+  font-size: 13px;
   opacity: 0;
   transform: translateY(4px);
   transition:
@@ -8983,7 +9025,7 @@ a.homepage-builder-card:hover
 
 .premium-shop-grid.is-compact
   .product-card-title {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .premium-shop-grid.is-compact
@@ -9004,7 +9046,7 @@ a.homepage-builder-card:hover
   background: white;
   color: #111413;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
   cursor: pointer;
   transition:
@@ -9045,7 +9087,7 @@ a.homepage-builder-card:hover
 .premium-shop-empty p {
   margin: 8px 0 20px;
   color: #858a86;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 /* =========================
@@ -9099,7 +9141,7 @@ a.homepage-builder-card:hover
 .premium-filter-header span {
   display: block;
   color: var(--orange);
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -9136,7 +9178,7 @@ a.homepage-builder-card:hover
 .premium-filter-section-title {
   margin-bottom: 13px;
   color: #242824;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 900;
 }
 
@@ -9154,7 +9196,7 @@ a.homepage-builder-card:hover
   background: white;
   color: #474c48;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 750;
   cursor: pointer;
 }
@@ -9187,7 +9229,7 @@ a.homepage-builder-card:hover
   text-align: left;
   color: #4c514d;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   cursor: pointer;
 }
 
@@ -9222,7 +9264,7 @@ a.homepage-builder-card:hover
   display: block;
   margin-bottom: 7px;
   color: #777d78;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .premium-filter-price > div {
@@ -9235,7 +9277,7 @@ a.homepage-builder-card:hover
 .premium-filter-price > div > span {
   padding-left: 11px;
   color: #666b67;
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .premium-filter-price input {
@@ -9254,7 +9296,7 @@ a.homepage-builder-card:hover
   gap: 9px;
   cursor: pointer;
   color: #414642;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -9295,7 +9337,7 @@ a.homepage-builder-card:hover
 .premium-filter-apply {
   border: 0;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -9449,7 +9491,7 @@ a.homepage-builder-card:hover
     justify-content: center;
     gap: 7px;
     color: #252925;
-    font-size: 9px;
+    font-size: 13px;
     font-weight: 800;
   }
 
@@ -9476,7 +9518,7 @@ a.homepage-builder-card:hover
     place-items: center;
     background: var(--orange);
     color: white;
-    font-size: 7px;
+    font-size: 15px;
   }
 
   .premium-shop-toolbar {
@@ -9509,7 +9551,7 @@ a.homepage-builder-card:hover
 
   .premium-shop-hero p {
     max-width: 190px;
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .premium-shop-hero-art {
@@ -9529,7 +9571,7 @@ a.homepage-builder-card:hover
   .premium-shop-category-chip {
     min-height: 32px;
     padding: 0 13px;
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .premium-shop-main {
@@ -9543,7 +9585,7 @@ a.homepage-builder-card:hover
   }
 
   .premium-shop-count {
-    font-size: 8px;
+    font-size: 16px;
   }
 
   .premium-shop-search {
@@ -9585,7 +9627,7 @@ a.homepage-builder-card:hover
 
   .premium-shop-grid
     .price {
-    font-size: 10px;
+    font-size: 14px;
   }
 
   .premium-shop-grid
@@ -9716,7 +9758,7 @@ a.homepage-builder-card:hover
 
   color: #ff7540;
 
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 900;
 
@@ -9807,7 +9849,7 @@ a.homepage-builder-card:hover
   color:
     #111413;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 
@@ -10220,7 +10262,7 @@ a.homepage-builder-card:hover
   color:
     var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -10277,7 +10319,7 @@ a.homepage-builder-card:hover
 
   color: white;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -10377,7 +10419,7 @@ a.homepage-builder-card:hover
   color:
     var(--muted);
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 
@@ -10393,7 +10435,7 @@ strong {
   color:
     #747a75;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 /* =========================================================
@@ -10508,7 +10550,7 @@ img {
   color:
     var(--ink);
 
-  font-size: 12px;
+  font-size: 16px;
 
   line-height: 1.35;
 
@@ -10535,7 +10577,7 @@ img {
   color:
     var(--muted);
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.45;
 }
@@ -10555,7 +10597,7 @@ img {
   color:
     #949995;
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1.3;
 }
@@ -10668,7 +10710,7 @@ span {
   color:
     var(--ink);
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 }
@@ -10718,7 +10760,7 @@ span {
   color:
     var(--ink);
 
-  font-size: 10px;
+  font-size: 14px;
 
   line-height: 1;
 
@@ -10746,7 +10788,7 @@ span {
   color:
     #5f655f;
 
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .cart-drawer-summary-row
@@ -10754,7 +10796,7 @@ strong {
   color:
     var(--ink);
 
-  font-size: 11px;
+  font-size: 15px;
 
   font-weight: 900;
 }
@@ -10764,7 +10806,7 @@ small {
   color:
     #848a85;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .cart-drawer-summary-divider {
@@ -10800,7 +10842,7 @@ small {
   color:
     var(--ink);
 
-  font-size: 12px;
+  font-size: 16px;
 
   font-weight: 900;
 }
@@ -10814,7 +10856,7 @@ small {
   color:
     #8b908c;
 
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .cart-drawer-total
@@ -10860,7 +10902,7 @@ small {
 
   color: white;
 
-  font-size: 9px;
+  font-size: 13px;
 
   line-height: 1;
 
@@ -10906,7 +10948,7 @@ small {
 
   gap: 10px;
 
-  font-size: 10px;
+  font-size: 14px;
 
   letter-spacing: 0;
 }
@@ -10954,7 +10996,7 @@ b {
   color:
     var(--ink);
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -10992,7 +11034,7 @@ b {
   color:
     #929793;
 
-  font-size: 7px;
+  font-size: 15px;
 
   line-height: 1.45;
 
@@ -11047,7 +11089,7 @@ b {
   color:
     var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   line-height: 1;
 
@@ -11084,7 +11126,7 @@ b {
   color:
     var(--muted);
 
-  font-size: 10px;
+  font-size: 14px;
 
   line-height: 1.55;
 }
@@ -11227,7 +11269,7 @@ b {
   }
 
   .cart-drawer-item-name {
-    font-size: 11px;
+    font-size: 15px;
   }
 
   .cart-drawer-quantity {
@@ -11240,7 +11282,7 @@ b {
   }
 
   .cart-drawer-line-total {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   /*
@@ -12012,7 +12054,7 @@ s {
   color:
     #e79a34;
 
-  font-size: 11px;
+  font-size: 15px;
 
   letter-spacing:
     .05em;
@@ -13755,5 +13797,57 @@ img {
 
     transform:
       none !important;
+  }
+}
+
+/* =========================================================
+   GLOBAL TYPOGRAPHY NORMALIZATION
+   ========================================================= */
+
+p,
+li,
+dd,
+dt {
+  line-height: 1.55;
+}
+
+input,
+select,
+textarea,
+button {
+  line-height: 1.35;
+}
+
+input,
+select,
+textarea {
+  font-size: 14px;
+}
+
+button {
+  font-size: 14px;
+}
+
+/* =========================================================
+   MOBILE TYPOGRAPHY
+   ========================================================= */
+
+@media (max-width: 700px) {
+  body {
+    font-size: 15px;
+  }
+
+  input,
+  select,
+  textarea {
+    /*
+     * 16px also prevents unwanted form zoom
+     * in mobile Safari.
+     */
+    font-size: 16px;
+  }
+
+  button {
+    font-size: 13px;
   }
 }

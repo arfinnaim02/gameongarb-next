@@ -17,7 +17,7 @@
   display: block;
   margin-bottom: 7px;
   color: #f15a24;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 900;
   letter-spacing: .14em;
@@ -36,7 +36,7 @@
   max-width: 650px;
   margin: 9px 0 0;
   color: #777d78;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -50,7 +50,7 @@
   justify-content: center;
   gap: 8px;
   font: inherit;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 850;
   cursor: pointer;
 }
@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -131,7 +131,7 @@
 
 .metric span {
   color: #777d78;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -183,7 +183,7 @@
   padding: 0 10px;
   color: #313632;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -207,7 +207,7 @@
   outline: 0;
   background: transparent;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .tableWrap {
@@ -228,7 +228,7 @@
   background: #fafbfa;
   color: #7b817c;
   text-align: left;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: .07em;
   text-transform: uppercase;
@@ -238,7 +238,7 @@
   padding: 10px 11px;
   border-bottom: 1px solid #edf0ec;
   color: #333834;
-  font-size: 9px;
+  font-size: 13px;
   vertical-align: middle;
 }
 
@@ -262,7 +262,7 @@
 .productName {
   display: block;
   color: #171a18;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 850;
 }
 
@@ -271,7 +271,7 @@
   display: block;
   margin-top: 3px;
   color: #969b97;
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .mono {
@@ -287,14 +287,14 @@
 .price {
   display: block;
   color: #f15a24;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .table s {
   display: block;
   margin-top: 2px;
   color: #999e99;
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .statusBadge,
@@ -304,7 +304,7 @@
   width: fit-content;
   margin-top: 3px;
   padding: 4px 6px;
-  font-size: 7px;
+  font-size: 15px;
   line-height: 1;
   font-weight: 850;
 }
@@ -358,7 +358,7 @@
   padding: 44px 20px;
   color: #858a86;
   text-align: center;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 /* =========================================================
@@ -401,7 +401,7 @@
 
 .editorHeader span {
   color: #f15a24;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -446,7 +446,7 @@
   background: transparent;
   color: #797f7a;
   font: inherit;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 850;
   white-space: nowrap;
   cursor: pointer;
@@ -499,7 +499,7 @@
 .sectionHeadingRow p {
   margin: 5px 0 0;
   color: #7c827d;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -517,7 +517,7 @@
 
 .field > span {
   color: #404541;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 850;
 }
 
@@ -537,7 +537,7 @@
   background: white;
   color: #202421;
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .field input,
@@ -582,7 +582,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 800;
 }
 
@@ -606,11 +606,11 @@
 
 .uploadBox strong {
   color: #222623;
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .uploadBox span {
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .uploadBox input {
@@ -626,7 +626,7 @@
   align-content: center;
   gap: 6px;
   color: #8c928d;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .imageGrid {
@@ -667,7 +667,7 @@
   padding: 4px 6px;
   background: #f15a24;
   color: white;
-  font-size: 6px;
+  font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -691,7 +691,7 @@
   background: white;
   color: #545a55;
   font: inherit;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 800;
 }
 
@@ -722,7 +722,7 @@
   background: #fafbfa;
   color: #797f7a;
   text-align: left;
-  font-size: 7px;
+  font-size: 15px;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -731,7 +731,7 @@
   padding: 7px;
   border-bottom: 1px solid #edf0ec;
   vertical-align: middle;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .variantTable input[type="text"],
@@ -750,7 +750,7 @@
 .variantTable td small {
   margin-top: 2px;
   color: #919692;
-  font-size: 7px;
+  font-size: 15px;
 }
 
 .colorField {
@@ -793,7 +793,7 @@
 
 .inventorySummary span {
   color: #7d837e;
-  font-size: 8px;
+  font-size: 16px;
   font-weight: 850;
   text-transform: uppercase;
 }
@@ -812,7 +812,7 @@
   border: 1px solid #f0ddd2;
   background: #fff7f2;
   color: #7b4931;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .seoPreview {
@@ -823,7 +823,7 @@
 
 .seoPreview span {
   color: #57905c;
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .seoPreview strong {
@@ -837,7 +837,7 @@
 .seoPreview p {
   margin: 5px 0 0;
   color: #666c67;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.5;
 }
 

@@ -26,7 +26,7 @@
   color:
     var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 
@@ -64,7 +64,7 @@
   color:
     #777d78;
 
-  font-size: 11px;
+  font-size: 15px;
 
   line-height: 1.55;
 }
@@ -91,7 +91,7 @@
 
   color: white;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 }
@@ -147,7 +147,7 @@
   color:
     #555b56;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 800;
 }
@@ -171,7 +171,7 @@
   color:
     #151817;
 
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .field textarea {
@@ -219,7 +219,7 @@
 .toggleRow strong {
   display: block;
 
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .toggleRow p {
@@ -229,7 +229,7 @@
   color:
     #8a908b;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .switch {
@@ -289,7 +289,7 @@
   color:
     #898f8a;
 
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .upload {
@@ -322,11 +322,11 @@
   color:
     #262a27;
 
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .upload span {
-  font-size: 8px;
+  font-size: 16px;
 }
 
 .imagePreview {
@@ -379,7 +379,7 @@
 
   gap: 6px;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 }
@@ -411,7 +411,7 @@
   color:
     #717772;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 
@@ -458,7 +458,7 @@
   color:
     var(--orange);
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 900;
 
@@ -513,7 +513,7 @@
 
   gap: 12px;
 
-  font-size: 8px;
+  font-size: 16px;
 
   font-weight: 850;
 }
@@ -530,7 +530,7 @@
   padding:
     12px 14px;
 
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .error {
@@ -571,7 +571,7 @@
   color:
     #777d78;
 
-  font-size: 10px;
+  font-size: 14px;
 }
 
 .spinner {
@@ -640,7 +640,7 @@
 .mediaHeading strong {
   color: #272b28;
 
-  font-size: 9px;
+  font-size: 13px;
 
   font-weight: 900;
 }
@@ -648,5 +648,5 @@
 .mediaHeading span {
   color: #8a908b;
 
-  font-size: 7px;
+  font-size: 15px;
 }
