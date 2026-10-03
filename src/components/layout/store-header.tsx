@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+import {
+  usePathname,
+} from "next/navigation";
 
 import {
   Heart,
@@ -35,8 +38,11 @@ type NavCategory = {
 };
 
 type StoreHeaderProps = {
-  navCategories: NavCategory[];
-  onCartOpen: () => void;
+  navCategories:
+    NavCategory[];
+
+  onCartOpen:
+    () => void;
 };
 
 /* =========================================================
@@ -53,24 +59,26 @@ export function StoreHeader({
   const {
     cartCount,
     wishlist,
-  } = useStore();
+  } =
+    useStore();
 
   const [
     menuOpen,
     setMenuOpen,
-  ] = useState(false);
+  ] =
+    useState(false);
 
-  /* ---------------------------------------------------------
-     Close the mobile menu whenever navigation changes.
-     --------------------------------------------------------- */
+  /* =======================================================
+     CLOSE MOBILE MENU AFTER NAVIGATION
+     ======================================================= */
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
 
-  /* ---------------------------------------------------------
-     Lock page scrolling while mobile menu is open.
-     --------------------------------------------------------- */
+  /* =======================================================
+     MOBILE MENU SCROLL LOCK
+     ======================================================= */
 
   useEffect(() => {
     if (!menuOpen) {
@@ -84,13 +92,16 @@ export function StoreHeader({
       "hidden";
 
     function handleEscape(
-      event: KeyboardEvent,
+      event:
+        KeyboardEvent,
     ) {
       if (
         event.key ===
         "Escape"
       ) {
-        setMenuOpen(false);
+        setMenuOpen(
+          false,
+        );
       }
     }
 
@@ -112,37 +123,15 @@ export function StoreHeader({
 
   return (
     <>
-      {/* =====================================================
-          DESKTOP UTILITY BAR
-          ===================================================== */}
-
-      <div className="store-utility-bar desktop-only">
-        <div className="container store-utility-inner">
-          <span>
-            Free Delivery Across
-            Bangladesh
-          </span>
-
-          <span>
-            Easy Exchange &amp;
-            Returns
-          </span>
-
-          <span>
-            100% Original Products
-          </span>
-        </div>
-      </div>
-
-      {/* =====================================================
+      {/* ===================================================
           MAIN HEADER
-          ===================================================== */}
+          =================================================== */}
 
       <header className="store-header">
         <div className="container store-header-inner">
-          {/* =========================
+          {/* ===============================================
               MOBILE MENU BUTTON
-              ========================= */}
+              =============================================== */}
 
           <button
             type="button"
@@ -153,27 +142,29 @@ export function StoreHeader({
             }
             aria-controls="store-mobile-menu"
             onClick={() =>
-              setMenuOpen(true)
+              setMenuOpen(
+                true,
+              )
             }
           >
             <Menu
-              size={21}
-              strokeWidth={1.7}
+              size={22}
+              strokeWidth={1.8}
               aria-hidden="true"
             />
           </button>
 
-          {/* =========================
+          {/* ===============================================
               LOGO
-              ========================= */}
+              =============================================== */}
 
           <div className="store-logo-wrap">
             <Logo />
           </div>
 
-          {/* =========================
+          {/* ===============================================
               DESKTOP NAVIGATION
-              ========================= */}
+              =============================================== */}
 
           <nav
             className="store-main-nav desktop-only"
@@ -208,21 +199,21 @@ export function StoreHeader({
             </Link>
           </nav>
 
-          {/* =========================
+          {/* ===============================================
               HEADER ACTIONS
-              ========================= */}
+              =============================================== */}
 
           <div className="store-header-actions">
             {/* Search */}
 
             <Link
-              className="store-header-action desktop-only"
               href="/shop"
+              className="store-header-action desktop-only"
               aria-label="Search products"
             >
               <Search
-                size={18}
-                strokeWidth={1.65}
+                size={19}
+                strokeWidth={1.7}
                 aria-hidden="true"
               />
             </Link>
@@ -230,13 +221,13 @@ export function StoreHeader({
             {/* Account */}
 
             <Link
-              className="store-header-action"
               href="/account"
-              aria-label="Account"
+              className="store-header-action"
+              aria-label="My account"
             >
               <UserRound
-                size={18}
-                strokeWidth={1.65}
+                size={19}
+                strokeWidth={1.7}
                 aria-hidden="true"
               />
             </Link>
@@ -244,13 +235,18 @@ export function StoreHeader({
             {/* Wishlist */}
 
             <Link
-              className="store-header-action desktop-only"
               href="/account/wishlist"
-              aria-label={`Wishlist with ${wishlist.length} items`}
+              className="store-header-action desktop-only"
+              aria-label={`Wishlist with ${wishlist.length} ${
+                wishlist.length ===
+                1
+                  ? "item"
+                  : "items"
+              }`}
             >
               <Heart
-                size={18}
-                strokeWidth={1.65}
+                size={19}
+                strokeWidth={1.7}
                 aria-hidden="true"
               />
 
@@ -263,18 +259,20 @@ export function StoreHeader({
               ) : null}
             </Link>
 
-            {/* Cart
-                IMPORTANT:
-                This is intentionally a BUTTON.
-                It does not navigate to /cart.
-                StoreShell owns the global CartDrawer.
-            */}
+            {/* =============================================
+                CART / CHECKOUT TRIGGER
+
+                Opens the global cart drawer.
+                The checkout CTA is available inside
+                the cart drawer.
+                ============================================= */}
 
             <button
               type="button"
               className="store-header-action store-cart-link store-cart-trigger"
               aria-label={`Open cart with ${cartCount} ${
-                cartCount === 1
+                cartCount ===
+                1
                   ? "item"
                   : "items"
               }`}
@@ -284,8 +282,8 @@ export function StoreHeader({
               }
             >
               <ShoppingBag
-                size={19}
-                strokeWidth={1.65}
+                size={20}
+                strokeWidth={1.8}
                 aria-hidden="true"
               />
 
@@ -305,16 +303,18 @@ export function StoreHeader({
         </div>
       </header>
 
-      {/* =====================================================
+      {/* ===================================================
           MOBILE NAVIGATION DRAWER
-          ===================================================== */}
+          =================================================== */}
 
       {menuOpen ? (
         <div
           className="mobile-menu-overlay mobile-only"
           role="presentation"
           onMouseDown={() =>
-            setMenuOpen(false)
+            setMenuOpen(
+              false,
+            )
           }
         >
           <aside
@@ -329,9 +329,9 @@ export function StoreHeader({
               event.stopPropagation()
             }
           >
-            {/* =========================
+            {/* =============================================
                 DRAWER HEADER
-                ========================= */}
+                ============================================= */}
 
             <div className="mobile-menu-header">
               <Logo />
@@ -341,20 +341,22 @@ export function StoreHeader({
                 className="mobile-menu-close"
                 aria-label="Close menu"
                 onClick={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               >
                 <X
-                  size={20}
-                  strokeWidth={1.7}
+                  size={21}
+                  strokeWidth={1.8}
                   aria-hidden="true"
                 />
               </button>
             </div>
 
-            {/* =========================
-                PRIMARY LINKS
-                ========================= */}
+            {/* =============================================
+                PRIMARY NAVIGATION
+                ============================================= */}
 
             <nav
               className="mobile-menu-nav"
@@ -364,7 +366,9 @@ export function StoreHeader({
                 href="/shop?sort=newest"
                 label="New In"
                 close={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               />
 
@@ -381,7 +385,9 @@ export function StoreHeader({
                       category.name
                     }
                     close={() =>
-                      setMenuOpen(false)
+                      setMenuOpen(
+                        false,
+                      )
                     }
                   />
                 ),
@@ -392,14 +398,16 @@ export function StoreHeader({
                 label="Offers"
                 highlight
                 close={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               />
             </nav>
 
-            {/* =========================
-                SECONDARY LINKS
-                ========================= */}
+            {/* =============================================
+                CUSTOMER LINKS
+                ============================================= */}
 
             <nav
               className="mobile-menu-secondary"
@@ -409,7 +417,9 @@ export function StoreHeader({
                 href="/account"
                 label="My Account"
                 close={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               />
 
@@ -422,7 +432,9 @@ export function StoreHeader({
                     : ""
                 }`}
                 close={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               />
 
@@ -430,14 +442,16 @@ export function StoreHeader({
                 href="/track-order"
                 label="Track Order"
                 close={() =>
-                  setMenuOpen(false)
+                  setMenuOpen(
+                    false,
+                  )
                 }
               />
             </nav>
 
-            {/* =========================
+            {/* =============================================
                 DRAWER FOOTER
-                ========================= */}
+                ============================================= */}
 
             <div className="mobile-menu-footer">
               <p>
@@ -465,15 +479,26 @@ function MobileMenuLink({
   close,
   highlight = false,
 }: {
-  href: string;
-  label: string;
-  close: () => void;
-  highlight?: boolean;
+  href:
+    string;
+
+  label:
+    string;
+
+  close:
+    () => void;
+
+  highlight?:
+    boolean;
 }) {
   return (
     <Link
-      href={href}
-      onClick={close}
+      href={
+        href
+      }
+      onClick={
+        close
+      }
       className={`mobile-menu-link${
         highlight
           ? " is-highlight"
@@ -481,12 +506,12 @@ function MobileMenuLink({
       }`}
     >
       <span>
-        {label}
+        {
+          label
+        }
       </span>
 
-      <span
-        aria-hidden="true"
-      >
+      <span aria-hidden="true">
         →
       </span>
     </Link>
