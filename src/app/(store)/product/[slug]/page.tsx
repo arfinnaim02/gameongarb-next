@@ -9,16 +9,16 @@ import {
 } from "next/navigation";
 
 import {
-  ProductCard,
-} from "@/components/product/product-card";
-
-import {
-  ProductDetail,
-} from "@/components/product/product-detail";
+  HomeProductRail,
+} from "@/components/home/home-product-rail";
 
 import {
   Section,
 } from "@/components/home/section";
+
+import {
+  ProductDetail,
+} from "@/components/product/product-detail";
 
 import {
   getProduct,
@@ -129,9 +129,13 @@ export default async function ProductPage({
         slug,
       ),
 
+      /*
+       * Fetch enough products to build
+       * a meaningful recommendation rail.
+       */
       getProducts({
         take:
-          20,
+          24,
       }),
     ]);
 
@@ -162,10 +166,15 @@ export default async function ProductPage({
      ======================================================= */
 
   /*
-   * Prioritize products from the same category.
+   * Recommendation priority:
    *
-   * If fewer than four exist, fill the remaining positions
-   * with other products.
+   * 1. Products from the same category.
+   * 2. Other active products.
+   * 3. Never include the current product.
+   *
+   * Eight items gives the carousel
+   * enough content for a smooth loop
+   * without making the query excessive.
    */
   const sameCategory =
     allProducts.filter(
@@ -194,7 +203,7 @@ export default async function ProductPage({
     ...otherProducts,
   ].slice(
     0,
-    4,
+    8,
   );
 
   /* =======================================================
@@ -370,7 +379,7 @@ export default async function ProductPage({
       />
 
       {/* ===================================================
-          RELATED PRODUCTS
+          PRODUCT RECOMMENDATIONS
           =================================================== */}
 
       {related.length >
@@ -393,22 +402,13 @@ export default async function ProductPage({
             </Link>
           }
         >
-          <div className="grid-products">
-            {related.map(
-              (
-                item,
-              ) => (
-                <ProductCard
-                  key={
-                    item.id
-                  }
-                  product={
-                    item
-                  }
-                />
-              ),
-            )}
-          </div>
+          <HomeProductRail
+            products={
+              related
+            }
+            direction="right-to-left"
+            label="You May Also Like"
+          />
         </Section>
       ) : null}
 

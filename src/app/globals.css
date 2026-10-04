@@ -3921,12 +3921,6 @@ span {
     5px 1px
     8px;
 
-  /*
-   * Allows product-card widths to
-   * be calculated from the actual
-   * carousel viewport rather than
-   * the full browser width.
-   */
   container-type:
     inline-size;
 
@@ -3936,8 +3930,23 @@ span {
   overscroll-behavior-x:
     contain;
 
+  /*
+   * Vertical page scrolling remains
+   * natural on touch devices while
+   * horizontal movement belongs to
+   * the product carousel.
+   */
   touch-action:
     pan-y;
+
+  cursor:
+    grab;
+
+  user-select:
+    none;
+
+  -webkit-user-select:
+    none;
 }
 
 .home-product-rail
@@ -3945,6 +3954,55 @@ span {
   display: none;
 }
 
+
+/* =========================================================
+   MANUAL DRAGGING
+   ========================================================= */
+
+.home-product-rail.is-dragging
+.home-rail-viewport {
+  cursor:
+    grabbing;
+}
+
+.home-product-rail.is-dragging
+.home-rail-track {
+  /*
+   * The Web Animations API already
+   * pauses the CSS animation at the
+   * exact current frame.
+   *
+   * Keep the GPU layer active while
+   * the user manually moves it.
+   */
+  will-change:
+    transform;
+}
+
+.home-product-rail.is-dragging
+.home-rail-item {
+  /*
+   * Prevent hover effects from fighting
+   * with the drag interaction.
+   */
+  transform:
+    none !important;
+}
+
+.home-product-rail
+img {
+  user-select:
+    none;
+
+  -webkit-user-select:
+    none;
+
+  -webkit-user-drag:
+    none;
+
+  pointer-events:
+    none;
+}
 /* =========================================================
    TRACK
    ========================================================= */
@@ -4026,16 +4084,24 @@ span {
   .is-static
 )
 .home-rail-track {
-  animation:
-    homeProductRailRightToLeft
+  animation-name:
+    homeProductRailRightToLeft;
+
+  animation-duration:
     var(
       --rail-duration,
-      34s
-    )
-    linear
-    infinite;
-}
+      30s
+    );
 
+  animation-timing-function:
+    linear;
+
+  animation-iteration-count:
+    infinite;
+
+  animation-play-state:
+    running;
+}
 /* =========================================================
    LEFT → RIGHT
    TRENDING
@@ -4045,14 +4111,23 @@ span {
   .is-static
 )
 .home-rail-track {
-  animation:
-    homeProductRailLeftToRight
+  animation-name:
+    homeProductRailLeftToRight;
+
+  animation-duration:
     var(
       --rail-duration,
-      34s
-    )
-    linear
+      30s
+    );
+
+  animation-timing-function:
+    linear;
+
+  animation-iteration-count:
     infinite;
+
+  animation-play-state:
+    running;
 }
 
 /* =========================================================
@@ -4163,25 +4238,18 @@ span {
       var(--ease-premium);
 }
 
-/*
- * Pause while the customer interacts
- * with a product card.
- */
+/* =========================================================
+   PRODUCT RAIL — INTERACTION
+   ========================================================= */
+
 @media (
   hover: hover
 ) and (
   pointer: fine
 ) {
-  .home-product-rail:hover
-  .home-rail-track,
-
-  .home-product-rail:focus-within
-  .home-rail-track {
-    animation-play-state:
-      paused;
-  }
-
-  .home-product-rail
+  .home-product-rail:not(
+    .is-dragging
+  )
   .home-rail-item:hover {
     position: relative;
 
@@ -4370,23 +4438,31 @@ span {
 }
 
 /* =========================================================
-   REDUCED MOTION
+   PRODUCT RAIL — REDUCED MOTION
    ========================================================= */
 
+/*
+ * The carousel remains functional even
+ * when reduced-motion is enabled.
+ *
+ * We remove card lift transitions here,
+ * but we do NOT disable the continuous
+ * product movement.
+ */
 @media (
   prefers-reduced-motion:
     reduce
 ) {
   .home-product-rail
-  .home-rail-track {
-    animation:
-      none !important;
+  .home-rail-item {
+    transition:
+      none;
+  }
 
+  .home-product-rail
+  .home-rail-item:hover {
     transform:
-      none !important;
-
-    will-change:
-      auto;
+      none;
   }
 }
 
@@ -6897,23 +6973,36 @@ span {
    REDUCED MOTION
    ========================================================= */
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation: none !important;
-    transition: none !important;
+/* =========================================================
+   GLOBAL REDUCED MOTION
+   ========================================================= */
+
+/*
+ * Do NOT globally set animation:none.
+ *
+ * Components such as the Hero, product
+ * carousel, cart drawer and other UI
+ * features manage motion individually.
+ *
+ * A blanket animation:none rule breaks
+ * functional animations as well as
+ * decorative ones.
+ */
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  html {
+    scroll-behavior:
+      auto !important;
   }
 
   .product-card:hover,
-  .product-card:hover .product-card-image,
+  .product-card:hover
+  .product-card-image,
   .premium-category-card:hover::after {
-    transform: none !important;
-  }
-
-  .home-rail-play {
-    display: none;
+    transform:
+      none !important;
   }
 }
 
