@@ -1,9 +1,14 @@
 "use client";
 
 import {
+  useDeferredValue,
   useEffect,
   useMemo,
   useState,
+} from "react";
+
+import type {
+  ReactNode,
 } from "react";
 
 import {
@@ -22,30 +27,52 @@ import {
   useSearchParams,
 } from "next/navigation";
 
-import type { Product } from "@/lib/data";
+import {
+  ProductCard,
+} from "@/components/product/product-card";
 
-import { ProductCard } from "@/components/product/product-card";
+import type {
+  Product,
+} from "@/lib/data";
+
+/* =========================================================
+   TYPES
+   ========================================================= */
 
 type ShopCategory = {
   id: string;
+
   name: string;
+
   slug: string;
-  parentId: string | null;
+
+  parentId:
+    | string
+    | null;
+
   sortOrder: number;
 };
 
 type ShopClientProps = {
-  products: Product[];
+  products:
+    Product[];
 
-  categories: ShopCategory[];
+  categories:
+    ShopCategory[];
 
-  productCategoryMap: Record<
-    string,
-    string[]
-  >;
+  productCategoryMap:
+    Record<
+      string,
+      string[]
+    >;
 
-  itemsPerPage: number;
+  itemsPerPage:
+    number;
 };
+
+/* =========================================================
+   SHOP
+   ========================================================= */
 
 export function ShopClient({
   products,
@@ -53,634 +80,1220 @@ export function ShopClient({
   productCategoryMap,
   itemsPerPage,
 }: ShopClientProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router =
+    useRouter();
+
+  const pathname =
+    usePathname();
+
   const searchParams =
     useSearchParams();
 
   const urlStateKey =
     searchParams.toString();
 
-  const [search, setSearch] =
+  /* =======================================================
+     URL-BACKED STATE
+     ======================================================= */
+
+  const [
+    search,
+    setSearch,
+  ] =
     useState(
-      searchParams.get("q") ??
+      searchParams.get(
+        "q",
+      ) ??
         "",
     );
 
   const [
     category,
     setCategory,
-  ] = useState(
-    searchParams.get(
-      "category",
-    ) ?? "all",
-  );
+  ] =
+    useState(
+      searchParams.get(
+        "category",
+      ) ??
+        "all",
+    );
 
-  const [sort, setSort] =
+  const [
+    sort,
+    setSort,
+  ] =
     useState(
       searchParams.get(
         "sort",
-      ) ?? "featured",
+      ) ??
+        "featured",
+    );
+
+  const [
+    size,
+    setSize,
+  ] =
+    useState(
+      searchParams.get(
+        "size",
+      ) ??
+        "all",
+    );
+
+  const [
+    color,
+    setColor,
+  ] =
+    useState(
+      searchParams.get(
+        "color",
+      ) ??
+        "all",
+    );
+
+  const [
+    maxPrice,
+    setMaxPrice,
+  ] =
+    useState(
+      searchParams.get(
+        "max",
+      ) ??
+        "",
     );
 
   const [
     onlyStock,
     setOnlyStock,
-  ] = useState(false);
+  ] =
+    useState(
+      searchParams.get(
+        "stock",
+      ) ===
+        "1",
+    );
+
+  const [
+    offersOnly,
+    setOffersOnly,
+  ] =
+    useState(
+      searchParams.get(
+        "offers",
+      ) ===
+        "1",
+    );
 
   const [
     filtersOpen,
     setFiltersOpen,
-  ] = useState(false);
-
-  const [size, setSize] =
-    useState("all");
-
-  const [color, setColor] =
-    useState("all");
-
-  const [
-    maxPrice,
-    setMaxPrice,
-  ] = useState("");
+  ] =
+    useState(false);
 
   const [
     visibleCount,
     setVisibleCount,
-  ] = useState(itemsPerPage);
+  ] =
+    useState(
+      itemsPerPage,
+    );
 
   const [
     gridMode,
     setGridMode,
-  ] = useState<
-    "grid" | "compact"
-  >("grid");
+  ] =
+    useState<
+      "grid" | "compact"
+    >(
+      "grid",
+    );
 
-  /*
-   * Keep React state synchronized
-   * when browser back / forward
-   * changes the URL.
-   */
+  const deferredSearch =
+    useDeferredValue(
+      search,
+    );
+
+  /* =======================================================
+     BACK/FORWARD URL SYNC
+     ======================================================= */
+
   useEffect(() => {
     setSearch(
-      searchParams.get("q") ??
+      searchParams.get(
+        "q",
+      ) ??
         "",
     );
 
     setCategory(
       searchParams.get(
         "category",
-      ) ?? "all",
+      ) ??
+        "all",
     );
 
     setSort(
       searchParams.get(
         "sort",
-      ) ?? "featured",
+      ) ??
+        "featured",
+    );
+
+    setSize(
+      searchParams.get(
+        "size",
+      ) ??
+        "all",
+    );
+
+    setColor(
+      searchParams.get(
+        "color",
+      ) ??
+        "all",
+    );
+
+    setMaxPrice(
+      searchParams.get(
+        "max",
+      ) ??
+        "",
+    );
+
+    setOnlyStock(
+      searchParams.get(
+        "stock",
+      ) ===
+        "1",
+    );
+
+    setOffersOnly(
+      searchParams.get(
+        "offers",
+      ) ===
+        "1",
     );
   }, [
     searchParams,
     urlStateKey,
   ]);
 
-  /*
-   * Keep Shop URL synchronized
-   * with search/category/sort.
-   */
+  /* =======================================================
+     WRITE SHOP STATE TO URL
+     ======================================================= */
+
   useEffect(() => {
-    const params =
-      new URLSearchParams(
-        searchParams.toString(),
+    const timer =
+      window.setTimeout(
+        () => {
+          const params =
+            new URLSearchParams(
+              searchParams.toString(),
+            );
+
+          const cleanSearch =
+            search.trim();
+
+          if (
+            cleanSearch
+          ) {
+            params.set(
+              "q",
+              cleanSearch,
+            );
+          } else {
+            params.delete(
+              "q",
+            );
+          }
+
+          if (
+            category !==
+            "all"
+          ) {
+            params.set(
+              "category",
+              category,
+            );
+          } else {
+            params.delete(
+              "category",
+            );
+          }
+
+          if (
+            sort !==
+            "featured"
+          ) {
+            params.set(
+              "sort",
+              sort,
+            );
+          } else {
+            params.delete(
+              "sort",
+            );
+          }
+
+          if (
+            size !==
+            "all"
+          ) {
+            params.set(
+              "size",
+              size,
+            );
+          } else {
+            params.delete(
+              "size",
+            );
+          }
+
+          if (
+            color !==
+            "all"
+          ) {
+            params.set(
+              "color",
+              color,
+            );
+          } else {
+            params.delete(
+              "color",
+            );
+          }
+
+          if (
+            maxPrice
+          ) {
+            params.set(
+              "max",
+              maxPrice,
+            );
+          } else {
+            params.delete(
+              "max",
+            );
+          }
+
+          if (
+            onlyStock
+          ) {
+            params.set(
+              "stock",
+              "1",
+            );
+          } else {
+            params.delete(
+              "stock",
+            );
+          }
+
+          if (
+            offersOnly
+          ) {
+            params.set(
+              "offers",
+              "1",
+            );
+          } else {
+            params.delete(
+              "offers",
+            );
+          }
+
+          const nextQuery =
+            params.toString();
+
+          const currentQuery =
+            searchParams.toString();
+
+          if (
+            nextQuery ===
+            currentQuery
+          ) {
+            return;
+          }
+
+          router.replace(
+            nextQuery
+              ? `${pathname}?${nextQuery}`
+              : pathname,
+
+            {
+              scroll:
+                false,
+            },
+          );
+        },
+
+        120,
       );
 
-    const cleanSearch =
-      search.trim();
-
-    if (cleanSearch) {
-      params.set(
-        "q",
-        cleanSearch,
+    return () => {
+      window.clearTimeout(
+        timer,
       );
-    } else {
-      params.delete("q");
-    }
-
-    if (
-      category !== "all"
-    ) {
-      params.set(
-        "category",
-        category,
-      );
-    } else {
-      params.delete(
-        "category",
-      );
-    }
-
-    if (
-      sort !== "featured"
-    ) {
-      params.set("sort", sort);
-    } else {
-      params.delete("sort");
-    }
-
-    const nextQuery =
-      params.toString();
-
-    const currentQuery =
-      searchParams.toString();
-
-    if (
-      nextQuery ===
-      currentQuery
-    ) {
-      return;
-    }
-
-    router.replace(
-      nextQuery
-        ? `${pathname}?${nextQuery}`
-        : pathname,
-      {
-        scroll: false,
-      },
-    );
+    };
   }, [
-    search,
     category,
-    sort,
+    color,
+    maxPrice,
+    offersOnly,
+    onlyStock,
     pathname,
     router,
+    search,
     searchParams,
+    size,
+    sort,
   ]);
 
-  /*
-   * Reset pagination whenever
-   * filtering changes.
-   */
+  /* =======================================================
+     RESET PAGINATION
+     ======================================================= */
+
   useEffect(() => {
     setVisibleCount(
       itemsPerPage,
     );
   }, [
-    search,
     category,
-    sort,
-    onlyStock,
-    size,
     color,
-    maxPrice,
     itemsPerPage,
+    maxPrice,
+    offersOnly,
+    onlyStock,
+    search,
+    size,
+    sort,
   ]);
 
-  /*
-   * Category lookup structures.
-   */
-  const categoryById =
-    useMemo(() => {
-      return new Map(
-        categories.map(
-          (item) => [
-            item.id,
-            item,
-          ],
-        ),
+  /* =======================================================
+     FILTER DRAWER LOCK
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      !filtersOpen
+    ) {
+      return;
+    }
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    function handleEscape(
+      event:
+        KeyboardEvent,
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setFiltersOpen(
+          false,
+        );
+      }
+    }
+
+    window.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      window.removeEventListener(
+        "keydown",
+        handleEscape,
       );
-    }, [categories]);
+    };
+  }, [
+    filtersOpen,
+  ]);
+
+  /* =======================================================
+     CATEGORY LOOKUPS
+     ======================================================= */
+
+  const categoryById =
+    useMemo(
+      () =>
+        new Map(
+          categories.map(
+            (
+              item,
+            ) => [
+              item.id,
+              item,
+            ],
+          ),
+        ),
+
+      [
+        categories,
+      ],
+    );
 
   const categoryBySlug =
-    useMemo(() => {
-      return new Map(
-        categories.map(
-          (item) => [
-            item.slug,
-            item,
-          ],
+    useMemo(
+      () =>
+        new Map(
+          categories.map(
+            (
+              item,
+            ) => [
+              item.slug,
+              item,
+            ],
+          ),
         ),
-      );
-    }, [categories]);
+
+      [
+        categories,
+      ],
+    );
 
   const childrenByParent =
-    useMemo(() => {
-      const map = new Map<
-        string | null,
-        ShopCategory[]
-      >();
+    useMemo(
+      () => {
+        const map =
+          new Map<
+            string | null,
+            ShopCategory[]
+          >();
 
-      for (
-        const item of categories
-      ) {
-        const existing =
-          map.get(
+        for (
+          const item
+          of categories
+        ) {
+          const current =
+            map.get(
+              item.parentId,
+            ) ??
+            [];
+
+          current.push(
+            item,
+          );
+
+          map.set(
             item.parentId,
-          ) ?? [];
+            current,
+          );
+        }
 
-        existing.push(item);
+        for (
+          const children
+          of map.values()
+        ) {
+          children.sort(
+            (
+              first,
+              second,
+            ) =>
+              first.sortOrder -
+                second.sortOrder ||
+              first.name.localeCompare(
+                second.name,
+              ),
+          );
+        }
 
-        map.set(
-          item.parentId,
-          existing,
-        );
-      }
+        return map;
+      },
 
-      for (
-        const entries of map.values()
-      ) {
-        entries.sort(
-          (a, b) =>
-            a.sortOrder -
-              b.sortOrder ||
-            a.name.localeCompare(
-              b.name,
-            ),
-        );
-      }
+      [
+        categories,
+      ],
+    );
 
-      return map;
-    }, [categories]);
-
-  /*
-   * Main/root categories.
-   */
   const rootCategories =
-    useMemo(() => {
-      const roots =
-        childrenByParent.get(
-          null,
-        ) ?? [];
+    useMemo(
+      () => {
+        const roots =
+          childrenByParent.get(
+            null,
+          ) ??
+          [];
 
-      /*
-       * Fallback for legacy data
-       * without parent relationships.
-       */
-      return roots.length
-        ? roots
-        : categories;
-    }, [
-      childrenByParent,
-      categories,
-    ]);
+        return roots.length
+          ? roots
+          : categories;
+      },
+
+      [
+        categories,
+        childrenByParent,
+      ],
+    );
 
   const selectedCategory =
-    category === "all"
+    category ===
+    "all"
       ? null
       : categoryBySlug.get(
           category,
-        ) ?? null;
+        ) ??
+        null;
 
-  /*
-   * Find the root parent for
-   * whatever category is selected.
-   */
+  /* =======================================================
+     ROOT CATEGORY
+     ======================================================= */
+
   const activeRootCategory =
-    useMemo(() => {
-      if (
-        !selectedCategory
-      ) {
-        return null;
-      }
+    useMemo(
+      () => {
+        if (
+          !selectedCategory
+        ) {
+          return null;
+        }
 
-      let current =
-        selectedCategory;
+        let current =
+          selectedCategory;
 
-      const visited =
-        new Set<string>();
+        const visited =
+          new Set<string>();
 
-      while (
-        current.parentId &&
-        !visited.has(
-          current.id,
-        )
-      ) {
-        visited.add(
-          current.id,
-        );
-
-        const parent =
-          categoryById.get(
-            current.parentId,
+        while (
+          current.parentId &&
+          !visited.has(
+            current.id,
+          )
+        ) {
+          visited.add(
+            current.id,
           );
 
-        if (!parent) {
-          break;
+          const parent =
+            categoryById.get(
+              current.parentId,
+            );
+
+          if (!parent) {
+            break;
+          }
+
+          current =
+            parent;
         }
 
-        current = parent;
-      }
+        return current;
+      },
 
-      return current;
-    }, [
-      selectedCategory,
-      categoryById,
-    ]);
+      [
+        categoryById,
+        selectedCategory,
+      ],
+    );
 
-  /*
-   * Flatten descendants of the
-   * selected root so second and
-   * third-level categories can
-   * also be selected.
-   */
+  /* =======================================================
+     ROOT DESCENDANTS
+     ======================================================= */
+
   const activeRootDescendants =
-    useMemo(() => {
-      if (
-        !activeRootCategory
-      ) {
-        return [];
-      }
-
-      const result:
-        ShopCategory[] = [];
-
-      const walk = (
-        parentId: string,
-      ) => {
-        const children =
-          childrenByParent.get(
-            parentId,
-          ) ?? [];
-
-        for (
-          const child of children
-        ) {
-          result.push(child);
-
-          walk(child.id);
-        }
-      };
-
-      walk(
-        activeRootCategory.id,
-      );
-
-      return result;
-    }, [
-      activeRootCategory,
-      childrenByParent,
-    ]);
-
-  /*
-   * When a parent category is
-   * selected, products inside any
-   * child/grandchild categories
-   * must also be included.
-   */
-  const allowedCategoryIds =
-    useMemo(() => {
-      if (
-        category === "all"
-      ) {
-        return null;
-      }
-
-      if (
-        !selectedCategory
-      ) {
-        return new Set<string>();
-      }
-
-      const ids =
-        new Set<string>();
-
-      const walk = (
-        categoryId: string,
-      ) => {
+    useMemo(
+      () => {
         if (
-          ids.has(categoryId)
+          !activeRootCategory
         ) {
-          return;
+          return [];
         }
 
-        ids.add(categoryId);
+        const result:
+          ShopCategory[] =
+          [];
 
-        const children =
-          childrenByParent.get(
+        function walk(
+          parentId:
+            string,
+        ) {
+          const children =
+            childrenByParent.get(
+              parentId,
+            ) ??
+            [];
+
+          for (
+            const child
+            of children
+          ) {
+            result.push(
+              child,
+            );
+
+            walk(
+              child.id,
+            );
+          }
+        }
+
+        walk(
+          activeRootCategory.id,
+        );
+
+        return result;
+      },
+
+      [
+        activeRootCategory,
+        childrenByParent,
+      ],
+    );
+
+  /* =======================================================
+     CATEGORY FILTER IDS
+     ======================================================= */
+
+  const allowedCategoryIds =
+    useMemo(
+      () => {
+        if (
+          category ===
+          "all"
+        ) {
+          return null;
+        }
+
+        if (
+          !selectedCategory
+        ) {
+          return new Set<
+            string
+          >();
+        }
+
+        const ids =
+          new Set<string>();
+
+        function walk(
+          categoryId:
+            string,
+        ) {
+          if (
+            ids.has(
+              categoryId,
+            )
+          ) {
+            return;
+          }
+
+          ids.add(
             categoryId,
-          ) ?? [];
+          );
+
+          const children =
+            childrenByParent.get(
+              categoryId,
+            ) ??
+            [];
+
+          for (
+            const child
+            of children
+          ) {
+            walk(
+              child.id,
+            );
+          }
+        }
+
+        walk(
+          selectedCategory.id,
+        );
+
+        return ids;
+      },
+
+      [
+        category,
+        childrenByParent,
+        selectedCategory,
+      ],
+    );
+
+  /* =======================================================
+     AVAILABLE SIZES
+     ======================================================= */
+
+  const sizes =
+    useMemo(
+      () =>
+        [
+          ...new Set(
+            products.flatMap(
+              (
+                product,
+              ) =>
+                product.sizes,
+            ),
+          ),
+        ]
+          .filter(
+            Boolean,
+          )
+          .sort(
+            (
+              first,
+              second,
+            ) =>
+              first.localeCompare(
+                second,
+                undefined,
+                {
+                  numeric:
+                    true,
+
+                  sensitivity:
+                    "base",
+                },
+              ),
+          ),
+
+      [
+        products,
+      ],
+    );
+
+  /* =======================================================
+     AVAILABLE COLORS
+     ======================================================= */
+
+  const colors =
+    useMemo(
+      () =>
+        [
+          ...new Set(
+            products.flatMap(
+              (
+                product,
+              ) =>
+                product.colors,
+            ),
+          ),
+        ]
+          .filter(
+            Boolean,
+          )
+          .sort(
+            (
+              first,
+              second,
+            ) =>
+              first.localeCompare(
+                second,
+              ),
+          ),
+
+      [
+        products,
+      ],
+    );
+
+  const colorSwatches =
+    useMemo(
+      () => {
+        const swatches =
+          new Map<
+            string,
+            string
+          >();
 
         for (
-          const child of children
+          const product
+          of products
         ) {
-          walk(child.id);
+          for (
+            const variant
+            of product.variants ??
+              []
+          ) {
+            if (
+              variant.color &&
+              variant.colorHex &&
+              !swatches.has(
+                variant.color,
+              )
+            ) {
+              swatches.set(
+                variant.color,
+                variant.colorHex,
+              );
+            }
+          }
         }
-      };
 
-      walk(
-        selectedCategory.id,
-      );
+        return swatches;
+      },
 
-      return ids;
-    }, [
-      category,
-      selectedCategory,
-      childrenByParent,
-    ]);
-
-  const sizes = useMemo(
-    () =>
       [
-        ...new Set(
-          products.flatMap(
-            (product) =>
-              product.sizes,
-          ),
-        ),
-      ].filter(Boolean),
-    [products],
-  );
+        products,
+      ],
+    );
 
-  const colors = useMemo(
-    () =>
-      [
-        ...new Set(
-          products.flatMap(
-            (product) =>
-              product.colors,
-          ),
-        ),
-      ].filter(Boolean),
-    [products],
-  );
+  /* =======================================================
+     HIGHEST PRICE
+     ======================================================= */
 
   const highestPrice =
-    useMemo(() => {
-      return Math.ceil(
-        Math.max(
-          ...products.map(
-            (product) =>
-              product.price,
+    useMemo(
+      () =>
+        Math.ceil(
+          Math.max(
+            ...products.map(
+              (
+                product,
+              ) =>
+                product.price,
+            ),
+
+            0,
           ),
-          0,
         ),
-      );
-    }, [products]);
+
+      [
+        products,
+      ],
+    );
+
+  /* =======================================================
+     ORIGINAL DATABASE ORDER
+     ======================================================= */
+
+  const originalOrder =
+    useMemo(
+      () =>
+        new Map(
+          products.map(
+            (
+              product,
+              productIndex,
+            ) => [
+              product.id,
+              productIndex,
+            ],
+          ),
+        ),
+
+      [
+        products,
+      ],
+    );
+
+  /* =======================================================
+     FILTER PRODUCTS
+     ======================================================= */
 
   const filteredProducts =
-    useMemo(() => {
-      const keyword =
-        search
-          .trim()
-          .toLowerCase();
+    useMemo(
+      () => {
+        const keyword =
+          deferredSearch
+            .trim()
+            .toLowerCase();
 
-      const result =
-        products.filter(
-          (product) => {
-            const searchable =
-              [
-                product.name,
-                product.category,
+        const result =
+          products.filter(
+            (
+              product,
+            ) => {
+              /* ===========================================
+                 SEARCH
+                 =========================================== */
 
-                ...(
-                  product.variants ??
-                  []
-                ).map(
-                  (variant) =>
-                    variant.sku,
-                ),
-              ]
-                .join(" ")
-                .toLowerCase();
+              const searchable =
+                [
+                  product.name,
 
-            const matchesSearch =
-              !keyword ||
-              searchable.includes(
-                keyword,
-              );
+                  product.category,
 
-            const productCategories =
-              productCategoryMap[
-                product.id
-              ] ?? [];
+                  ...product.sizes,
 
-            const matchesCategory =
-              allowedCategoryIds ===
-              null
-                ? true
-                : productCategories.some(
+                  ...product.colors,
+
+                  ...(
+                    product.variants ??
+                    []
+                  ).flatMap(
                     (
-                      categoryId,
-                    ) =>
-                      allowedCategoryIds.has(
+                      variant,
+                    ) => [
+                      variant.sku,
+                      variant.size,
+                      variant.color,
+                    ],
+                  ),
+                ]
+                  .join(
+                    " ",
+                  )
+                  .toLowerCase();
+
+              const matchesSearch =
+                !keyword ||
+                searchable.includes(
+                  keyword,
+                );
+
+              /* ===========================================
+                 CATEGORY
+                 =========================================== */
+
+              const productCategories =
+                productCategoryMap[
+                  product.id
+                ] ??
+                [];
+
+              const matchesCategory =
+                allowedCategoryIds ===
+                null
+                  ? true
+                  : productCategories.some(
+                      (
                         categoryId,
-                      ),
-                  );
+                      ) =>
+                        allowedCategoryIds.has(
+                          categoryId,
+                        ),
+                    );
 
-            const matchesStock =
-              !onlyStock ||
-              product.stock > 0;
+              /* ===========================================
+                 STOCK
+                 =========================================== */
 
-            const matchesSize =
-              size === "all" ||
-              product.sizes.includes(
-                size,
+              const matchesStock =
+                !onlyStock ||
+                product.stock >
+                  0;
+
+              /* ===========================================
+                 SIZE + COLOR COMBINATION
+
+                 Only show a product when an actual
+                 in-stock variant satisfies the
+                 selected size/color combination.
+                 =========================================== */
+
+              const needsVariantFilter =
+                size !==
+                  "all" ||
+                color !==
+                  "all";
+
+              const variants =
+                product.variants ??
+                [];
+
+              const matchesVariant =
+                !needsVariantFilter
+                  ? true
+                  : variants.some(
+                      (
+                        variant,
+                      ) =>
+                        variant.stock >
+                          0 &&
+                        (
+                          size ===
+                            "all" ||
+                          variant.size ===
+                            size
+                        ) &&
+                        (
+                          color ===
+                            "all" ||
+                          variant.color ===
+                            color
+                        ),
+                    );
+
+              /* ===========================================
+                 PRICE
+                 =========================================== */
+
+              const numericMaxPrice =
+                Number(
+                  maxPrice,
+                );
+
+              const matchesPrice =
+                !maxPrice ||
+                !Number.isFinite(
+                  numericMaxPrice,
+                ) ||
+                product.price <=
+                  numericMaxPrice;
+
+              /* ===========================================
+                 OFFERS
+                 =========================================== */
+
+              const matchesOffers =
+                !offersOnly ||
+                Boolean(
+                  product.oldPrice &&
+                    product.oldPrice >
+                      product.price,
+                );
+
+              return (
+                matchesSearch &&
+                matchesCategory &&
+                matchesStock &&
+                matchesVariant &&
+                matchesPrice &&
+                matchesOffers
               );
+            },
+          );
 
-            const matchesColor =
-              color === "all" ||
-              product.colors.includes(
-                color,
+        /* ===============================================
+           SORTING
+           =============================================== */
+
+        result.sort(
+          (
+            first,
+            second,
+          ) => {
+            if (
+              sort ===
+              "low"
+            ) {
+              return (
+                first.price -
+                second.price
               );
+            }
 
-            const numericMaxPrice =
-              Number(
-                maxPrice,
+            if (
+              sort ===
+              "high"
+            ) {
+              return (
+                second.price -
+                first.price
               );
+            }
 
-            const matchesPrice =
-              !maxPrice ||
-              !Number.isFinite(
-                numericMaxPrice,
-              ) ||
-              product.price <=
-                numericMaxPrice;
+            if (
+              sort ===
+              "newest"
+            ) {
+              return (
+                (
+                  originalOrder.get(
+                    first.id,
+                  ) ??
+                  0
+                ) -
+                (
+                  originalOrder.get(
+                    second.id,
+                  ) ??
+                  0
+                )
+              );
+            }
+
+            const featuredFirst =
+              first.badge ===
+              "FEATURED"
+                ? 1
+                : 0;
+
+            const featuredSecond =
+              second.badge ===
+              "FEATURED"
+                ? 1
+                : 0;
+
+            if (
+              featuredFirst !==
+              featuredSecond
+            ) {
+              return (
+                featuredSecond -
+                featuredFirst
+              );
+            }
 
             return (
-              matchesSearch &&
-              matchesCategory &&
-              matchesStock &&
-              matchesSize &&
-              matchesColor &&
-              matchesPrice
+              (
+                originalOrder.get(
+                  first.id,
+                ) ??
+                0
+              ) -
+              (
+                originalOrder.get(
+                  second.id,
+                ) ??
+                0
+              )
             );
           },
         );
 
-      return result.sort(
-        (a, b) => {
-          if (
-            sort === "low"
-          ) {
-            return (
-              a.price -
-              b.price
-            );
-          }
+        return result;
+      },
 
-          if (
-            sort === "high"
-          ) {
-            return (
-              b.price -
-              a.price
-            );
-          }
+      [
+        allowedCategoryIds,
+        color,
+        deferredSearch,
+        maxPrice,
+        offersOnly,
+        onlyStock,
+        originalOrder,
+        productCategoryMap,
+        products,
+        size,
+        sort,
+      ],
+    );
 
-          if (
-            sort ===
-            "newest"
-          ) {
-            return b.id.localeCompare(
-              a.id,
-            );
-          }
-
-          const featuredA =
-            a.badge ===
-            "FEATURED"
-              ? 1
-              : 0;
-
-          const featuredB =
-            b.badge ===
-            "FEATURED"
-              ? 1
-              : 0;
-
-          if (
-            featuredA !==
-            featuredB
-          ) {
-            return (
-              featuredB -
-              featuredA
-            );
-          }
-
-          return b.id.localeCompare(
-            a.id,
-          );
-        },
-      );
-    }, [
-      products,
-      productCategoryMap,
-      search,
-      sort,
-      allowedCategoryIds,
-      onlyStock,
-      size,
-      color,
-      maxPrice,
-    ]);
+  /* =======================================================
+     FILTER COUNTS
+     ======================================================= */
 
   const activeFiltersCount =
     [
-      size !== "all",
-      color !== "all",
-      Boolean(maxPrice),
+      category !==
+        "all",
+
+      size !==
+        "all",
+
+      color !==
+        "all",
+
+      Boolean(
+        maxPrice,
+      ),
+
       onlyStock,
-    ].filter(Boolean).length;
+
+      offersOnly,
+    ].filter(
+      Boolean,
+    ).length;
+
+  const hasRefinements =
+    Boolean(
+      search.trim(),
+    ) ||
+    activeFiltersCount >
+      0;
 
   const visibleProducts =
     filteredProducts.slice(
@@ -688,81 +1301,265 @@ export function ShopClient({
       visibleCount,
     );
 
+  /* =======================================================
+     ACTIONS
+     ======================================================= */
+
   function selectCategory(
-    slug: string,
+    slug:
+      string,
   ) {
-    setCategory(slug);
+    setCategory(
+      slug,
+    );
   }
 
   function resetFilters() {
-    setSize("all");
-    setColor("all");
-    setMaxPrice("");
-    setOnlyStock(false);
+    setCategory(
+      "all",
+    );
+
+    setSize(
+      "all",
+    );
+
+    setColor(
+      "all",
+    );
+
+    setMaxPrice(
+      "",
+    );
+
+    setOnlyStock(
+      false,
+    );
+
+    setOffersOnly(
+      false,
+    );
   }
 
-  function resetEverything() {
-    setSearch("");
-    setCategory("all");
-    setSort("featured");
+  function clearEverything() {
+    setSearch(
+      "",
+    );
+
+    setSort(
+      "featured",
+    );
 
     resetFilters();
   }
 
+  const collectionTitle =
+    selectedCategory
+      ?.name ??
+    (
+      offersOnly
+        ? "Offers"
+        : "All Products"
+    );
+
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
     <>
+      {/* ===================================================
+          DISCOVERY + FILTER CONTROLS
+          =================================================== */}
+
       <section className="premium-shop-controls">
-        <div className="container">
-          <div className="premium-shop-category-row">
-            <div className="premium-shop-categories">
-              <CategoryButton
-                active={
-                  category ===
-                  "all"
+        <div className="container premium-shop-controls-inner">
+          {/* ===============================================
+              CATEGORY HEADING
+              =============================================== */}
+
+          <div className="premium-shop-control-heading">
+            <span>
+              Shop by Category
+            </span>
+
+            <small>
+              {
+                products.length
+              }{" "}
+              styles available
+            </small>
+          </div>
+
+          {/* ===============================================
+              ROOT CATEGORIES
+              =============================================== */}
+
+          <div
+            className="premium-shop-categories"
+            aria-label="Product categories"
+          >
+            <CategoryButton
+              active={
+                category ===
+                "all"
+              }
+              onClick={() =>
+                selectCategory(
+                  "all",
+                )
+              }
+            >
+              All
+            </CategoryButton>
+
+            {rootCategories.map(
+              (
+                item,
+              ) => (
+                <CategoryButton
+                  key={
+                    item.id
+                  }
+                  active={
+                    activeRootCategory
+                      ?.id ===
+                      item.id
+                  }
+                  onClick={() =>
+                    selectCategory(
+                      item.slug,
+                    )
+                  }
+                >
+                  {
+                    item.name
+                  }
+                </CategoryButton>
+              ),
+            )}
+          </div>
+
+          {/* ===============================================
+              SUBCATEGORIES
+              =============================================== */}
+
+          {activeRootCategory &&
+          activeRootDescendants.length >
+            0 ? (
+            <div className="premium-shop-subcategory-wrap">
+              <span>
+                {
+                  activeRootCategory.name
                 }
-                onClick={() =>
-                  selectCategory(
-                    "all",
+              </span>
+
+              <div className="premium-shop-subcategories">
+                <CategoryButton
+                  active={
+                    category ===
+                    activeRootCategory
+                      .slug
+                  }
+                  onClick={() =>
+                    selectCategory(
+                      activeRootCategory.slug,
+                    )
+                  }
+                >
+                  All{" "}
+                  {
+                    activeRootCategory.name
+                  }
+                </CategoryButton>
+
+                {activeRootDescendants.map(
+                  (
+                    item,
+                  ) => (
+                    <CategoryButton
+                      key={
+                        item.id
+                      }
+                      active={
+                        category ===
+                        item.slug
+                      }
+                      onClick={() =>
+                        selectCategory(
+                          item.slug,
+                        )
+                      }
+                    >
+                      {
+                        item.name
+                      }
+                    </CategoryButton>
+                  ),
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* ===============================================
+              SEARCH + SHOP ACTIONS
+              =============================================== */}
+
+          <div className="premium-shop-discovery-row">
+            <label className="premium-shop-search">
+              <Search
+                size={18}
+                strokeWidth={
+                  1.7
+                }
+              />
+
+              <input
+                type="search"
+                value={
+                  search
+                }
+                aria-label="Search products"
+                placeholder="Search product, category, SKU, size..."
+                onChange={(
+                  event,
+                ) =>
+                  setSearch(
+                    event
+                      .target
+                      .value,
                   )
                 }
-              >
-                All
-              </CategoryButton>
+              />
 
-              {rootCategories.map(
-                (item) => (
-                  <CategoryButton
-                    key={
-                      item.id
-                    }
-                    active={
-                      activeRootCategory?.id ===
-                        item.id ||
-                      category ===
-                        item.slug
-                    }
-                    onClick={() =>
-                      selectCategory(
-                        item.slug,
-                      )
-                    }
-                  >
-                    {
-                      item.name
-                    }
-                  </CategoryButton>
-                ),
-              )}
-            </div>
+              {search ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() =>
+                    setSearch(
+                      "",
+                    )
+                  }
+                >
+                  <X
+                    size={16}
+                  />
+                </button>
+              ) : null}
+            </label>
 
-            <div className="premium-shop-sort-area">
-              <span className="premium-shop-sort-label">
-                Sort by
-              </span>
+            <div className="premium-shop-discovery-actions">
+              {/* ===========================================
+                  SORT
+                  =========================================== */}
 
               <div className="premium-shop-select-wrap">
                 <select
-                  value={sort}
+                  value={
+                    sort
+                  }
+                  aria-label="Sort products"
+                  className="premium-shop-sort-select"
                   onChange={(
                     event,
                   ) =>
@@ -772,7 +1569,6 @@ export function ShopClient({
                         .value,
                     )
                   }
-                  className="premium-shop-sort-select"
                 >
                   <option value="featured">
                     Featured
@@ -783,25 +1579,28 @@ export function ShopClient({
                   </option>
 
                   <option value="low">
-                    Price: Low
-                    to High
+                    Price: Low to High
                   </option>
 
                   <option value="high">
-                    Price: High
-                    to Low
+                    Price: High to Low
                   </option>
                 </select>
 
                 <ChevronDown
-                  size={14}
+                  size={15}
                 />
               </div>
+
+              {/* ===========================================
+                  FILTER DRAWER
+                  =========================================== */}
 
               <button
                 type="button"
                 className={`premium-shop-filter-button ${
-                  activeFiltersCount
+                  activeFiltersCount >
+                  0
                     ? "has-filters"
                     : ""
                 }`}
@@ -812,228 +1611,211 @@ export function ShopClient({
                 }
               >
                 <SlidersHorizontal
-                  size={15}
+                  size={17}
                 />
 
-                Filter
+                <span>
+                  Filter
+                </span>
 
                 {activeFiltersCount >
                 0 ? (
-                  <span>
+                  <b>
                     {
                       activeFiltersCount
                     }
-                  </span>
+                  </b>
                 ) : null}
               </button>
+
+              {/* ===========================================
+                  GRID VIEW
+                  =========================================== */}
+
+              <div className="premium-shop-view-switch">
+                <button
+                  type="button"
+                  aria-label="Standard grid"
+                  className={
+                    gridMode ===
+                    "grid"
+                      ? "is-active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setGridMode(
+                      "grid",
+                    )
+                  }
+                >
+                  <Grid2X2
+                    size={16}
+                  />
+                </button>
+
+                <button
+                  type="button"
+                  aria-label="Compact grid"
+                  className={
+                    gridMode ===
+                    "compact"
+                      ? "is-active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setGridMode(
+                      "compact",
+                    )
+                  }
+                >
+                  <List
+                    size={17}
+                  />
+                </button>
+              </div>
             </div>
           </div>
 
-          {activeRootCategory &&
-          activeRootDescendants.length >
-            0 ? (
-            <div
-              className="premium-shop-categories premium-shop-subcategories"
-              style={{
-                paddingTop: 10,
-              }}
-            >
-              <CategoryButton
-                active={
-                  category ===
-                  activeRootCategory.slug
-                }
-                onClick={() =>
-                  selectCategory(
-                    activeRootCategory.slug,
-                  )
-                }
-              >
-                All{" "}
-                {
-                  activeRootCategory.name
-                }
-              </CategoryButton>
+          {/* ===============================================
+              ACTIVE FILTERS
+              =============================================== */}
 
-              {activeRootDescendants.map(
-                (item) => (
-                  <CategoryButton
-                    key={
-                      item.id
-                    }
-                    active={
-                      category ===
-                      item.slug
-                    }
-                    onClick={() =>
-                      selectCategory(
-                        item.slug,
-                      )
-                    }
-                  >
-                    {
-                      item.name
-                    }
-                  </CategoryButton>
-                ),
-              )}
-            </div>
-          ) : null}
-
-          <div className="premium-shop-mobile-actions">
-            <button
-              type="button"
-              onClick={() =>
-                setFiltersOpen(
-                  true,
-                )
-              }
-            >
-              <SlidersHorizontal
-                size={15}
-              />
-
-              Filter
-
-              {activeFiltersCount >
-              0 ? (
-                <span className="premium-shop-mobile-filter-count">
-                  {
-                    activeFiltersCount
-                  }
-                </span>
-              ) : null}
-            </button>
-
-            <label>
-              <span>
-                Sort
+          {hasRefinements ? (
+            <div className="premium-shop-active-filters">
+              <span className="premium-shop-active-label">
+                Active
               </span>
 
-              <select
-                value={sort}
-                onChange={(
-                  event,
-                ) =>
-                  setSort(
-                    event
-                      .target
-                      .value,
-                  )
+              {search ? (
+                <ActiveFilter
+                  label={`Search: ${search}`}
+                  onRemove={() =>
+                    setSearch(
+                      "",
+                    )
+                  }
+                />
+              ) : null}
+
+              {selectedCategory ? (
+                <ActiveFilter
+                  label={
+                    selectedCategory.name
+                  }
+                  onRemove={() =>
+                    setCategory(
+                      "all",
+                    )
+                  }
+                />
+              ) : null}
+
+              {size !==
+              "all" ? (
+                <ActiveFilter
+                  label={`Size: ${size}`}
+                  onRemove={() =>
+                    setSize(
+                      "all",
+                    )
+                  }
+                />
+              ) : null}
+
+              {color !==
+              "all" ? (
+                <ActiveFilter
+                  label={`Color: ${color}`}
+                  onRemove={() =>
+                    setColor(
+                      "all",
+                    )
+                  }
+                />
+              ) : null}
+
+              {maxPrice ? (
+                <ActiveFilter
+                  label={`Up to ৳${Number(
+                    maxPrice,
+                  ).toLocaleString()}`}
+                  onRemove={() =>
+                    setMaxPrice(
+                      "",
+                    )
+                  }
+                />
+              ) : null}
+
+              {onlyStock ? (
+                <ActiveFilter
+                  label="In stock"
+                  onRemove={() =>
+                    setOnlyStock(
+                      false,
+                    )
+                  }
+                />
+              ) : null}
+
+              {offersOnly ? (
+                <ActiveFilter
+                  label="Offers"
+                  onRemove={() =>
+                    setOffersOnly(
+                      false,
+                    )
+                  }
+                />
+              ) : null}
+
+              <button
+                type="button"
+                className="premium-shop-clear-all"
+                onClick={
+                  clearEverything
                 }
               >
-                <option value="featured">
-                  Featured
-                </option>
-
-                <option value="newest">
-                  Newest
-                </option>
-
-                <option value="low">
-                  Price Low
-                </option>
-
-                <option value="high">
-                  Price High
-                </option>
-              </select>
-            </label>
-          </div>
+                Clear all
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
 
+      {/* ===================================================
+          PRODUCT COLLECTION
+          =================================================== */}
+
       <section className="container premium-shop-main">
-        <div className="premium-shop-toolbar">
-          <div className="premium-shop-count">
+        <div className="premium-shop-results-heading">
+          <div>
+            <span>
+              Shop Collection
+            </span>
+
+            <h2>
+              {
+                collectionTitle
+              }
+            </h2>
+          </div>
+
+          <p>
             Showing{" "}
-            {
-              visibleProducts.length
-            }{" "}
+            <strong>
+              {
+                visibleProducts.length
+              }
+            </strong>{" "}
             of{" "}
-            {
-              filteredProducts.length
-            }{" "}
+            <strong>
+              {
+                filteredProducts.length
+              }
+            </strong>{" "}
             products
-          </div>
-
-          <div className="premium-shop-toolbar-right">
-            <label className="premium-shop-search">
-              <Search
-                size={15}
-              />
-
-              <input
-                value={search}
-                onChange={(
-                  event,
-                ) =>
-                  setSearch(
-                    event
-                      .target
-                      .value,
-                  )
-                }
-                placeholder="Search products..."
-              />
-
-              {search ? (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() =>
-                    setSearch("")
-                  }
-                >
-                  <X
-                    size={14}
-                  />
-                </button>
-              ) : null}
-            </label>
-
-            <div className="premium-shop-view-switch">
-              <button
-                type="button"
-                className={
-                  gridMode ===
-                  "grid"
-                    ? "is-active"
-                    : ""
-                }
-                aria-label="Grid view"
-                onClick={() =>
-                  setGridMode(
-                    "grid",
-                  )
-                }
-              >
-                <Grid2X2
-                  size={14}
-                />
-              </button>
-
-              <button
-                type="button"
-                className={
-                  gridMode ===
-                  "compact"
-                    ? "is-active"
-                    : ""
-                }
-                aria-label="Compact view"
-                onClick={() =>
-                  setGridMode(
-                    "compact",
-                  )
-                }
-              >
-                <List
-                  size={15}
-                />
-              </button>
-            </div>
-          </div>
+          </p>
         </div>
 
         {filteredProducts.length >
@@ -1079,7 +1861,11 @@ export function ShopClient({
                     )
                   }
                 >
-                  Load More
+                  Load More Products
+
+                  <span>
+                    +
+                  </span>
                 </button>
               </div>
             ) : null}
@@ -1088,26 +1874,28 @@ export function ShopClient({
           <div className="premium-shop-empty">
             <div className="premium-shop-empty-icon">
               <Search
-                size={26}
+                size={27}
               />
             </div>
+
+            <span>
+              No Match
+            </span>
 
             <h2>
               No products found
             </h2>
 
             <p>
-              Try changing
-              your search,
-              category or
-              filters.
+              Try another search,
+              category or filter.
             </p>
 
             <button
               type="button"
-              className="btn btn-dark"
+              className="premium-shop-empty-reset"
               onClick={
-                resetEverything
+                clearEverything
               }
             >
               View All Products
@@ -1116,9 +1904,14 @@ export function ShopClient({
         )}
       </section>
 
+      {/* ===================================================
+          FILTER DRAWER
+          =================================================== */}
+
       {filtersOpen ? (
         <div
           className="premium-filter-overlay"
+          role="presentation"
           onMouseDown={() =>
             setFiltersOpen(
               false,
@@ -1127,6 +1920,9 @@ export function ShopClient({
         >
           <aside
             className="premium-filter-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shop-filter-title"
             onMouseDown={(
               event,
             ) =>
@@ -1139,8 +1935,10 @@ export function ShopClient({
                   Refine
                 </span>
 
-                <h2>
-                  Filters
+                <h2
+                  id="shop-filter-title"
+                >
+                  Shop Filters
                 </h2>
               </div>
 
@@ -1160,6 +1958,58 @@ export function ShopClient({
             </div>
 
             <div className="premium-filter-body">
+              {/* ===========================================
+                  CATEGORY
+                  =========================================== */}
+
+              <FilterSection title="Category">
+                <div className="premium-filter-size-grid">
+                  <FilterChip
+                    active={
+                      category ===
+                      "all"
+                    }
+                    onClick={() =>
+                      setCategory(
+                        "all",
+                      )
+                    }
+                  >
+                    All
+                  </FilterChip>
+
+                  {rootCategories.map(
+                    (
+                      item,
+                    ) => (
+                      <FilterChip
+                        key={
+                          item.id
+                        }
+                        active={
+                          activeRootCategory
+                            ?.id ===
+                          item.id
+                        }
+                        onClick={() =>
+                          setCategory(
+                            item.slug,
+                          )
+                        }
+                      >
+                        {
+                          item.name
+                        }
+                      </FilterChip>
+                    ),
+                  )}
+                </div>
+              </FilterSection>
+
+              {/* ===========================================
+                  SIZE
+                  =========================================== */}
+
               <FilterSection title="Size">
                 <div className="premium-filter-size-grid">
                   <FilterChip
@@ -1202,6 +2052,10 @@ export function ShopClient({
                   )}
                 </div>
               </FilterSection>
+
+              {/* ===========================================
+                  COLOR
+                  =========================================== */}
 
               <FilterSection title="Color">
                 <div className="premium-filter-color-list">
@@ -1258,6 +2112,9 @@ export function ShopClient({
                           className="premium-filter-color-dot"
                           style={{
                             background:
+                              colorSwatches.get(
+                                value,
+                              ) ??
                               value,
                           }}
                         />
@@ -1271,9 +2128,7 @@ export function ShopClient({
                         {color ===
                         value ? (
                           <Check
-                            size={
-                              14
-                            }
+                            size={14}
                           />
                         ) : null}
                       </button>
@@ -1282,6 +2137,10 @@ export function ShopClient({
                 </div>
               </FilterSection>
 
+              {/* ===========================================
+                  PRICE
+                  =========================================== */}
+
               <FilterSection title="Price">
                 <label className="premium-filter-price">
                   <span>
@@ -1289,9 +2148,9 @@ export function ShopClient({
                   </span>
 
                   <div>
-                    <span>
+                    <b>
                       ৳
-                    </span>
+                    </b>
 
                     <input
                       type="number"
@@ -1302,6 +2161,13 @@ export function ShopClient({
                       value={
                         maxPrice
                       }
+                      placeholder={
+                        highestPrice
+                          ? String(
+                              highestPrice,
+                            )
+                          : "Any"
+                      }
                       onChange={(
                         event,
                       ) =>
@@ -1311,46 +2177,73 @@ export function ShopClient({
                             .value,
                         )
                       }
-                      placeholder={
-                        highestPrice
-                          ? String(
-                              highestPrice,
-                            )
-                          : "Any"
-                      }
                     />
                   </div>
                 </label>
               </FilterSection>
 
+              {/* ===========================================
+                  AVAILABILITY
+                  =========================================== */}
+
               <FilterSection title="Availability">
-                <label className="premium-filter-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={
-                      onlyStock
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      setOnlyStock(
-                        event
-                          .target
-                          .checked,
-                      )
-                    }
-                  />
-
-                  <span className="premium-filter-checkmark">
-                    <Check
-                      size={11}
+                <div className="premium-filter-checkbox-list">
+                  <label className="premium-filter-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={
+                        onlyStock
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setOnlyStock(
+                          event
+                            .target
+                            .checked,
+                        )
+                      }
                     />
-                  </span>
 
-                  <span>
-                    In stock only
-                  </span>
-                </label>
+                    <span className="premium-filter-checkmark">
+                      <Check
+                        size={11}
+                      />
+                    </span>
+
+                    <span>
+                      In stock only
+                    </span>
+                  </label>
+
+                  <label className="premium-filter-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={
+                        offersOnly
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setOffersOnly(
+                          event
+                            .target
+                            .checked,
+                        )
+                      }
+                    />
+
+                    <span className="premium-filter-checkmark">
+                      <Check
+                        size={11}
+                      />
+                    </span>
+
+                    <span>
+                      Offers only
+                    </span>
+                  </label>
+                </div>
               </FilterSection>
             </div>
 
@@ -1388,71 +2281,146 @@ export function ShopClient({
   );
 }
 
+/* =========================================================
+   CATEGORY BUTTON
+   ========================================================= */
+
 function CategoryButton({
   active,
   onClick,
   children,
 }: {
-  active: boolean;
-  onClick: () => void;
+  active:
+    boolean;
+
+  onClick:
+    () => void;
+
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <button
       type="button"
+      aria-pressed={
+        active
+      }
       className={`premium-shop-category-chip ${
         active
           ? "is-active"
           : ""
       }`}
-      onClick={onClick}
+      onClick={
+        onClick
+      }
     >
-      {children}
+      {
+        children
+      }
     </button>
   );
 }
+
+/* =========================================================
+   ACTIVE FILTER
+   ========================================================= */
+
+function ActiveFilter({
+  label,
+  onRemove,
+}: {
+  label:
+    string;
+
+  onRemove:
+    () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="premium-shop-active-chip"
+      onClick={
+        onRemove
+      }
+    >
+      <span>
+        {
+          label
+        }
+      </span>
+
+      <X
+        size={12}
+      />
+    </button>
+  );
+}
+
+/* =========================================================
+   FILTER SECTION
+   ========================================================= */
 
 function FilterSection({
   title,
   children,
 }: {
-  title: string;
+  title:
+    string;
+
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <section className="premium-filter-section">
       <div className="premium-filter-section-title">
-        {title}
+        {
+          title
+        }
       </div>
 
-      {children}
+      {
+        children
+      }
     </section>
   );
 }
+
+/* =========================================================
+   FILTER CHIP
+   ========================================================= */
 
 function FilterChip({
   active,
   onClick,
   children,
 }: {
-  active: boolean;
-  onClick: () => void;
+  active:
+    boolean;
+
+  onClick:
+    () => void;
+
   children:
-    React.ReactNode;
+    ReactNode;
 }) {
   return (
     <button
       type="button"
+      aria-pressed={
+        active
+      }
       className={`premium-filter-chip ${
         active
           ? "is-active"
           : ""
       }`}
-      onClick={onClick}
+      onClick={
+        onClick
+      }
     >
-      {children}
+      {
+        children
+      }
     </button>
   );
 }

@@ -827,7 +827,7 @@ export function HomepageCampaignManager({
 
           <CampaignUploader
             title="Desktop Image"
-            hint="Recommended 1400 × 760px or larger"
+            hint="Best frame: 1400 × 760px · other sizes are automatically cropped"
             image={
               form.image
             }
@@ -846,7 +846,7 @@ export function HomepageCampaignManager({
 
           <CampaignUploader
             title="Mobile Image"
-            hint="Recommended 900 × 1100px"
+            hint="Best frame: 900 × 1100px · other sizes are automatically cropped"
             image={
               form.mobileImage
             }

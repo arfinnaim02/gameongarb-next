@@ -3,60 +3,299 @@
 import Link from "next/link";
 
 import {
-  ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+
+import type {
+  CSSProperties,
+  TouchEvent,
+} from "react";
 
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
 type ShopHeroSlide = {
   id: string;
+
   title: string;
-  subtitle: string | null;
+
+  subtitle:
+    | string
+    | null;
 
   image: string;
-  mobileImage: string | null;
 
-  ctaLabel: string | null;
-  ctaLink: string | null;
+  mobileImage:
+    | string
+    | null;
+
+  ctaLabel:
+    | string
+    | null;
+
+  ctaLink:
+    | string
+    | null;
 
   enabled: boolean;
+
   sortOrder: number;
 };
 
 type ShopHeroSliderProps = {
-  slides: ShopHeroSlide[];
+  slides:
+    ShopHeroSlide[];
 };
+
+type ShopHeroStyle =
+  CSSProperties & {
+    "--shop-hero-duration":
+      string;
+
+    "--shop-hero-transition":
+      string;
+  };
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+const AUTOPLAY_DELAY =
+  5000;
+
+const TRANSITION_DURATION =
+  1000;
+
+const SWIPE_THRESHOLD =
+  45;
+
+/* =========================================================
+   HELPER
+   ========================================================= */
+
+function positiveModulo(
+  value: number,
+  modulo: number,
+) {
+  if (
+    modulo <=
+    0
+  ) {
+    return 0;
+  }
+
+  return (
+    ((value % modulo) +
+      modulo) %
+    modulo
+  );
+}
+
+/* =========================================================
+   SHOP HERO
+   ========================================================= */
 
 export function ShopHeroSlider({
   slides,
 }: ShopHeroSliderProps) {
-  const availableSlides =
+  const preparedSlides =
     useMemo(
-      () =>
-        slides.filter(
-          (slide) =>
-            slide.enabled &&
-            slide.image,
-        ),
-      [slides],
+      () => {
+        const valid =
+          slides.filter(
+            (
+              slide,
+            ) =>
+              slide.enabled &&
+              Boolean(
+                slide.image?.trim(),
+              ),
+          );
+
+        if (
+          valid.length >
+          0
+        ) {
+          return valid;
+        }
+
+        return [
+          {
+            id:
+              "shop-fallback",
+
+            title:
+              "Shop The Latest",
+
+            subtitle:
+              "Performance, lifestyle and everyday essentials made for your game.",
+
+            image:
+              "/images/campaigns/hero.svg",
+
+            mobileImage:
+              null,
+
+            ctaLabel:
+              "Shop All",
+
+            ctaLink:
+              "/shop",
+
+            enabled:
+              true,
+
+            sortOrder:
+              0,
+          },
+        ];
+      },
+
+      [
+        slides,
+      ],
     );
 
-  const [index, setIndex] =
+  const [
+    index,
+    setIndex,
+  ] =
     useState(0);
 
-  const [paused, setPaused] =
-    useState(false);
+  const [
+    timerVersion,
+    setTimerVersion,
+  ] =
+    useState(0);
+
+  const touchStartX =
+    useRef<
+      number | null
+    >(null);
+
+  const slideCount =
+    preparedSlides.length;
+
+  const activeIndex =
+    positiveModulo(
+      index,
+      slideCount,
+    );
+
+  const activeSlide =
+    preparedSlides[
+      activeIndex
+    ];
+
+  const hasMultipleSlides =
+    slideCount >
+    1;
+
+  /* =======================================================
+     KEEP INDEX VALID
+     ======================================================= */
+
+  useEffect(() => {
+    setIndex(
+      (
+        current,
+      ) =>
+        positiveModulo(
+          current,
+          slideCount,
+        ),
+    );
+  }, [
+    slideCount,
+  ]);
+
+  /* =======================================================
+     PRELOAD NEIGHBOURS
+     ======================================================= */
 
   useEffect(() => {
     if (
-      availableSlides.length <=
-        1 ||
-      paused
+      slideCount <=
+      1
+    ) {
+      return;
+    }
+
+    const indexes = [
+      positiveModulo(
+        activeIndex +
+          1,
+        slideCount,
+      ),
+
+      positiveModulo(
+        activeIndex -
+          1,
+        slideCount,
+      ),
+    ];
+
+    const urls =
+      new Set<string>();
+
+    indexes.forEach(
+      (
+        slideIndex,
+      ) => {
+        const slide =
+          preparedSlides[
+            slideIndex
+          ];
+
+        if (!slide) {
+          return;
+        }
+
+        urls.add(
+          slide.image,
+        );
+
+        if (
+          slide.mobileImage
+        ) {
+          urls.add(
+            slide.mobileImage,
+          );
+        }
+      },
+    );
+
+    urls.forEach(
+      (
+        url,
+      ) => {
+        const image =
+          new window.Image();
+
+        image.decoding =
+          "async";
+
+        image.src =
+          url;
+      },
+    );
+  }, [
+    activeIndex,
+    preparedSlides,
+    slideCount,
+  ]);
+
+  /* =======================================================
+     AUTOPLAY — 5 SECONDS
+     ======================================================= */
+
+  useEffect(() => {
+    if (
+      !hasMultipleSlides
     ) {
       return;
     }
@@ -64,177 +303,307 @@ export function ShopHeroSlider({
     const timer =
       window.setInterval(
         () => {
+          if (
+            document.hidden
+          ) {
+            return;
+          }
+
           setIndex(
-            (current) =>
-              (current + 1) %
-              availableSlides.length,
+            (
+              current,
+            ) =>
+              positiveModulo(
+                current +
+                  1,
+
+                slideCount,
+              ),
           );
         },
-        6500,
+
+        AUTOPLAY_DELAY,
       );
 
-    return () =>
+    return () => {
       window.clearInterval(
         timer,
       );
+    };
   }, [
-    availableSlides.length,
-    paused,
+    hasMultipleSlides,
+    slideCount,
+    timerVersion,
   ]);
 
-  useEffect(() => {
-    if (
-      index >=
-      availableSlides.length
-    ) {
-      setIndex(0);
-    }
-  }, [
-    index,
-    availableSlides.length,
-  ]);
+  /* =======================================================
+     MANUAL NAVIGATION
+     ======================================================= */
 
-  if (
-    !availableSlides.length
+  function goToSlide(
+    nextIndex:
+      number,
   ) {
-    return (
-      <section className="shop-hero shop-hero-fallback">
-        <div className="container shop-hero-inner">
-          <div className="shop-hero-copy">
-            <span className="shop-hero-eyebrow">
-              Game On Garb
-            </span>
+    const next =
+      positiveModulo(
+        nextIndex,
+        slideCount,
+      );
 
-            <h1>
-              Shop
-            </h1>
+    if (
+      next ===
+      activeIndex
+    ) {
+      return;
+    }
 
-            <p>
-              Premium styles
-              for your
-              everyday game.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const active =
-    availableSlides[index];
-
-  function previous() {
     setIndex(
-      (current) =>
-        (current -
-          1 +
-          availableSlides.length) %
-        availableSlides.length,
+      next,
+    );
+
+    setTimerVersion(
+      (
+        current,
+      ) =>
+        current +
+        1,
     );
   }
 
-  function next() {
-    setIndex(
-      (current) =>
-        (current + 1) %
-        availableSlides.length,
+  /* =======================================================
+     TOUCH SWIPE
+     ======================================================= */
+
+  function handleTouchStart(
+    event:
+      TouchEvent<HTMLElement>,
+  ) {
+    touchStartX.current =
+      event.changedTouches[
+        0
+      ]?.clientX ??
+      null;
+  }
+
+  function handleTouchEnd(
+    event:
+      TouchEvent<HTMLElement>,
+  ) {
+    const start =
+      touchStartX.current;
+
+    touchStartX.current =
+      null;
+
+    if (
+      start ===
+      null
+    ) {
+      return;
+    }
+
+    const end =
+      event.changedTouches[
+        0
+      ]?.clientX;
+
+    if (
+      typeof end !==
+      "number"
+    ) {
+      return;
+    }
+
+    const movement =
+      end -
+      start;
+
+    if (
+      Math.abs(
+        movement,
+      ) <
+      SWIPE_THRESHOLD
+    ) {
+      return;
+    }
+
+    goToSlide(
+      activeIndex +
+        (
+          movement <
+          0
+            ? 1
+            : -1
+        ),
     );
   }
 
-  const style = {
-    "--shop-hero-image":
-      `url("${active.image}")`,
+  /* =======================================================
+     STYLE VARIABLES
+     ======================================================= */
 
-    "--shop-hero-mobile-image":
-      `url("${
-        active.mobileImage ||
-        active.image
-      }")`,
-  } as React.CSSProperties;
+  const style:
+    ShopHeroStyle = {
+      "--shop-hero-duration":
+        `${AUTOPLAY_DELAY}ms`,
+
+      "--shop-hero-transition":
+        `${TRANSITION_DURATION}ms`,
+    };
 
   return (
     <section
-      key={active.id}
       className="shop-hero"
-      style={style}
-      onMouseEnter={() =>
-        setPaused(true)
+      style={
+        style
       }
-      onMouseLeave={() =>
-        setPaused(false)
+      aria-label="Shop featured campaigns"
+      aria-roledescription="carousel"
+      onTouchStart={
+        handleTouchStart
+      }
+      onTouchEnd={
+        handleTouchEnd
       }
     >
-      <div className="shop-hero-overlay" />
+      {/* ===================================================
+          MEDIA
+          =================================================== */}
+
+      <div
+        className="shop-hero-media-stack"
+        aria-hidden="true"
+      >
+        {preparedSlides.map(
+          (
+            slide,
+            slideIndex,
+          ) => {
+            const active =
+              slideIndex ===
+              activeIndex;
+
+            return (
+              <div
+                key={
+                  slide.id
+                }
+                className={`shop-hero-media ${
+                  active
+                    ? "is-active"
+                    : ""
+                }`}
+              >
+                <picture>
+                  <source
+                    media="(max-width: 700px)"
+                    srcSet={
+                      slide.mobileImage ||
+                      slide.image
+                    }
+                  />
+
+                  <img
+                    src={
+                      slide.image
+                    }
+                    alt=""
+                    draggable={
+                      false
+                    }
+                    loading={
+                      slideIndex <=
+                      1
+                        ? "eager"
+                        : "lazy"
+                    }
+                    decoding="async"
+                  />
+                </picture>
+              </div>
+            );
+          },
+        )}
+      </div>
+
+      {/* ===================================================
+          OVERLAYS
+          =================================================== */}
+
+      <div
+        className="shop-hero-overlay"
+        aria-hidden="true"
+      />
+
+      <div
+        className="shop-hero-glow"
+        aria-hidden="true"
+      />
+
+      {/* ===================================================
+          COPY — MATCHES HOMEPAGE POSITIONING
+          =================================================== */}
 
       <div className="container shop-hero-inner">
-        <div className="shop-hero-copy">
-          <span className="shop-hero-eyebrow">
+        <div
+          key={
+            activeSlide.id
+          }
+          className="shop-hero-copy"
+        >
+          <div className="shop-hero-eyebrow">
+            <span />
+
             Game On Garb
-          </span>
+          </div>
 
           <h1>
-            {active.title}
+            {
+              activeSlide.title
+            }
           </h1>
 
-          {active.subtitle ? (
+          {activeSlide.subtitle ? (
             <p>
               {
-                active.subtitle
+                activeSlide.subtitle
               }
             </p>
           ) : null}
 
-          {active.ctaLabel &&
-          active.ctaLink ? (
+          {activeSlide.ctaLabel &&
+          activeSlide.ctaLink ? (
             <Link
               href={
-                active.ctaLink
+                activeSlide.ctaLink
               }
               className="shop-hero-cta"
             >
-              {
-                active.ctaLabel
-              }
-
               <span>
-                →
+                {
+                  activeSlide.ctaLabel
+                }
               </span>
+
+              <ChevronRight
+                size={16}
+                strokeWidth={
+                  1.8
+                }
+              />
             </Link>
           ) : null}
         </div>
       </div>
 
-      {availableSlides.length >
-      1 ? (
+      {/* ===================================================
+          PROGRESS
+          =================================================== */}
+
+      {hasMultipleSlides ? (
         <>
-          <button
-            type="button"
-            aria-label="Previous banner"
-            className="shop-hero-arrow shop-hero-arrow-left"
-            onClick={
-              previous
-            }
-          >
-            <ChevronLeft
-              size={20}
-            />
-          </button>
-
-          <button
-            type="button"
-            aria-label="Next banner"
-            className="shop-hero-arrow shop-hero-arrow-right"
-            onClick={
-              next
-            }
-          >
-            <ChevronRight
-              size={20}
-            />
-          </button>
-
           <div className="shop-hero-dots">
-            {availableSlides.map(
+            {preparedSlides.map(
               (
                 slide,
                 slideIndex,
@@ -244,24 +613,56 @@ export function ShopHeroSlider({
                     slide.id
                   }
                   type="button"
-                  aria-label={`Show banner ${
+                  aria-label={`Show Shop banner ${
                     slideIndex +
                     1
                   }`}
+                  aria-current={
+                    slideIndex ===
+                    activeIndex
+                      ? "true"
+                      : undefined
+                  }
                   className={`shop-hero-dot ${
                     slideIndex ===
-                    index
+                    activeIndex
                       ? "is-active"
                       : ""
                   }`}
                   onClick={() =>
-                    setIndex(
+                    goToSlide(
                       slideIndex,
                     )
                   }
                 />
               ),
             )}
+          </div>
+
+          <div
+            className="shop-hero-counter desktop-only"
+            aria-hidden="true"
+          >
+            <strong>
+              {String(
+                activeIndex +
+                  1,
+              ).padStart(
+                2,
+                "0",
+              )}
+            </strong>
+
+            <span />
+
+            <small>
+              {String(
+                slideCount,
+              ).padStart(
+                2,
+                "0",
+              )}
+            </small>
           </div>
         </>
       ) : null}
