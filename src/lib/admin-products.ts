@@ -242,6 +242,17 @@ export const productEditorSchema =
                     "",
                   ),
 
+              color:
+                z
+                  .string()
+                  .trim()
+                  .max(
+                    120,
+                  )
+                  .default(
+                    "",
+                  ),
+
               sortOrder:
                 z
                   .number()
@@ -446,6 +457,9 @@ export function normalizeProductImages(
         alt:
           productName,
 
+        color:
+          null,
+
         sortOrder:
           0,
 
@@ -481,6 +495,10 @@ export function normalizeProductImages(
       alt:
         image.alt.trim() ||
         productName,
+
+      color:
+        image.color.trim() ||
+        null,
 
       sortOrder:
         index,
@@ -642,6 +660,10 @@ export function serializeAdminProduct(
 
           alt:
             image.alt,
+
+          color:
+            image.color ??
+            "",
 
           sortOrder:
             image.sortOrder,

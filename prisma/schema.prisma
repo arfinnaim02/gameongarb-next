@@ -224,7 +224,6 @@ model SizeChart {
   @@index([active, name])
 }
 
-
 model Product {
   id               String              @id @default(cuid())
   name             String
@@ -250,9 +249,9 @@ model Product {
   wishlistItems    WishlistItem[]
   cartItems        CartItem[]
   reviews          Review[]
-  sizeChart        SizeChart?           @relation(fields: [sizeChartId], references: [id], onDelete: SetNull)
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  sizeChart        SizeChart?          @relation(fields: [sizeChartId], references: [id], onDelete: SetNull)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
   @@index([status, createdAt])
   @@index([featured, newArrival, trending])
@@ -276,11 +275,14 @@ model ProductImage {
   url       String
   publicId  String?
   alt       String
+  color     String?
   sortOrder Int     @default(0)
   primary   Boolean @default(false)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId, sortOrder])
+  @@index([productId, color])
 }
 
 model ProductVariant {

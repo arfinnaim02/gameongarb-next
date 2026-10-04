@@ -11871,6 +11871,85 @@ b {
 }
 
 /* =========================================================
+   PRODUCT DESCRIPTION
+   ========================================================= */
+
+.product-description-panel {
+  margin-top:
+    18px;
+
+  padding:
+    20px 0
+    4px;
+
+  border-top:
+    1px solid
+    #e6e9e5;
+}
+
+.product-description-eyebrow {
+  display:
+    block;
+
+  margin-bottom:
+    7px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    12px;
+
+  line-height: 1;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+.product-description-panel
+h2 {
+  margin:
+    0 0
+    13px;
+
+  color:
+    #202421;
+
+  font-size:
+    21px;
+
+  line-height:
+    1.1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.035em;
+}
+
+.product-description-panel
+.product-detail-copy {
+  color:
+    #666c67;
+
+  font-size:
+    14px;
+
+  line-height:
+    1.75;
+
+  white-space:
+    pre-line;
+}
+
+/* =========================================================
    MOBILE — FULL SCREEN CHECKOUT DRAWER
    ========================================================= */
 
@@ -13411,6 +13490,88 @@ strong {
 tr:last-child
 td {
   border-bottom: 0;
+}
+
+/* =========================================================
+   LIVE SIZE AVAILABILITY
+   ========================================================= */
+
+.product-size-guide-table
+tr.is-unavailable
+td {
+  background:
+    #fff8f7;
+}
+
+.product-size-guide-table
+tr.is-unavailable
+td:first-child {
+  background:
+    #fff3f1;
+}
+
+.product-size-guide-table
+tr.is-available
+td:first-child {
+  background:
+    #f7fbf8;
+}
+
+.product-size-guide-size-cell {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+}
+
+.product-size-guide-size-cell
+> span {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    5px;
+
+  white-space:
+    nowrap;
+
+  font-size:
+    11px;
+
+  line-height: 1;
+
+  font-weight:
+    850;
+}
+
+.product-size-guide-size-cell
+> span.is-available {
+  color:
+    #2d8254;
+}
+
+.product-size-guide-size-cell
+> span.is-unavailable {
+  color:
+    #c4473c;
+}
+
+.product-size-guide-table
+tr.is-unavailable
+td:first-child
+strong {
+  color:
+    #b43d34;
 }
 
 .product-size-guide-table

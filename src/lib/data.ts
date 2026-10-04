@@ -47,6 +47,12 @@ export type Product = {
   images: {
     url: string;
     alt: string;
+
+    /*
+     * Assigned variant color.
+     * Undefined means generic image.
+     */
+    color?: string;
   }[];
 
   alt: string;

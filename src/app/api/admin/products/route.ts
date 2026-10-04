@@ -164,6 +164,9 @@ export async function POST(
                     alt:
                       image.alt,
 
+                    color:
+                      image.color,
+
                     sortOrder:
                       image.sortOrder,
 

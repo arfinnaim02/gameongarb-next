@@ -97,6 +97,10 @@ export function toStoreProduct(
       images?: {
         url: string;
         alt: string;
+
+        color?:
+          string | null;
+
         primary: boolean;
         sortOrder: number;
       }[];
@@ -323,6 +327,10 @@ export function toStoreProduct(
 
           alt:
             image.alt,
+
+          color:
+            image.color ??
+            undefined,
         }),
       ),
 

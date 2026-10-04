@@ -8,11 +8,25 @@ export type {
 
 export type AdminProductImage = {
   id: string;
+
   url: string;
-  publicId: string | null;
+
+  publicId:
+    string | null;
+
   alt: string;
-  sortOrder: number;
-  primary: boolean;
+
+  /*
+   * Empty/undefined means generic image.
+   */
+  color?:
+    string;
+
+  sortOrder:
+    number;
+
+  primary:
+    boolean;
 };
 
 export type AdminProductVariant = {

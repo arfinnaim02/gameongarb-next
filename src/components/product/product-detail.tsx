@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import {
-  ChevronDown,
   Heart,
   Maximize2,
   Minus,
@@ -143,25 +142,89 @@ export function ProductDetail({
   const gallery =
     useMemo(
       () => {
-        if (
+        const images =
           product.images.length >
           0
+            ? product.images
+            : [
+                {
+                  url:
+                    product.image,
+
+                  alt:
+                    product.alt,
+
+                  color:
+                    undefined,
+                },
+              ];
+
+        /*
+         * Legacy products may not have any
+         * images assigned to colors yet.
+         */
+        const hasColorAssignments =
+          images.some(
+            (
+              image,
+            ) =>
+              Boolean(
+                image.color?.trim(),
+              ),
+          );
+
+        if (
+          !hasColorAssignments
         ) {
-          return product.images;
+          return images;
         }
 
-        return [
-          {
-            url:
-              product.image,
+        const selectedColor =
+          color
+            .trim()
+            .toLowerCase();
 
-            alt:
-              product.alt,
-          },
-        ];
+        const matched =
+          images.filter(
+            (
+              image,
+            ) =>
+              image.color
+                ?.trim()
+                .toLowerCase() ===
+              selectedColor,
+          );
+
+        /*
+         * Exact selected-color images always win.
+         */
+        if (
+          matched.length >
+          0
+        ) {
+          return matched;
+        }
+
+        /*
+         * Generic detail images can be used when
+         * a color has no dedicated photography.
+         */
+        const generic =
+          images.filter(
+            (
+              image,
+            ) =>
+              !image.color?.trim(),
+          );
+
+        return generic.length >
+          0
+          ? generic
+          : images;
       },
 
       [
+        color,
         product.alt,
         product.image,
         product.images,
@@ -177,6 +240,8 @@ export function ProductDetail({
     fullscreen,
     setFullscreen,
   ] = useState(false);
+
+
 
   const activeImage =
     gallery[
@@ -435,9 +500,7 @@ export function ProductDetail({
         0
       : product.stock;
 
-  const selectedSku =
-    selectedVariant?.sku ??
-    "—";
+
 
   const inStock =
     selectedStock >
@@ -455,6 +518,18 @@ export function ProductDetail({
   ) {
     setColor(
       nextColor,
+    );
+
+    /*
+     * Start the newly selected
+     * color gallery from image 1.
+     *
+     * This belongs in the user
+     * interaction handler rather
+     * than a React effect.
+     */
+    setActiveImageIndex(
+      0,
     );
 
     if (
@@ -658,16 +733,6 @@ export function ProductDetail({
           <Link href="/shop">
             Shop
           </Link>
-
-          <span>
-            /
-          </span>
-
-          <span>
-            {
-              product.category
-            }
-          </span>
 
           <span>
             /
@@ -880,22 +945,6 @@ export function ProductDetail({
               }
             </h1>
 
-            <div className="product-detail-meta">
-              <span>
-                SKU:{" "}
-                <strong>
-                  {
-                    selectedSku
-                  }
-                </strong>
-              </span>
-
-              <span>
-                {
-                  product.category
-                }
-              </span>
-            </div>
 
             {/* =============================================
                 PRICE
@@ -1118,6 +1167,12 @@ export function ProductDetail({
                 chart={
                   sizeChart
                 }
+                selectedColor={
+                  color
+                }
+                variants={
+                  variants
+                }
               />
             ) : null}
             {/* =============================================
@@ -1321,126 +1376,21 @@ export function ProductDetail({
                 PRODUCT DETAILS
                 ============================================= */}
 
-            <div className="product-information-accordions">
-              <ProductAccordion
-                title="Product Details"
-                open
-              >
-                <div className="product-detail-copy">
-                  {
-                    fullProductDetails
-                  }
-                </div>
+                       <section className="product-description-panel">
+              <span className="product-description-eyebrow">
+                Product Description
+              </span>
 
-                <dl className="product-spec-list">
-                  <div>
-                    <dt>
-                      Category
-                    </dt>
+              <h2>
+                About This Product
+              </h2>
 
-                    <dd>
-                      {
-                        product.category
-                      }
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>
-                      SKU
-                    </dt>
-
-                    <dd>
-                      {
-                        selectedSku
-                      }
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>
-                      Color
-                    </dt>
-
-                    <dd>
-                      {
-                        color
-                      }
-                    </dd>
-                  </div>
-
-                  <div>
-                    <dt>
-                      Size
-                    </dt>
-
-                    <dd>
-                      {
-                        size
-                      }
-                    </dd>
-                  </div>
-                </dl>
-              </ProductAccordion>
-
-              <ProductAccordion title="Size & Fit">
-                <p>
-                  Available sizes:
-                  {" "}
-                  {
-                    sizes.join(
-                      ", ",
-                    )
-                  }.
-                  Select your color
-                  first; unavailable
-                  size combinations
-                  are automatically
-                  disabled.
-                </p>
-
-                <p>
-                  Use the Size Chart
-                  above to check live
-                  size availability
-                  before adding the
-                  product to your cart.
-                </p>
-              </ProductAccordion>
-
-              <ProductAccordion title="Delivery & Returns">
-                <p>
-                  Delivery charge is
-                  calculated during
-                  checkout according
-                  to the delivery
-                  destination.
-                </p>
-
-                <p>
-                  Returns and
-                  exchanges are
-                  handled according
-                  to the current Game
-                  On Garb store
-                  policy.
-                </p>
-              </ProductAccordion>
-
-              <ProductAccordion title="Care Instructions">
-                <p>
-                  Always follow the
-                  care label supplied
-                  with the product.
-                  Wash with similar
-                  colours and avoid
-                  excessive heat
-                  unless the garment
-                  care label permits
-                  it.
-                </p>
-              </ProductAccordion>
-            </div>
+              <div className="product-detail-copy">
+                {
+                  fullProductDetails
+                }
+              </div>
+            </section>
           </section>
         </div>
       </div>
@@ -1503,50 +1453,6 @@ export function ProductDetail({
   );
 }
 
-/* =========================================================
-   ACCORDION
-   ========================================================= */
-
-function ProductAccordion({
-  title,
-  open = false,
-  children,
-}: {
-  title: string;
-  open?: boolean;
-  children:
-    React.ReactNode;
-}) {
-  return (
-    <details
-      className="product-info-accordion"
-      open={
-        open
-      }
-    >
-      <summary>
-        <span>
-          {
-            title
-          }
-        </span>
-
-        <ChevronDown
-          size={16}
-          strokeWidth={
-            1.7
-          }
-        />
-      </summary>
-
-      <div className="product-info-accordion-content">
-        {
-          children
-        }
-      </div>
-    </details>
-  );
-}
 
 /* =========================================================
    TRUST

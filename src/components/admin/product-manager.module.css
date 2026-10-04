@@ -530,6 +530,7 @@
 .field textarea,
 .field select,
 .imageCard input,
+.imageCard select,
 .variantTable input {
   width: 100%;
   border: 1px solid #dfe3de;
@@ -556,7 +557,8 @@
 .field textarea:focus,
 .field select:focus,
 .variantTable input:focus,
-.imageCard input:focus {
+.imageCard input:focus,
+.imageCard select:focus {
   border-color: #8f9690;
 }
 
@@ -672,9 +674,36 @@
   text-transform: uppercase;
 }
 
-.imageCard input {
-  min-height: 34px;
-  padding: 0 7px;
+.imageCard input,
+.imageCard select {
+  width: 100%;
+
+  min-height:
+    36px;
+
+  margin-top:
+    6px;
+
+  padding:
+    0 8px;
+
+  border:
+    1px solid
+    #dfe3de;
+
+  outline:
+    none;
+
+  background:
+    #fff;
+
+  color:
+    #202421;
+
+  font: inherit;
+
+  font-size:
+    13px;
 }
 
 .imageActions {

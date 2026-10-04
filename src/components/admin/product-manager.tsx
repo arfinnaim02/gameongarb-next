@@ -472,6 +472,10 @@ function formPayload(
           alt:
             image.alt.trim(),
 
+          color:
+            image.color?.trim() ??
+            "",
+
           sortOrder:
             index,
 
@@ -1132,6 +1136,9 @@ export function ProductManager({
           alt:
             form.name ||
             "Product image",
+
+          color:
+            "",
 
           sortOrder:
             form.images.length +
@@ -2804,6 +2811,22 @@ function ImagesTab({
       React.SetStateAction<ProductFormState>
     >;
 }) {
+  const imageColorOptions =
+    [
+      ...new Set(
+        form.variants
+          .map(
+            (
+              variant,
+            ) =>
+              variant.color.trim(),
+          )
+          .filter(
+            Boolean,
+          ),
+      ),
+    ];
+
   return (
     <div className={styles.formStack}>
       <div className={styles.sectionHeading}>
@@ -2937,6 +2960,65 @@ function ImagesTab({
                     )
                   }
                 />
+
+                <select
+                  value={
+                    image.color ??
+                    ""
+                  }
+                  aria-label="Assign image color"
+                  onChange={(
+                    event,
+                  ) =>
+                    setForm(
+                      (
+                        current,
+                      ) => ({
+                        ...current,
+
+                        images:
+                          current.images.map(
+                            (
+                              item,
+                            ) =>
+                              item.clientId ===
+                              image.clientId
+                                ? {
+                                    ...item,
+
+                                    color:
+                                      event.target
+                                        .value,
+                                  }
+                                : item,
+                          ),
+                      }),
+                    )
+                  }
+                >
+                  <option value="">
+                    Generic / All Colors
+                  </option>
+
+                  {imageColorOptions.map(
+                    (
+                      imageColor,
+                    ) => (
+                      <option
+                        key={
+                          imageColor
+                        }
+                        value={
+                          imageColor
+                        }
+                      >
+                        {
+                          imageColor
+                        }
+                      </option>
+                    ),
+                  )}
+                </select>
 
                 <div className={styles.imageActions}>
                   <button
