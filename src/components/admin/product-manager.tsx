@@ -224,6 +224,162 @@ function slugify(
     );
 }
 
+/* =========================================================
+   SKU / VARIANT HELPERS
+   ========================================================= */
+
+function skuPart(
+  value: string,
+  fallback: string,
+  maxLength: number,
+) {
+  const clean =
+    value
+      .normalize(
+        "NFKD",
+      )
+      .replace(
+        /[^a-zA-Z0-9]+/g,
+        "-",
+      )
+      .replace(
+        /^-+|-+$/g,
+        "",
+      )
+      .toUpperCase();
+
+  return (
+    clean ||
+    fallback
+  ).slice(
+    0,
+    maxLength,
+  );
+}
+
+function buildVariantSku(
+  productSlug: string,
+  color: string,
+  size: string,
+) {
+  const product =
+    skuPart(
+      productSlug,
+      "PRODUCT",
+      44,
+    );
+
+  const colorPart =
+    skuPart(
+      color,
+      "DEFAULT",
+      18,
+    );
+
+  const sizePart =
+    skuPart(
+      size,
+      "ONE",
+      14,
+    );
+
+  return `GOG-${product}-${colorPart}-${sizePart}`;
+}
+
+function parseGeneratorValues(
+  value: string,
+) {
+  return [
+    ...new Set(
+      value
+        .split(
+          /[\n,;]+/,
+        )
+        .map(
+          (
+            item,
+          ) =>
+            item.trim(),
+        )
+        .filter(
+          Boolean,
+        ),
+    ),
+  ];
+}
+
+function variantKey(
+  color: string,
+  size: string,
+) {
+  return `${color
+    .trim()
+    .toLowerCase()}::${size
+    .trim()
+    .toLowerCase()}`;
+}
+
+function guessColorHex(
+  color: string,
+) {
+  const knownColors:
+    Record<
+      string,
+      string
+    > = {
+    black:
+      "#111111",
+
+    white:
+      "#FFFFFF",
+
+    green:
+      "#198754",
+
+    yellow:
+      "#F4C430",
+
+    red:
+      "#C9342F",
+
+    blue:
+      "#2463A9",
+
+    navy:
+      "#172A46",
+
+    orange:
+      "#F15A24",
+
+    grey:
+      "#777777",
+
+    gray:
+      "#777777",
+
+    beige:
+      "#D7C3A5",
+
+    brown:
+      "#704A34",
+
+    pink:
+      "#D982A4",
+
+    purple:
+      "#7651A8",
+  };
+
+  return (
+    knownColors[
+      color
+        .trim()
+        .toLowerCase()
+    ] ??
+    "#111111"
+  );
+}
+
 function emptyVariant():
   EditorVariant {
   return {
@@ -497,7 +653,12 @@ function formPayload(
             : {}),
 
           sku:
-            variant.sku.trim(),
+            variant.sku.trim() ||
+            buildVariantSku(
+              form.slug,
+              variant.color,
+              variant.size,
+            ),
 
           size:
             variant.size.trim(),
@@ -691,25 +852,35 @@ export function ProductManager({
             if (
               term &&
               ![
+                product.id,
                 product.name,
                 product.slug,
+                product.brand,
                 product.category,
-                ...product.variants.map(
+
+                ...product.variants.flatMap(
                   (
                     variant,
-                  ) =>
+                  ) => [
                     variant.sku,
+                    variant.color,
+                    variant.size,
+                  ],
                 ),
-              ].some(
-                (
-                  value,
-                ) =>
-                  value
-                    .toLowerCase()
-                    .includes(
-                      term,
-                    ),
-              )
+              ]
+                .filter(
+                  Boolean,
+                )
+                .some(
+                  (
+                    value,
+                  ) =>
+                    value
+                      .toLowerCase()
+                      .includes(
+                        term,
+                      ),
+                )
             ) {
               return false;
             }
@@ -909,24 +1080,7 @@ export function ProductManager({
       return;
     }
 
-    if (
-      form.variants.some(
-        (
-          variant,
-        ) =>
-          !variant.sku.trim(),
-      )
-    ) {
-      setError(
-        "Every variant requires an SKU.",
-      );
 
-      setActiveTab(
-        "variants",
-      );
-
-      return;
-    }
 
     setSaving(true);
 
@@ -1743,7 +1897,8 @@ export function ProductManager({
                     .value,
                 )
               }
-              placeholder="Search product, SKU or category..."
+              aria-label="Search products"
+              placeholder="Search name, SKU, colour, size, category or ID..."
             />
           </label>
 
@@ -1848,6 +2003,55 @@ export function ProductManager({
               Out of Stock
             </option>
           </select>
+        </div>
+
+        <div className={styles.filterSummary}>
+          <span>
+            Showing{" "}
+            <strong>
+              {
+                filteredProducts.length
+              }
+            </strong>{" "}
+            of{" "}
+            <strong>
+              {
+                products.length
+              }
+            </strong>{" "}
+            products
+          </span>
+
+          {query ||
+          categoryFilter !==
+            "ALL" ||
+          statusFilter !==
+            "ALL" ||
+          stockFilter !==
+            "ALL" ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery(
+                  "",
+                );
+
+                setCategoryFilter(
+                  "ALL",
+                );
+
+                setStatusFilter(
+                  "ALL",
+                );
+
+                setStockFilter(
+                  "ALL",
+                );
+              }}
+            >
+              Clear Filters
+            </button>
+          ) : null}
         </div>
 
         <div className={styles.tableWrap}>
@@ -2014,6 +2218,7 @@ export function ProductManager({
                               )
                             }
                             aria-label="Edit product"
+                            title="Edit product"
                           >
                             <Pencil
                               size={14}
@@ -2031,6 +2236,7 @@ export function ProductManager({
                               )
                             }
                             aria-label="Duplicate product"
+                            title="Duplicate / copy product"
                           >
                             <Copy
                               size={14}
@@ -2048,6 +2254,12 @@ export function ProductManager({
                               )
                             }
                             aria-label={
+                              product.status ===
+                              "ACTIVE"
+                                ? "Deactivate product"
+                                : "Activate product"
+                            }
+                            title={
                               product.status ===
                               "ACTIVE"
                                 ? "Deactivate product"
@@ -2078,6 +2290,7 @@ export function ProductManager({
                               )
                             }
                             aria-label="Delete product"
+                            title="Delete / archive product"
                           >
                             <Trash2
                               size={14}
@@ -2248,12 +2461,15 @@ export function ProductManager({
                     variants={
                       form.variants
                     }
+
                     updateVariant={
                       updateVariant
                     }
+
                     removeVariant={
                       removeVariant
                     }
+
                     addVariant={() =>
                       setForm(
                         (
@@ -2267,6 +2483,10 @@ export function ProductManager({
                           ],
                         }),
                       )
+                    }
+
+                    setForm={
+                      setForm
                     }
                   />
                 ) : null}
@@ -3211,16 +3431,12 @@ function PricingTab({
     </div>
   );
 }
-
-/* =========================================================
-   VARIANTS
-   ========================================================= */
-
 function VariantsTab({
   variants,
   updateVariant,
   removeVariant,
   addVariant,
+  setForm,
 }: {
   variants:
     EditorVariant[];
@@ -3241,19 +3457,320 @@ function VariantsTab({
 
   addVariant:
     () => void;
+
+  setForm:
+    React.Dispatch<
+      React.SetStateAction<ProductFormState>
+    >;
 }) {
+  const [
+    generatorSizes,
+    setGeneratorSizes,
+  ] =
+    useState("");
+
+  const [
+    generatorColors,
+    setGeneratorColors,
+  ] =
+    useState("");
+
+  const [
+    generatorMessage,
+    setGeneratorMessage,
+  ] =
+    useState("");
+
+  /* =======================================================
+     GENERATE SIZE × COLOR COMBINATIONS
+     ======================================================= */
+
+  function generateVariants() {
+    const sizes =
+      parseGeneratorValues(
+        generatorSizes,
+      );
+
+    const colors =
+      parseGeneratorValues(
+        generatorColors,
+      );
+
+    if (
+      sizes.length ===
+      0
+    ) {
+      setGeneratorMessage(
+        "Add at least one size.",
+      );
+
+      return;
+    }
+
+    if (
+      colors.length ===
+      0
+    ) {
+      setGeneratorMessage(
+        "Add at least one colour.",
+      );
+
+      return;
+    }
+
+    setForm(
+      (
+        current,
+      ) => {
+        /*
+         * Existing matching variants are
+         * preserved so editing a product
+         * never destroys current stock,
+         * IDs or price overrides.
+         */
+        const existingByCombination =
+          new Map<
+            string,
+            EditorVariant
+          >();
+
+        current.variants.forEach(
+          (
+            variant,
+          ) => {
+            const meaningful =
+              variant.color.trim() ||
+              variant.size.trim() ||
+              variant.sku.trim();
+
+            if (
+              !meaningful
+            ) {
+              return;
+            }
+
+            existingByCombination.set(
+              variantKey(
+                variant.color,
+                variant.size,
+              ),
+
+              variant,
+            );
+          },
+        );
+
+        const generated:
+          EditorVariant[] =
+          [];
+
+        const generatedKeys =
+          new Set<
+            string
+          >();
+
+        colors.forEach(
+          (
+            color,
+          ) => {
+            sizes.forEach(
+              (
+                size,
+              ) => {
+                const key =
+                  variantKey(
+                    color,
+                    size,
+                  );
+
+                generatedKeys.add(
+                  key,
+                );
+
+                const existing =
+                  existingByCombination.get(
+                    key,
+                  );
+
+                if (
+                  existing
+                ) {
+                  generated.push({
+                    ...existing,
+
+                    sku:
+                      existing.sku.trim() ||
+                      buildVariantSku(
+                        current.slug,
+                        color,
+                        size,
+                      ),
+                  });
+
+                  return;
+                }
+
+                generated.push({
+                  ...emptyVariant(),
+
+                  color,
+
+                  size,
+
+                  colorHex:
+                    guessColorHex(
+                      color,
+                    ),
+
+                  sku:
+                    buildVariantSku(
+                      current.slug,
+                      color,
+                      size,
+                    ),
+                });
+              },
+            );
+          },
+        );
+
+        /*
+         * Keep older/custom combinations
+         * that are not part of the new
+         * generator selection.
+         */
+        const preserved =
+          current.variants.filter(
+            (
+              variant,
+            ) => {
+              const meaningful =
+                variant.color.trim() ||
+                variant.size.trim() ||
+                variant.sku.trim();
+
+              if (
+                !meaningful
+              ) {
+                return false;
+              }
+
+              return !generatedKeys.has(
+                variantKey(
+                  variant.color,
+                  variant.size,
+                ),
+              );
+            },
+          );
+
+        return {
+          ...current,
+
+          variants: [
+            ...generated,
+            ...preserved,
+          ],
+        };
+      },
+    );
+
+    setGeneratorMessage(
+      `${colors.length * sizes.length} variant combination${
+        colors.length *
+          sizes.length ===
+        1
+          ? ""
+          : "s"
+      } prepared. Matching existing variants were preserved.`,
+    );
+  }
+
+  /* =======================================================
+     REGENERATE SKUS
+     ======================================================= */
+
+  function regenerateSkus() {
+    setForm(
+      (
+        current,
+      ) => {
+        const used =
+          new Map<
+            string,
+            number
+          >();
+
+        const nextVariants =
+          current.variants.map(
+            (
+              variant,
+            ) => {
+              const base =
+                buildVariantSku(
+                  current.slug,
+                  variant.color,
+                  variant.size,
+                );
+
+              const count =
+                used.get(
+                  base,
+                ) ??
+                0;
+
+              used.set(
+                base,
+                count +
+                  1,
+              );
+
+              return {
+                ...variant,
+
+                sku:
+                  count ===
+                  0
+                    ? base
+                    : `${base}-${count + 1}`,
+              };
+            },
+          );
+
+        return {
+          ...current,
+
+          variants:
+            nextVariants,
+        };
+      },
+    );
+
+    setGeneratorMessage(
+      "Variant SKUs regenerated from the product, colour and size.",
+    );
+  }
+
   return (
     <div className={styles.formStack}>
+      {/* ===================================================
+          HEADING
+          =================================================== */}
+
       <div className={styles.sectionHeadingRow}>
         <div>
           <h3>
-            Size & Color Variants
+            Size & Colour Variants
           </h3>
 
           <p>
-            Every purchasable
-            combination needs its
-            own SKU and stock.
+            Generate all
+            purchasable size and
+            colour combinations
+            automatically. SKUs are
+            generated for you but
+            can still be edited
+            manually.
           </p>
         </div>
 
@@ -3268,16 +3785,143 @@ function VariantsTab({
             size={14}
           />
 
-          Add Variant
+          Add Manually
         </button>
       </div>
+
+      {/* ===================================================
+          VARIANT GENERATOR
+          =================================================== */}
+
+      <section className={styles.variantGenerator}>
+        <div className={styles.variantGeneratorHeader}>
+          <div>
+            <span>
+              Automatic Generator
+            </span>
+
+            <h4>
+              Build Variants
+            </h4>
+
+            <p>
+              Enter sizes and
+              colours separated by
+              commas. Every
+              colour × size
+              combination will be
+              created automatically.
+            </p>
+          </div>
+
+          <strong>
+            {
+              variants.length
+            }{" "}
+            current
+          </strong>
+        </div>
+
+        <div className={styles.variantGeneratorGrid}>
+          <label className={styles.generatorField}>
+            <span>
+              Sizes
+            </span>
+
+            <input
+              value={
+                generatorSizes
+              }
+              placeholder="S, M, L, XL, 2XL"
+              onChange={(
+                event,
+              ) =>
+                setGeneratorSizes(
+                  event.target
+                    .value,
+                )
+              }
+            />
+
+            <small>
+              Example:
+              S, M, L, XL
+            </small>
+          </label>
+
+          <label className={styles.generatorField}>
+            <span>
+              Colours
+            </span>
+
+            <input
+              value={
+                generatorColors
+              }
+              placeholder="Black, Green, Yellow"
+              onChange={(
+                event,
+              ) =>
+                setGeneratorColors(
+                  event.target
+                    .value,
+                )
+              }
+            />
+
+            <small>
+              Use the same colour
+              names used for
+              product images.
+            </small>
+          </label>
+        </div>
+
+        <div className={styles.generatorActions}>
+          <button
+            type="button"
+            className={styles.generateButton}
+            onClick={
+              generateVariants
+            }
+          >
+            <Plus
+              size={15}
+            />
+
+            Generate Variants
+          </button>
+
+          <button
+            type="button"
+            className={styles.regenerateButton}
+            onClick={
+              regenerateSkus
+            }
+          >
+            Regenerate SKUs
+          </button>
+        </div>
+
+        {generatorMessage ? (
+          <div className={styles.generatorMessage}>
+            {
+              generatorMessage
+            }
+          </div>
+        ) : null}
+      </section>
+
+      {/* ===================================================
+          VARIANT TABLE
+          =================================================== */}
 
       <div className={styles.variantTableWrap}>
         <table className={styles.variantTable}>
           <thead>
             <tr>
               <th>
-                Color
+                Colour
               </th>
 
               <th>
@@ -3300,7 +3944,9 @@ function VariantsTab({
                 Active
               </th>
 
-              <th />
+              <th>
+                Action
+              </th>
             </tr>
           </thead>
 
@@ -3346,6 +3992,7 @@ function VariantsTab({
                             ? variant.colorHex
                             : "#111111"
                         }
+                        title="Choose colour"
                         onChange={(
                           event,
                         ) =>
@@ -3407,7 +4054,7 @@ function VariantsTab({
                       value={
                         variant.sku
                       }
-                      placeholder="GOG-POLO-BLK-M"
+                      placeholder="Auto-generated if blank"
                       onChange={(
                         event,
                       ) =>
@@ -3454,24 +4101,32 @@ function VariantsTab({
                   </td>
 
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={
-                        variant.active
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            active:
-                              event.target
-                                .checked,
-                          },
-                        )
-                      }
-                    />
+                    <label className={styles.variantActiveToggle}>
+                      <input
+                        type="checkbox"
+                        checked={
+                          variant.active
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          updateVariant(
+                            variant.clientId,
+                            {
+                              active:
+                                event.target
+                                  .checked,
+                            },
+                          )
+                        }
+                      />
+
+                      <span>
+                        {variant.active
+                          ? "Active"
+                          : "Off"}
+                      </span>
+                    </label>
                   </td>
 
                   <td>
@@ -3488,6 +4143,7 @@ function VariantsTab({
                         )
                       }
                       aria-label="Remove variant"
+                      title="Remove variant"
                     >
                       <Trash2
                         size={14}
@@ -3503,7 +4159,6 @@ function VariantsTab({
     </div>
   );
 }
-
 /* =========================================================
    INVENTORY
    ========================================================= */

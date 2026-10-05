@@ -1,7 +1,10 @@
 import { StoreShell } from "@/components/layout/store-shell";
 
 import { getNavigationCategories } from "@/lib/catalog";
-import { db } from "@/lib/db";
+import {
+  db,
+  withDatabaseRetry,
+} from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -10,29 +13,35 @@ export default async function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [
-    navCategories,
-    settingsRows,
-  ] = await Promise.all([
-    getNavigationCategories(),
+  const navCategories =
+    await withDatabaseRetry(
+      () =>
+        getNavigationCategories(),
+    );
 
-    db.storeSetting.findMany({
-      where: {
-        key: {
-          in: [
-            "general",
-            "contact",
-            "social",
-          ],
-        },
-      },
+  const settingsRows =
+    await withDatabaseRetry(
+      () =>
+        db.storeSetting.findMany({
+          where: {
+            key: {
+              in: [
+                "general",
+                "contact",
+                "social",
+              ],
+            },
+          },
 
-      select: {
-        key: true,
-        value: true,
-      },
-    }),
-  ]);
+          select: {
+            key:
+              true,
+
+            value:
+              true,
+          },
+        }),
+    );
 
   const settings =
     Object.fromEntries(

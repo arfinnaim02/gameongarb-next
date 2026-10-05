@@ -20,6 +20,7 @@ import {
 
 import {
   db,
+  withDatabaseRetry,
 } from "@/lib/db";
 
 export const metadata:
@@ -35,123 +36,143 @@ export const dynamic =
   "force-dynamic";
 
 export default async function ShopPage() {
-  const [
-    products,
-    categories,
-    productCategoryRows,
-    shopHeroSlides,
-    otherSetting,
-  ] =
-    await Promise.all([
-      getProducts(),
+  /*
+   * Deliberately load Shop data in a
+   * controlled sequence.
+   *
+   * This avoids opening many Prisma
+   * connections simultaneously during
+   * local development / Neon wake-up.
+   */
 
-      db.category.findMany({
-        where: {
-          active:
-            true,
-        },
+  const products =
+    await withDatabaseRetry(
+      () =>
+        getProducts(),
+    );
 
-        orderBy: [
-          {
-            sortOrder:
-              "asc",
+  const categories =
+    await withDatabaseRetry(
+      () =>
+        db.category.findMany({
+          where: {
+            active:
+              true,
           },
 
-          {
+          orderBy: [
+            {
+              sortOrder:
+                "asc",
+            },
+
+            {
+              name:
+                "asc",
+            },
+          ],
+
+          select: {
+            id:
+              true,
+
             name:
-              "asc",
-          },
-        ],
+              true,
 
-        select: {
-          id:
-            true,
+            slug:
+              true,
 
-          name:
-            true,
+            description:
+              true,
 
-          slug:
-            true,
+            parentId:
+              true,
 
-          description:
-            true,
-
-          parentId:
-            true,
-
-          sortOrder:
-            true,
-        },
-      }),
-
-      db.productCategory.findMany({
-        select: {
-          productId:
-            true,
-
-          categoryId:
-            true,
-
-          primary:
-            true,
-        },
-      }),
-
-      db.shopHeroSlide.findMany({
-        where: {
-          enabled:
-            true,
-        },
-
-        orderBy: [
-          {
             sortOrder:
-              "asc",
+              true,
+          },
+        }),
+    );
+
+  const productCategoryRows =
+    await withDatabaseRetry(
+      () =>
+        db.productCategory.findMany({
+          select: {
+            productId:
+              true,
+
+            categoryId:
+              true,
+
+            primary:
+              true,
+          },
+        }),
+    );
+
+  const shopHeroSlides =
+    await withDatabaseRetry(
+      () =>
+        db.shopHeroSlide.findMany({
+          where: {
+            enabled:
+              true,
           },
 
-          {
-            createdAt:
-              "asc",
+          orderBy: [
+            {
+              sortOrder:
+                "asc",
+            },
+
+            {
+              createdAt:
+                "asc",
+            },
+          ],
+
+          select: {
+            id:
+              true,
+
+            title:
+              true,
+
+            subtitle:
+              true,
+
+            image:
+              true,
+
+            mobileImage:
+              true,
+
+            ctaLabel:
+              true,
+
+            ctaLink:
+              true,
+
+            enabled:
+              true,
+
+            sortOrder:
+              true,
           },
-        ],
+        }),
+    );
 
-        select: {
-          id:
-            true,
-
-          title:
-            true,
-
-          subtitle:
-            true,
-
-          image:
-            true,
-
-          mobileImage:
-            true,
-
-          ctaLabel:
-            true,
-
-          ctaLink:
-            true,
-
-          enabled:
-            true,
-
-          sortOrder:
-            true,
-        },
-      }),
-
-      db.storeSetting.findUnique({
-        where: {
-          key:
-            "other",
-        },
-      }),
-    ]);
+  const otherSetting =
+    await withDatabaseRetry(
+      () =>
+        db.storeSetting.findUnique({
+          where: {
+            key:
+              "other",
+          },
+        }),
+    );
 
   const other =
     (
