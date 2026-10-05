@@ -1,0 +1,1409 @@
+.header {
+  margin-bottom:
+    20px;
+}
+
+.eyebrow {
+  display:
+    block;
+
+  margin-bottom:
+    7px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    10px;
+
+  line-height: 1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+}
+
+.header h1 {
+  margin: 0;
+
+  color:
+    #151816;
+
+  font-size:
+    clamp(
+      2rem,
+      3.6vw,
+      3rem
+    );
+
+  line-height:
+    .95;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.055em;
+}
+
+.header p {
+  max-width:
+    610px;
+
+  margin:
+    10px 0
+    0;
+
+  color:
+    #7d837e;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+  position:
+    relative;
+
+  overflow:
+    hidden;
+
+  min-height:
+    178px;
+
+  margin-bottom:
+    14px;
+
+  padding:
+    25px;
+
+  border:
+    1px solid
+    #262a27;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    30px;
+
+  background:
+    #111412;
+
+  color:
+    #fff;
+}
+
+.hero::after {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  width:
+    330px;
+
+  height:
+    330px;
+
+  right:
+    -110px;
+
+  bottom:
+    -190px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgb(
+        241 90 36 /
+        20%
+      ),
+      transparent
+        68%
+    );
+}
+
+.heroCopy {
+  position:
+    relative;
+
+  z-index:
+    2;
+}
+
+.heroCopy
+span {
+  color:
+    #ff7540;
+
+  font-size:
+    9px;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
+}
+
+.heroCopy
+h2 {
+  max-width:
+    520px;
+
+  margin:
+    7px 0
+    8px;
+
+  color:
+    #fff;
+
+  font-size:
+    clamp(
+      1.7rem,
+      3vw,
+      2.6rem
+    );
+
+  line-height:
+    .95;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.05em;
+}
+
+.heroCopy
+p {
+  max-width:
+    480px;
+
+  margin: 0;
+
+  color:
+    rgb(
+      255 255 255 /
+      62%
+    );
+
+  font-size:
+    12px;
+
+  line-height:
+    1.55;
+}
+
+.heroAction {
+  position:
+    relative;
+
+  z-index:
+    2;
+
+  min-height:
+    42px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    rgb(
+      255 255 255 /
+      50%
+    );
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    7px;
+
+  color:
+    #fff;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+
+  white-space:
+    nowrap;
+}
+
+/* =========================================================
+   METRICS
+   ========================================================= */
+
+.metrics {
+  margin-bottom:
+    16px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    9px;
+}
+
+.metric {
+  min-width:
+    0;
+
+  padding:
+    15px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+
+  transition:
+    transform
+      180ms ease,
+    box-shadow
+      180ms ease;
+}
+
+.metricIcon {
+  width:
+    34px;
+
+  height:
+    34px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff4ee;
+
+  color:
+    var(--orange);
+}
+
+.metric strong,
+.metric span {
+  display:
+    block;
+}
+
+.metric strong {
+  margin-top:
+    11px;
+
+  color:
+    #171a18;
+
+  font-size:
+    21px;
+
+  line-height: 1;
+
+  font-weight:
+    950;
+}
+
+.metric span {
+  margin-top:
+    5px;
+
+  color:
+    #898f8a;
+
+  font-size:
+    10px;
+
+  font-weight:
+    750;
+}
+
+/* =========================================================
+   SECTION CARD
+   ========================================================= */
+
+.section {
+  margin-top:
+    14px;
+
+  padding:
+    19px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+}
+
+.sectionHeader {
+  margin-bottom:
+    14px;
+
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+}
+
+.sectionHeader
+span {
+  display:
+    block;
+
+  margin-bottom:
+    5px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    9px;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .15em;
+
+  text-transform:
+    uppercase;
+}
+
+.sectionHeader
+h2 {
+  margin: 0;
+
+  color:
+    #222622;
+
+  font-size:
+    17px;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.03em;
+}
+
+.sectionHeader
+a {
+  color:
+    #333834;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  border-bottom:
+    1px solid
+    #333834;
+}
+
+/* =========================================================
+   ORDERS
+   ========================================================= */
+
+.orderList {
+  display:
+    grid;
+}
+
+.orderRow {
+  min-height:
+    70px;
+
+  padding:
+    12px 0;
+
+  border-top:
+    1px solid
+    #eceeeb;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1.2fr
+    )
+    auto
+    auto
+    auto;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+}
+
+.orderNumber {
+  color:
+    #272c28;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+}
+
+.orderMeta {
+  display:
+    block;
+
+  margin-top:
+    4px;
+
+  color:
+    #979c98;
+
+  font-size:
+    9px;
+}
+
+.orderTotal {
+  color:
+    #292e2a;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+
+  white-space:
+    nowrap;
+}
+
+.status {
+  min-height:
+    25px;
+
+  padding:
+    0 8px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  font-size:
+    8px;
+
+  line-height: 1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .05em;
+
+  text-transform:
+    uppercase;
+
+  white-space:
+    nowrap;
+}
+
+.statusProgress {
+  background:
+    #eef4ff;
+
+  color:
+    #315ea7;
+}
+
+.statusSuccess {
+  background:
+    #edf8f1;
+
+  color:
+    #25744d;
+}
+
+.statusDanger {
+  background:
+    #fff0ee;
+
+  color:
+    #ae3931;
+}
+
+.statusNeutral {
+  background:
+    #f2f3f1;
+
+  color:
+    #646a65;
+}
+
+.orderLink {
+  min-height:
+    32px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  color:
+    #363b37;
+
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+}
+
+/* =========================================================
+   ORDERS PAGE
+   ========================================================= */
+
+.tabs {
+  display:
+    flex;
+
+  gap:
+    5px;
+
+  overflow-x:
+    auto;
+
+  margin-bottom:
+    11px;
+
+  padding-bottom:
+    2px;
+
+  scrollbar-width:
+    none;
+}
+
+.tabs::-webkit-scrollbar {
+  display:
+    none;
+}
+
+.tab {
+  min-height:
+    35px;
+
+  flex:
+    0 0 auto;
+
+  padding:
+    0 12px;
+
+  border:
+    1px solid
+    #dfe3de;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  background:
+    #fff;
+
+  color:
+    #6b716c;
+
+  font-size:
+    10px;
+
+  font-weight:
+    850;
+}
+
+.tabActive {
+  border-color:
+    #151816;
+
+  background:
+    #151816;
+
+  color:
+    #fff;
+}
+
+.toolbar {
+  margin-bottom:
+    14px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1fr
+    )
+    145px
+    auto;
+
+  gap:
+    7px;
+}
+
+.toolbar input,
+.toolbar select {
+  min-width:
+    0;
+
+  height:
+    43px;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  outline:
+    none;
+
+  background:
+    #fff;
+
+  color:
+    #333834;
+
+  font:
+    inherit;
+
+  font-size:
+    11px;
+}
+
+.toolbar button {
+  min-height:
+    43px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    #151816;
+
+  background:
+    #151816;
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.orders {
+  display:
+    grid;
+
+  gap:
+    8px;
+}
+
+.orderCard {
+  padding:
+    15px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    68px
+    minmax(
+      0,
+      1fr
+    )
+    auto
+    auto;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+
+  background:
+    #fff;
+
+  transition:
+    transform
+      180ms ease,
+    box-shadow
+      180ms ease,
+    border-color
+      180ms ease;
+}
+
+.orderImage {
+  position:
+    relative;
+
+  width:
+    68px;
+
+  height:
+    72px;
+
+  overflow:
+    hidden;
+
+  background:
+    #f4f5f2;
+}
+
+.orderImage
+img {
+  padding:
+    6px;
+
+  object-fit:
+    contain;
+}
+
+.orderCardCopy
+strong,
+.orderCardCopy
+span {
+  display:
+    block;
+}
+
+.orderCardCopy
+strong {
+  color:
+    #282d29;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+}
+
+.orderCardCopy
+span {
+  margin-top:
+    4px;
+
+  color:
+    #929793;
+
+  font-size:
+    9px;
+}
+
+.orderCardRight {
+  text-align:
+    right;
+}
+
+.orderCardRight
+strong {
+  display:
+    block;
+
+  margin-bottom:
+    7px;
+
+  font-size:
+    13px;
+
+  font-weight:
+    950;
+}
+
+/* =========================================================
+   DETAIL
+   ========================================================= */
+
+.backLink {
+  margin-bottom:
+    13px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    5px;
+
+  color:
+    #757b76;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+}
+
+.detailGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1.3fr
+    )
+    minmax(
+      270px,
+      .7fr
+    );
+
+  gap:
+    13px;
+}
+
+.detailCard {
+  padding:
+    18px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+}
+
+.detailCard + .detailCard {
+  margin-top:
+    13px;
+}
+
+.detailCard
+h2 {
+  margin:
+    0 0
+    14px;
+
+  color:
+    #272c28;
+
+  font-size:
+    15px;
+
+  font-weight:
+    950;
+}
+
+.timeline {
+  display:
+    grid;
+}
+
+.timelineEvent {
+  position:
+    relative;
+
+  padding:
+    0 0
+    18px
+    29px;
+}
+
+.timelineEvent:last-child {
+  padding-bottom:
+    0;
+}
+
+.timelineEvent::before {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  top:
+    4px;
+
+  left: 5px;
+
+  width:
+    10px;
+
+  height:
+    10px;
+
+  border-radius:
+    50%;
+
+  background:
+    var(--orange);
+
+  box-shadow:
+    0 0 0 4px
+    #fff3ed;
+}
+
+.timelineEvent:not(
+  :last-child
+)::after {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  top:
+    17px;
+
+  left:
+    9px;
+
+  bottom:
+    2px;
+
+  width:
+    1px;
+
+  background:
+    #e2e5e1;
+}
+
+.timelineEvent
+strong,
+.timelineEvent
+span {
+  display:
+    block;
+}
+
+.timelineEvent
+strong {
+  color:
+    #303532;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+}
+
+.timelineEvent
+span {
+  margin-top:
+    3px;
+
+  color:
+    #969b97;
+
+  font-size:
+    9px;
+}
+
+.item {
+  padding:
+    10px 0;
+
+  border-top:
+    1px solid
+    #eceeeb;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    58px
+    minmax(
+      0,
+      1fr
+    )
+    auto;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+}
+
+.itemImage {
+  position:
+    relative;
+
+  width:
+    58px;
+
+  height:
+    63px;
+
+  background:
+    #f4f5f2;
+}
+
+.itemImage
+img {
+  padding:
+    5px;
+
+  object-fit:
+    contain;
+}
+
+.item
+strong {
+  font-size:
+    11px;
+}
+
+.item
+small {
+  display:
+    block;
+
+  margin-top:
+    4px;
+
+  color:
+    #969b97;
+
+  font-size:
+    9px;
+}
+
+.summaryLine {
+  min-height:
+    29px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+
+  color:
+    #737974;
+
+  font-size:
+    10px;
+}
+
+.summaryLineTotal {
+  margin-top:
+    5px;
+
+  padding-top:
+    12px;
+
+  border-top:
+    1px solid
+    #dfe3de;
+
+  color:
+    #191c1a;
+
+  font-size:
+    13px;
+
+  font-weight:
+    950;
+}
+
+/* =========================================================
+   GENERIC / EMPTY
+   ========================================================= */
+
+.empty {
+  padding:
+    50px 20px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+
+  text-align:
+    center;
+}
+
+.empty h2 {
+  margin:
+    0 0
+    7px;
+
+  font-size:
+    18px;
+
+  font-weight:
+    950;
+}
+
+.empty p {
+  margin:
+    0 0
+    16px;
+
+  color:
+    #8a908b;
+
+  font-size:
+    11px;
+}
+
+.addressGrid,
+.couponGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    10px;
+}
+
+.addressCard,
+.couponCard {
+  padding:
+    16px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+}
+
+@media (
+  hover: hover
+) and (
+  pointer: fine
+) {
+  .metric:hover,
+  .orderCard:hover {
+    transform:
+      translateY(
+        -2px
+      );
+
+    box-shadow:
+      0 12px 28px
+      rgb(
+        0 0 0 /
+        4%
+      );
+  }
+}
+
+@media (
+  max-width: 1000px
+) {
+  .metrics {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+@media (
+  max-width: 700px
+) {
+  .hero {
+    min-height:
+      0;
+
+    padding:
+      20px 16px;
+
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .heroAction {
+    min-height:
+      38px;
+  }
+
+  .orderRow {
+    grid-template-columns:
+      minmax(
+        0,
+        1fr
+      )
+      auto;
+
+    gap:
+      8px;
+  }
+
+  .orderLink {
+    grid-column:
+      1 / -1;
+
+    justify-self:
+      start;
+  }
+
+  .toolbar {
+    grid-template-columns:
+      1fr;
+  }
+
+  .orderCard {
+    grid-template-columns:
+      58px
+      minmax(
+        0,
+        1fr
+      );
+
+    gap:
+      10px;
+  }
+
+  .orderImage {
+    width:
+      58px;
+
+    height:
+      64px;
+  }
+
+  .orderCardRight {
+    grid-column:
+      2;
+
+    text-align:
+      left;
+  }
+
+  .orderCard
+  > a {
+    grid-column:
+      2;
+
+    justify-self:
+      start;
+  }
+
+  .detailGrid,
+  .addressGrid,
+  .couponGrid {
+    grid-template-columns:
+      1fr;
+  }
+}

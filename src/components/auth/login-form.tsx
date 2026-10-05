@@ -12,10 +12,13 @@ import {
   useSearchParams,
 } from "next/navigation";
 
+import styles from "./customer-auth.module.css";
+
 export function LoginForm({
   admin = false,
 }: {
-  admin?: boolean;
+  admin?:
+    boolean;
 }) {
   const router =
     useRouter();
@@ -23,23 +26,44 @@ export function LoginForm({
   const searchParams =
     useSearchParams();
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState("");
 
-  const [busy, setBusy] =
+  const [
+    busy,
+    setBusy,
+  ] =
     useState(false);
 
+  const loggedOut =
+    !admin &&
+    searchParams.get(
+      "loggedout",
+    ) ===
+      "1";
+
   async function submit(
-    event: FormEvent<HTMLFormElement>,
+    event:
+      FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
-    if (busy) {
+    if (
+      busy
+    ) {
       return;
     }
 
-    setBusy(true);
-    setError("");
+    setBusy(
+      true,
+    );
+
+    setError(
+      "",
+    );
 
     try {
       const form =
@@ -51,40 +75,39 @@ export function LoginForm({
         await fetch(
           "/api/auth/login",
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "content-type":
                 "application/json",
             },
 
-            body: JSON.stringify({
-              email:
-                form.get(
-                  "email",
-                ),
+            body:
+              JSON.stringify({
+                email:
+                  form.get(
+                    "email",
+                  ),
 
-              password:
-                form.get(
-                  "password",
-                ),
+                password:
+                  form.get(
+                    "password",
+                  ),
 
-              /*
-               * Critical:
-               * backend can now tell
-               * admin/customer login apart.
-               */
-              admin,
-            }),
+                admin,
+              }),
           },
         );
 
-      const data =
+      const result =
         await response.json();
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         setError(
-          data.error ||
+          result.error ??
             "Unable to sign in.",
         );
 
@@ -101,18 +124,9 @@ export function LoginForm({
           ? "/admin"
           : "/account";
 
-      /*
-       * Only honor a next URL if
-       * it belongs to the correct
-       * area.
-       *
-       * Prevents:
-       * admin login → /account
-       */
       if (
         admin &&
-        requestedNext &&
-        requestedNext.startsWith(
+        requestedNext?.startsWith(
           "/admin",
         ) &&
         !requestedNext.startsWith(
@@ -125,8 +139,7 @@ export function LoginForm({
 
       if (
         !admin &&
-        requestedNext &&
-        requestedNext.startsWith(
+        requestedNext?.startsWith(
           "/account",
         ) &&
         !requestedNext.startsWith(
@@ -137,12 +150,6 @@ export function LoginForm({
           requestedNext;
       }
 
-      /*
-       * Use replace instead of push.
-       *
-       * This avoids the login page
-       * remaining in history.
-       */
       router.replace(
         destination,
       );
@@ -153,88 +160,90 @@ export function LoginForm({
         "Unable to sign in. Please try again.",
       );
     } finally {
-      setBusy(false);
+      setBusy(
+        false,
+      );
     }
   }
 
   return (
     <form
-      onSubmit={submit}
-      style={{
-        display: "grid",
-        gap: 13,
-      }}
+      onSubmit={
+        submit
+      }
+      className={styles.form}
     >
-      <label>
-        <span className="label">
-          Email address
+      {loggedOut ? (
+        <p className={styles.success}>
+          You have been logged out
+          successfully.
+        </p>
+      ) : null}
+
+      <label className={styles.field}>
+        <span>
+          Email Address
         </span>
 
         <input
-          className="field"
           name="email"
           type="email"
           autoComplete="email"
+          placeholder="you@example.com"
           required
         />
       </label>
 
-      <label>
-        <span className="label">
+      <label className={styles.field}>
+        <span>
           Password
         </span>
 
         <input
-          className="field"
           name="password"
           type="password"
           autoComplete="current-password"
+          placeholder="Enter your password"
           required
-          minLength={8}
+          minLength={
+            8
+          }
         />
       </label>
 
       {error ? (
         <p
           role="alert"
-          style={{
-            margin: 0,
-            color: "#b52727",
-            fontSize: 12,
-          }}
+          className={styles.error}
         >
-          {error}
+          {
+            error
+          }
         </p>
       ) : null}
 
       <button
         type="submit"
-        className="btn btn-primary"
-        disabled={busy}
+        className={styles.submit}
+        disabled={
+          busy
+        }
       >
         {busy
-          ? "Signing in…"
+          ? "Signing In..."
           : admin
             ? "Sign In to Admin"
-            : "Sign In"}
+            : "Sign In to My Account"}
       </button>
 
       {!admin ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent:
-              "space-between",
-            gap: 12,
-            fontSize: 11,
-          }}
-        >
+        <div className={styles.links}>
           <Link href="/account/forgot-password">
-            Forgot password?
+            Forgot Password?
           </Link>
 
           <Link href="/account/register">
-            Create account
+            Create Account
           </Link>
         </div>
       ) : null}
