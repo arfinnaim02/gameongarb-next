@@ -109,12 +109,6 @@ const INITIAL_FORM:
   address: "",
 };
 
-const PROGRESS_STEPS = [
-  "Delivery",
-  "Payment",
-  "Review",
-  "Complete",
-];
 
 /* =========================================================
    CHECKOUT
@@ -1107,46 +1101,6 @@ export function CheckoutClient() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-        {/* =================================================
-            RESPONSIVE PROGRESS
-            ================================================= */}
-
-        <ol
-          className={styles.progress}
-          aria-label="Checkout progress"
-        >
-          {PROGRESS_STEPS.map(
-            (
-              step,
-              index,
-            ) => (
-              <li
-                key={
-                  step
-                }
-                className={
-                  index ===
-                  0
-                    ? styles.progressActive
-                    : ""
-                }
-              >
-                <span className={styles.progressNumber}>
-                  {
-                    index +
-                    1
-                  }
-                </span>
-
-                <strong>
-                  {
-                    step
-                  }
-                </strong>
-              </li>
-            ),
-          )}
-        </ol>
 
         {/* =================================================
             TITLE

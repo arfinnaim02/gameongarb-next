@@ -1249,7 +1249,7 @@ export function ProductDetail({
                 <span />
 
                 {inStock
-                  ? `In Stock · ${selectedStock} available`
+                  ? "In Stock"
                   : "Out of Stock"}
               </div>
             </div>

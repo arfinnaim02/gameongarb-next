@@ -329,12 +329,14 @@ export function HomeProductRail({
     /*
      * Pause automatic animation exactly
      * where it currently is.
+     *
+     * IMPORTANT:
+     * Do not capture the pointer yet.
+     * A simple mouse click must remain
+     * available to ProductCard links,
+     * wishlist and Quick Add buttons.
      */
     animation.pause();
-
-    viewport.setPointerCapture(
-      event.pointerId,
-    );
 
     dragRef.current = {
       pointerId:
@@ -356,10 +358,6 @@ export function HomeProductRail({
 
     suppressClickRef.current =
       false;
-
-    setDragging(
-      true,
-    );
   }
 
   /* =======================================================

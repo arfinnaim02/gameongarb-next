@@ -3891,8 +3891,18 @@ span {
    ========================================================= */
 
 .home-product-rail {
+  /*
+   * Homepage provides --home-gap: 12px.
+   *
+   * Product Details uses this same
+   * reusable rail outside .home-page,
+   * so it needs the identical fallback.
+   */
   --rail-gap:
-    var(--home-gap);
+    var(
+      --home-gap,
+      12px
+    );
 
   position: relative;
 
