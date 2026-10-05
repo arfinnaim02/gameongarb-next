@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import {
   ArrowRight,
+  ImageIcon,
   Images,
   Layers3,
   Shirt,
@@ -56,6 +57,20 @@ const sections = [
 
   {
     title:
+      "Category Images",
+
+    description:
+      "Upload and update category artwork used across the homepage and Categories page.",
+
+    href:
+      "/admin/homepage/category-images",
+
+    icon:
+      ImageIcon,
+  },
+
+  {
+    title:
       "Experience The Thrill",
 
     description:
@@ -84,7 +99,8 @@ export default function HomepageBuilderPage() {
 
           <p>
             Manage the major
-            visual campaigns of
+            visual campaigns and
+            category artwork of
             the Game On Garb
             storefront.
           </p>
@@ -105,11 +121,12 @@ export default function HomepageBuilderPage() {
 
       <div className="homepage-admin-notice">
         <strong>
-          Homepage campaigns
+          Storefront appearance
         </strong>
 
         <span>
-          Hero, Sports, Polo and
+          Hero, Sports, Polo,
+          Category Images and
           Experience The Thrill
           are connected directly
           to the storefront.
