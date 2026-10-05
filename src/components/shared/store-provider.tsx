@@ -12,6 +12,8 @@ export type CartLine = {
 type StoreContextValue = {
   cart: CartLine[];
   wishlist: string[];
+
+  ready: boolean;
   add: (p: Product, size?: string, color?: string) => void;
   remove: (key: string) => void;
   setQuantity: (key: string, q: number) => void;
@@ -43,10 +45,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (ready) localStorage.setItem("gog-wishlist", JSON.stringify(wishlist));
   }, [wishlist, ready]);
-  const value = useMemo(
+  const value = useMemo<StoreContextValue>(
     () => ({
       cart,
       wishlist,
+      ready,
       add: (
         product: Product,
         size = product.sizes[0],
@@ -80,10 +83,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (cartKey(x.product.id, x.size, x.color) !== key) return x;
             const stock =
               x.product.variants?.find(
-                (variant) =>
-                  variant.size === x.size && variant.color === x.color,
-              )?.stock ?? x.product.stock;
-            return { ...x, quantity: Math.max(1, Math.min(q, stock)) };
+                (
+                  variant,
+                ) =>
+                  variant.size ===
+                    x.size &&
+                  variant.color ===
+                    x.color,
+              )?.stock ??
+              x.product.stock;
+
+            if (
+              stock <
+              1
+            ) {
+              return x;
+            }
+
+            return {
+              ...x,
+
+              quantity:
+                Math.max(
+                  1,
+                  Math.min(
+                    q,
+                    stock,
+                  ),
+                ),
+            };
           }),
         ),
       toggleWishlist: (id: string) => {
@@ -99,7 +127,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       clear: () => setCart([]),
       cartCount: cart.reduce((n, x) => n + x.quantity, 0),
     }),
-    [cart, wishlist],
+    [
+      cart,
+      wishlist,
+      ready,
+    ],
   );
   return (
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
