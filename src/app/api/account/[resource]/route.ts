@@ -62,14 +62,72 @@ export async function POST(
       return NextResponse.json({ address });
     }
     if (resource === "settings") {
-      const input = z
-        .object({
-          name: z.string().min(2),
-          phone: z.string().regex(/^01\d{9}$/),
-          password: z.string().min(8).optional(),
-          currentPassword: z.string().optional(),
-        })
-        .parse(body);
+      const input =
+        z
+          .object({
+            name:
+              z
+                .string()
+                .trim()
+                .min(2)
+                .max(100),
+
+            phone:
+              z
+                .string()
+                .trim()
+                .regex(
+                  /^01\d{9}$/,
+                ),
+
+            password:
+              z
+                .string()
+                .min(8)
+                .max(100)
+                .optional(),
+
+            currentPassword:
+              z
+                .string()
+                .optional(),
+          })
+          .parse(
+            body,
+          );
+
+                const phoneOwner =
+        await db.user.findFirst({
+          where: {
+            phone:
+              input.phone,
+
+            id: {
+              not:
+                user.id,
+            },
+          },
+
+          select: {
+            id:
+              true,
+          },
+        });
+
+      if (
+        phoneOwner
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "This phone number is already connected to another account.",
+          },
+          {
+            status:
+              409,
+          },
+        );
+      }
       if (
         input.password &&
         (!input.currentPassword ||
@@ -176,11 +234,101 @@ export async function DELETE(
       { error: "Unsupported resource" },
       { status: 404 },
     );
-  const { id } = z.object({ id: z.string() }).parse(await request.json());
-  const deleted = await db.address.deleteMany({
-    where: { id, customerId: user.customer.id },
+  const {
+    id,
+  } =
+    z
+      .object({
+        id:
+          z.string(),
+      })
+      .parse(
+        await request.json(),
+      );
+
+  const address =
+    await db.address.findFirst({
+      where: {
+        id,
+
+        customerId:
+          user.customer.id,
+      },
+
+      select: {
+        id:
+          true,
+
+        isDefault:
+          true,
+      },
+    });
+
+  if (!address) {
+    return NextResponse.json(
+      {
+        error:
+          "Address not found",
+      },
+      {
+        status:
+          404,
+      },
+    );
+  }
+
+  await db.address.delete({
+    where: {
+      id:
+        address.id,
+    },
   });
-  if (!deleted.count)
-    return NextResponse.json({ error: "Address not found" }, { status: 404 });
-  return NextResponse.json({ message: "Address removed" });
+
+  /*
+   * If the deleted address was
+   * the default address, promote
+   * the newest remaining address.
+   */
+  if (
+    address.isDefault
+  ) {
+    const replacement =
+      await db.address.findFirst({
+        where: {
+          customerId:
+            user.customer.id,
+        },
+
+        orderBy: {
+          createdAt:
+            "desc",
+        },
+
+        select: {
+          id:
+            true,
+        },
+      });
+
+    if (
+      replacement
+    ) {
+      await db.address.update({
+        where: {
+          id:
+            replacement.id,
+        },
+
+        data: {
+          isDefault:
+            true,
+        },
+      });
+    }
+  }
+
+  return NextResponse.json({
+    message:
+      "Address removed",
+  });
 }

@@ -1,0 +1,1553 @@
+/* =========================================================
+   GAME ON GARB — CUSTOMER ACCOUNT SECTIONS
+   ========================================================= */
+
+.page {
+  min-width: 0;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.header {
+  margin-bottom:
+    19px;
+}
+
+.eyebrow {
+  display:
+    block;
+
+  margin-bottom:
+    7px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    9px;
+
+  line-height:
+    1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+}
+
+.header h1 {
+  margin:
+    0;
+
+  color:
+    #151816;
+
+  font-size:
+    clamp(
+      2rem,
+      3.5vw,
+      2.9rem
+    );
+
+  line-height:
+    .95;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.055em;
+}
+
+.header p {
+  max-width:
+    620px;
+
+  margin:
+    10px 0
+    0;
+
+  color:
+    #7e847f;
+
+  font-size:
+    12px;
+
+  line-height:
+    1.65;
+}
+
+/* =========================================================
+   SECTION INTRO BAR
+   ========================================================= */
+
+.summaryBar {
+  min-height:
+    64px;
+
+  margin-bottom:
+    14px;
+
+  padding:
+    12px 15px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  background:
+    #fff;
+}
+
+.summaryCopy {
+  min-width:
+    0;
+}
+
+.summaryCopy strong,
+.summaryCopy span {
+  display:
+    block;
+}
+
+.summaryCopy strong {
+  color:
+    #292e2a;
+
+  font-size:
+    12px;
+
+  font-weight:
+    900;
+}
+
+.summaryCopy span {
+  margin-top:
+    4px;
+
+  color:
+    #969b97;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.4;
+}
+
+.summaryCount {
+  min-width:
+    42px;
+
+  height:
+    34px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #f0d4c7;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff6f1;
+
+  color:
+    var(--orange);
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+}
+
+/* =========================================================
+   ADDRESS GRID
+   ========================================================= */
+
+.addressGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    10px;
+}
+
+.addressCard {
+  position:
+    relative;
+
+  min-width:
+    0;
+
+  padding:
+    17px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+
+  transition:
+    border-color
+      180ms ease,
+    transform
+      180ms ease,
+    box-shadow
+      180ms ease;
+}
+
+.addressDefault {
+  border-color:
+    #e8c6b5;
+
+  box-shadow:
+    inset
+    0 2px 0
+    var(--orange);
+}
+
+.addressTop {
+  margin-bottom:
+    13px;
+
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+}
+
+.addressLabel {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    7px;
+
+  color:
+    #2b302c;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+}
+
+.addressIcon {
+  width:
+    30px;
+
+  height:
+    30px;
+
+  flex:
+    0 0
+    30px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #f5f6f3;
+
+  color:
+    #565c57;
+}
+
+.defaultBadge {
+  min-height:
+    23px;
+
+  padding:
+    0 7px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  background:
+    #eef8f2;
+
+  color:
+    #25744d;
+
+  font-size:
+    8px;
+
+  line-height:
+    1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .05em;
+
+  text-transform:
+    uppercase;
+}
+
+.addressPerson {
+  margin:
+    0;
+
+  color:
+    #313632;
+
+  font-size:
+    11px;
+
+  line-height:
+    1.55;
+}
+
+.addressPerson strong {
+  font-weight:
+    900;
+}
+
+.addressLocation {
+  margin:
+    11px 0
+    0;
+
+  padding-top:
+    11px;
+
+  border-top:
+    1px solid
+    #eceeeb;
+
+  color:
+    #7e847f;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   ADDRESS ACTIONS
+   ========================================================= */
+
+.addressActions {
+  margin-top:
+    13px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    6px;
+}
+
+.addressAction,
+.addressDelete {
+  min-height:
+    32px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    5px;
+
+  background:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.addressAction {
+  color:
+    #343935;
+}
+
+.addressDelete {
+  border-color:
+    #ead7d4;
+
+  background:
+    #fffafa;
+
+  color:
+    #ad3b33;
+}
+
+.addressAction:disabled,
+.addressDelete:disabled {
+  opacity:
+    .48;
+
+  cursor:
+    not-allowed;
+}
+
+.actionMessage {
+  flex:
+    1 1
+    100%;
+
+  margin:
+    2px 0
+    0;
+
+  color:
+    #aa3a33;
+
+  font-size:
+    9px;
+}
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
+
+.formCard {
+  margin-top:
+    14px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+}
+
+.formHeader {
+  min-height:
+    71px;
+
+  padding:
+    15px 17px;
+
+  border-bottom:
+    1px solid
+    #e8eae7;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    18px;
+
+  background:
+    #fafbf9;
+}
+
+.formHeaderCopy {
+  min-width:
+    0;
+}
+
+.formHeaderCopy span,
+.formHeaderCopy strong,
+.formHeaderCopy small {
+  display:
+    block;
+}
+
+.formHeaderCopy span {
+  margin-bottom:
+    4px;
+
+  color:
+    var(--orange);
+
+  font-size:
+    8px;
+
+  line-height:
+    1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .15em;
+
+  text-transform:
+    uppercase;
+}
+
+.formHeaderCopy strong {
+  color:
+    #282d29;
+
+  font-size:
+    14px;
+
+  font-weight:
+    950;
+}
+
+.formHeaderCopy small {
+  margin-top:
+    4px;
+
+  color:
+    #949995;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.45;
+}
+
+.formHeaderIcon {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  flex:
+    0 0
+    38px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff;
+
+  color:
+    var(--orange);
+
+  border:
+    1px solid
+    #e6e9e5;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.form {
+  padding:
+    17px;
+
+  display:
+    grid;
+
+  gap:
+    13px;
+}
+
+.formGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    12px;
+}
+
+.field {
+  min-width:
+    0;
+
+  display:
+    grid;
+
+  gap:
+    6px;
+}
+
+.fieldFull {
+  grid-column:
+    1 / -1;
+}
+
+.field > span {
+  color:
+    #3f443f;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+}
+
+.field small {
+  color:
+    #979c98;
+
+  font-size:
+    8px;
+
+  line-height:
+    1.45;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width:
+    100%;
+
+  min-width:
+    0;
+
+  border:
+    1px solid
+    #d9ddda;
+
+  outline:
+    0;
+
+  background:
+    #fff;
+
+  color:
+    #242824;
+
+  font:
+    inherit;
+
+  font-size:
+    12px;
+
+  transition:
+    border-color
+      170ms ease,
+    box-shadow
+      170ms ease;
+}
+
+.field input,
+.field select {
+  min-height:
+    43px;
+
+  padding:
+    0 11px;
+}
+
+.field textarea {
+  min-height:
+    92px;
+
+  padding:
+    10px 11px;
+
+  line-height:
+    1.55;
+
+  resize:
+    vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color:
+    #747b75;
+
+  box-shadow:
+    0 0 0 3px
+    rgb(
+      17 20 18 /
+      4%
+    );
+}
+
+.readonly {
+  background:
+    #f7f8f6 !important;
+
+  color:
+    #777d78 !important;
+
+  cursor:
+    not-allowed;
+}
+
+.passwordSection {
+  margin-top:
+    4px;
+
+  padding-top:
+    15px;
+
+  border-top:
+    1px solid
+    #e8eae7;
+}
+
+.passwordHeading {
+  margin-bottom:
+    11px;
+}
+
+.passwordHeading strong,
+.passwordHeading span {
+  display:
+    block;
+}
+
+.passwordHeading strong {
+  color:
+    #303532;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+}
+
+.passwordHeading span {
+  margin-top:
+    4px;
+
+  color:
+    #969b97;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.45;
+}
+
+.formFooter {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    15px;
+
+  margin-top:
+    3px;
+
+  padding-top:
+    13px;
+
+  border-top:
+    1px solid
+    #eceeeb;
+}
+
+.formStatus {
+  margin: 0;
+
+  color:
+    #25744d;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+}
+
+.formStatusError {
+  color:
+    #ad3931;
+}
+
+.saveButton {
+  min-width:
+    130px;
+
+  min-height:
+    41px;
+
+  padding:
+    0 14px;
+
+  border:
+    0;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  background:
+    var(--orange);
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    950;
+
+  cursor:
+    pointer;
+
+  transition:
+    background-color
+      170ms ease,
+    transform
+      170ms ease;
+}
+
+.saveButton:hover {
+  background:
+    var(--orange-dark);
+
+  transform:
+    translateY(
+      -1px
+    );
+}
+
+.saveButton:disabled {
+  opacity:
+    .55;
+
+  cursor:
+    not-allowed;
+
+  transform:
+    none;
+}
+
+/* =========================================================
+   WISHLIST
+   ========================================================= */
+
+.wishlistGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    10px;
+}
+
+.wishlistGrid
+:global(.product-card) {
+  min-width:
+    0;
+
+  border:
+    1px solid
+    #e6e9e5;
+
+  background:
+    #fff;
+}
+
+/* =========================================================
+   COUPONS
+   ========================================================= */
+
+.couponGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    10px;
+}
+
+.couponCard {
+  position:
+    relative;
+
+  overflow:
+    hidden;
+
+  min-height:
+    160px;
+
+  padding:
+    18px;
+
+  border:
+    1px solid
+    #e2e5e1;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  justify-content:
+    space-between;
+
+  background:
+    #fff;
+}
+
+.couponCard::before {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  top: 0;
+  left: 0;
+
+  width:
+    4px;
+
+  height:
+    100%;
+
+  background:
+    var(--orange);
+}
+
+.couponTop {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    16px;
+}
+
+.couponIcon {
+  width:
+    36px;
+
+  height:
+    36px;
+
+  flex:
+    0 0
+    36px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff3ed;
+
+  color:
+    var(--orange);
+}
+
+.couponValue {
+  color:
+    var(--orange);
+
+  font-size:
+    16px;
+
+  line-height:
+    1;
+
+  font-weight:
+    950;
+
+  text-align:
+    right;
+}
+
+.couponTitle {
+  margin:
+    13px 0
+    0;
+
+  color:
+    #292e2a;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.35;
+
+  font-weight:
+    950;
+}
+
+.couponDescription {
+  margin:
+    6px 0
+    0;
+
+  color:
+    #838984;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.55;
+}
+
+.couponBottom {
+  margin-top:
+    15px;
+
+  padding-top:
+    12px;
+
+  border-top:
+    1px dashed
+    #dfe3de;
+
+  display:
+    flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+}
+
+.couponCode span,
+.couponCode strong {
+  display:
+    block;
+}
+
+.couponCode span {
+  margin-bottom:
+    4px;
+
+  color:
+    #9a9f9b;
+
+  font-size:
+    7px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .12em;
+
+  text-transform:
+    uppercase;
+}
+
+.couponCode strong {
+  color:
+    #333834;
+
+  font-size:
+    11px;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .05em;
+}
+
+.couponExpiry {
+  color:
+    #898f8a;
+
+  font-size:
+    8px;
+
+  line-height:
+    1.4;
+
+  text-align:
+    right;
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+.settingsGrid {
+  display:
+    grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1.25fr
+    )
+    minmax(
+      230px,
+      .75fr
+    );
+
+  align-items:
+    start;
+
+  gap:
+    12px;
+}
+
+.securityCard {
+  padding:
+    17px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  background:
+    #fff;
+}
+
+.securityIcon {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  margin-bottom:
+    13px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #f4f5f2;
+
+  color:
+    #343935;
+}
+
+.securityCard h3 {
+  margin:
+    0;
+
+  color:
+    #2c312d;
+
+  font-size:
+    13px;
+
+  font-weight:
+    950;
+}
+
+.securityCard p {
+  margin:
+    7px 0
+    0;
+
+  color:
+    #858b86;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.6;
+}
+
+.securityList {
+  margin:
+    15px 0
+    0;
+
+  padding:
+    13px 0
+    0;
+
+  border-top:
+    1px solid
+    #eceeeb;
+
+  display:
+    grid;
+
+  gap:
+    9px;
+}
+
+.securityItem {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  gap:
+    8px;
+
+  color:
+    #646a65;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.5;
+}
+
+.securityItem svg {
+  flex:
+    0 0 auto;
+
+  margin-top:
+    1px;
+
+  color:
+    #3c8058;
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.empty {
+  min-height:
+    280px;
+
+  padding:
+    42px 20px;
+
+  border:
+    1px solid
+    #e0e3df;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  background:
+    #fff;
+
+  text-align:
+    center;
+}
+
+.emptyIcon {
+  width:
+    52px;
+
+  height:
+    52px;
+
+  margin-bottom:
+    12px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #f4f5f2;
+
+  color:
+    #6d736e;
+}
+
+.empty h2 {
+  margin:
+    0;
+
+  color:
+    #292e2a;
+
+  font-size:
+    17px;
+
+  font-weight:
+    950;
+}
+
+.empty p {
+  max-width:
+    360px;
+
+  margin:
+    7px 0
+    15px;
+
+  color:
+    #8b908c;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.55;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (
+  hover: hover
+) and (
+  pointer: fine
+) {
+  .addressCard:hover {
+    border-color:
+      #cfd4cf;
+
+    transform:
+      translateY(
+        -2px
+      );
+
+    box-shadow:
+      0 12px 28px
+      rgb(
+        0 0 0 /
+        4%
+      );
+  }
+}
+
+@media (
+  max-width: 1050px
+) {
+  .wishlistGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+@media (
+  max-width: 760px
+) {
+  .addressGrid,
+  .couponGrid,
+  .settingsGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .formGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .fieldFull {
+    grid-column:
+      auto;
+  }
+}
+
+@media (
+  max-width: 520px
+) {
+  .summaryBar {
+    align-items:
+      flex-start;
+  }
+
+  .wishlistGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      7px;
+  }
+
+  .form {
+    padding:
+      14px;
+  }
+
+  .formHeader {
+    padding:
+      14px;
+  }
+
+  .formFooter {
+    align-items:
+      stretch;
+
+    flex-direction:
+      column;
+  }
+
+  .saveButton {
+    width:
+      100%;
+  }
+
+  .couponBottom {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .couponExpiry {
+    text-align:
+      left;
+  }
+}

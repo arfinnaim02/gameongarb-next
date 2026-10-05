@@ -1,54 +1,179 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+  Check,
+  Trash2,
+} from "lucide-react";
+
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  useState,
+} from "react";
+
+import styles from "./account-section.module.css";
 
 export function AddressActions({
   id,
   isDefault,
 }: {
-  id: string;
-  isDefault: boolean;
+  id:
+    string;
+
+  isDefault:
+    boolean;
 }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  async function mutate(method: "PATCH" | "DELETE") {
-    if (method === "DELETE" && !window.confirm("Remove this saved address?"))
+  const router =
+    useRouter();
+
+  const [
+    busy,
+    setBusy,
+  ] =
+    useState<
+      "default" |
+      "delete" |
+      null
+    >(
+      null,
+    );
+
+  const [
+    error,
+    setError,
+  ] =
+    useState("");
+
+  async function mutate(
+    method:
+      "PATCH" |
+      "DELETE",
+  ) {
+    if (
+      method ===
+        "DELETE" &&
+      !window.confirm(
+        "Remove this saved address?",
+      )
+    ) {
       return;
-    setBusy(true);
-    const response = await fetch("/api/account/addresses", {
-      method,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    setBusy(false);
-    if (response.ok) router.refresh();
+    }
+
+    setError(
+      "",
+    );
+
+    setBusy(
+      method ===
+      "PATCH"
+        ? "default"
+        : "delete",
+    );
+
+    try {
+      const response =
+        await fetch(
+          "/api/account/addresses",
+          {
+            method,
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                id,
+              }),
+          },
+        );
+
+      const result =
+        await response.json();
+
+      if (
+        !response.ok
+      ) {
+        setError(
+          result.error ??
+            "Unable to update address.",
+        );
+
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError(
+        "Unable to update address. Please try again.",
+      );
+    } finally {
+      setBusy(
+        null,
+      );
+    }
   }
+
   return (
-    <div style={{ display: "flex", gap: 8 }}>
-      {!isDefault && (
+    <div className={styles.addressActions}>
+      {!isDefault ? (
         <button
-          className="btn btn-outline"
-          style={{ minHeight: 34, padding: 7 }}
-          disabled={busy}
-          onClick={() => mutate("PATCH")}
+          type="button"
+          className={styles.addressAction}
+          disabled={
+            busy !==
+            null
+          }
+          onClick={() =>
+            mutate(
+              "PATCH",
+            )
+          }
         >
-          Make Default
+          <Check
+            size={12}
+          />
+
+          {busy ===
+          "default"
+            ? "Updating..."
+            : "Make Default"}
         </button>
-      )}
+      ) : null}
+
       <button
-        className="btn"
-        style={{
-          minHeight: 34,
-          padding: 7,
-          color: "#b42318",
-          background: "transparent",
-        }}
-        disabled={busy}
-        onClick={() => mutate("DELETE")}
+        type="button"
+        className={styles.addressDelete}
+        disabled={
+          busy !==
+          null
+        }
+        onClick={() =>
+          mutate(
+            "DELETE",
+          )
+        }
       >
-        Remove
+        <Trash2
+          size={12}
+        />
+
+        {busy ===
+        "delete"
+          ? "Removing..."
+          : "Remove"}
       </button>
+
+      {error ? (
+        <p className={styles.actionMessage}>
+          {
+            error
+          }
+        </p>
+      ) : null}
     </div>
   );
 }
