@@ -351,6 +351,7 @@ function ModuleTable({
             <th>Name</th>
             <th>Slug</th>
             <th>Parent</th>
+            <th>Shop Order</th>
             <th>Products</th>
             <th>Navigation</th>
             <th>Status</th>
@@ -374,7 +375,21 @@ function ModuleTable({
                     )
                   : "Root"}
               </td>
-              <td>{String(c.productCount)}</td>
+
+              <td>
+                <strong>
+                  {String(
+                    c.sortOrder ??
+                    0,
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                {String(
+                  c.productCount,
+                )}
+              </td>
               <td>{c.showInNavigation ? "Visible" : "Hidden"}</td>
               <td>
                 <span className={`badge ${c.active ? "green" : "orange"}`}>
@@ -960,6 +975,30 @@ function ResourceDrawer({
                 label="Description"
                 value={String(row?.description ?? "")}
               />
+
+              <Field
+                name="sortOrder"
+                label="Shop Display Order"
+                type="number"
+                value={String(
+                  row?.sortOrder ??
+                  0,
+                )}
+              />
+
+              <small
+                className="muted"
+                style={{
+                  marginTop:
+                    -7,
+                }}
+              >
+                Lower numbers appear
+                first on the Shop page.
+                Example: Sports = 1,
+                Polo = 2, T-Shirts = 3.
+              </small>
+
               <label>
                 <span className="label">Parent Category</span>
                 <select

@@ -165,9 +165,34 @@ export async function POST(
             .min(2)
             .regex(/^[a-z0-9-]+$/),
           parentId: z.string().optional(),
-          description: z.string().optional(),
-          showInNavigation: z.union([z.boolean(), z.string()]).optional(),
-          showOnHomepage: z.union([z.boolean(), z.string()]).optional(),
+          description:
+            z
+              .string()
+              .optional(),
+
+          sortOrder:
+            z
+              .coerce
+              .number()
+              .int()
+              .min(0)
+              .default(0),
+
+          showInNavigation:
+            z
+              .union([
+                z.boolean(),
+                z.string(),
+              ])
+              .optional(),
+
+          showOnHomepage:
+            z
+              .union([
+                z.boolean(),
+                z.string(),
+              ])
+              .optional(),
         })
         .parse(body);
       if (input.parentId) await assertCategoryDepth(input.parentId);
@@ -176,7 +201,13 @@ export async function POST(
           name: input.name,
           slug: input.slug,
           parentId: input.parentId || null,
-          description: input.description || null,
+          description:
+            input.description ||
+            null,
+
+          sortOrder:
+            input.sortOrder,
+
           showInNavigation:
             input.showInNavigation === true ||
             input.showInNavigation === "true",
@@ -526,9 +557,28 @@ export async function PATCH(
             .min(2)
             .regex(/^[a-z0-9-]+$/)
             .optional(),
-          description: z.string().optional(),
-          parentId: z.string().optional(),
-          active: z.boolean().optional(),
+          description:
+            z
+              .string()
+              .optional(),
+
+          sortOrder:
+            z
+              .coerce
+              .number()
+              .int()
+              .min(0)
+              .optional(),
+
+          parentId:
+            z
+              .string()
+              .optional(),
+
+          active:
+            z
+              .boolean()
+              .optional(),
           showInNavigation: z.union([z.boolean(), z.string()]).optional(),
           showOnHomepage: z.union([z.boolean(), z.string()]).optional(),
         })
@@ -544,10 +594,23 @@ export async function PATCH(
         data: {
           ...(input.name !== undefined && { name: input.name }),
           ...(input.slug !== undefined && { slug: input.slug }),
-          ...(input.description !== undefined && {
-            description: input.description || null,
+          ...(input.description !==
+            undefined && {
+            description:
+              input.description ||
+              null,
           }),
-          ...(Object.hasOwn(body, "parentId") && {
+
+          ...(input.sortOrder !==
+            undefined && {
+            sortOrder:
+              input.sortOrder,
+          }),
+
+          ...(Object.hasOwn(
+            body,
+            "parentId",
+          ) && {
             parentId: input.parentId || null,
           }),
           ...(input.active !== undefined && { active: input.active }),

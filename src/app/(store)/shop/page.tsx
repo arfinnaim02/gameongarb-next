@@ -22,8 +22,10 @@ import {
   db,
 } from "@/lib/db";
 
-export const metadata: Metadata = {
-  title: "Shop",
+export const metadata:
+  Metadata = {
+  title:
+    "Shop",
 
   description:
     "Shop premium Game On Garb sports and lifestyle fashion.",
@@ -39,77 +41,125 @@ export default async function ShopPage() {
     productCategoryRows,
     shopHeroSlides,
     otherSetting,
-  ] = await Promise.all([
-    getProducts(),
+  ] =
+    await Promise.all([
+      getProducts(),
 
-    db.category.findMany({
-      where: {
-        active: true,
-      },
-
-      orderBy: [
-        {
-          sortOrder: "asc",
+      db.category.findMany({
+        where: {
+          active:
+            true,
         },
-        {
-          name: "asc",
+
+        orderBy: [
+          {
+            sortOrder:
+              "asc",
+          },
+
+          {
+            name:
+              "asc",
+          },
+        ],
+
+        select: {
+          id:
+            true,
+
+          name:
+            true,
+
+          slug:
+            true,
+
+          description:
+            true,
+
+          parentId:
+            true,
+
+          sortOrder:
+            true,
         },
-      ],
+      }),
 
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        parentId: true,
-        sortOrder: true,
-      },
-    }),
+      db.productCategory.findMany({
+        select: {
+          productId:
+            true,
 
-    db.productCategory.findMany({
-      select: {
-        productId: true,
-        categoryId: true,
-      },
-    }),
+          categoryId:
+            true,
 
-    db.shopHeroSlide.findMany({
-      where: {
-        enabled: true,
-      },
-
-      orderBy: [
-        {
-          sortOrder: "asc",
+          primary:
+            true,
         },
-        {
-          createdAt: "asc",
+      }),
+
+      db.shopHeroSlide.findMany({
+        where: {
+          enabled:
+            true,
         },
-      ],
 
-      select: {
-        id: true,
-        title: true,
-        subtitle: true,
-        image: true,
-        mobileImage: true,
-        ctaLabel: true,
-        ctaLink: true,
-        enabled: true,
-        sortOrder: true,
-      },
-    }),
+        orderBy: [
+          {
+            sortOrder:
+              "asc",
+          },
 
-    db.storeSetting.findUnique({
-      where: {
-        key: "other",
-      },
-    }),
-  ]);
+          {
+            createdAt:
+              "asc",
+          },
+        ],
+
+        select: {
+          id:
+            true,
+
+          title:
+            true,
+
+          subtitle:
+            true,
+
+          image:
+            true,
+
+          mobileImage:
+            true,
+
+          ctaLabel:
+            true,
+
+          ctaLink:
+            true,
+
+          enabled:
+            true,
+
+          sortOrder:
+            true,
+        },
+      }),
+
+      db.storeSetting.findUnique({
+        where: {
+          key:
+            "other",
+        },
+      }),
+    ]);
 
   const other =
-    (otherSetting?.value ??
-      {}) as {
-      itemsPerPage?: number;
+    (
+      otherSetting?.value ??
+      {}
+    ) as {
+      itemsPerPage?:
+        number;
     };
 
   const productCategoryMap =
@@ -141,6 +191,33 @@ export default async function ShopPage() {
 
         return map;
       },
+
+      {},
+    );
+
+  const primaryCategoryMap =
+    productCategoryRows.reduce<
+      Record<
+        string,
+        string
+      >
+    >(
+      (
+        map,
+        row,
+      ) => {
+        if (
+          row.primary
+        ) {
+          map[
+            row.productId
+          ] =
+            row.categoryId;
+        }
+
+        return map;
+      },
+
       {},
     );
 
@@ -170,6 +247,10 @@ export default async function ShopPage() {
             productCategoryMap
           }
 
+          primaryCategoryMap={
+            primaryCategoryMap
+          }
+
           itemsPerPage={
             other.itemsPerPage ??
             12
@@ -187,7 +268,8 @@ function ShopSkeleton() {
 
       <div className="premium-shop-loading-grid">
         {Array.from({
-          length: 8,
+          length:
+            8,
         }).map(
           (
             _,

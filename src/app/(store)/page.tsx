@@ -494,7 +494,7 @@ function TrustStrip() {
     {
       icon: Truck,
       title:
-        "Free Delivery",
+        "Home Delivery",
       subtitle:
         "Across Bangladesh",
     },

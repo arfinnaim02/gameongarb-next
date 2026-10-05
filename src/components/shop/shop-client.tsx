@@ -1,14 +1,14 @@
 "use client";
 
+import type {
+  FormEvent,
+  ReactNode,
+} from "react";
+
 import {
-  useDeferredValue,
   useEffect,
   useMemo,
   useState,
-} from "react";
-
-import type {
-  ReactNode,
 } from "react";
 
 import {
@@ -23,7 +23,6 @@ import {
 
 import {
   usePathname,
-  useRouter,
   useSearchParams,
 } from "next/navigation";
 
@@ -35,22 +34,30 @@ import type {
   Product,
 } from "@/lib/data";
 
+import styles from "./shop-client.module.css";
+
 /* =========================================================
    TYPES
    ========================================================= */
 
 type ShopCategory = {
-  id: string;
+  id:
+    string;
 
-  name: string;
+  name:
+    string;
 
-  slug: string;
+  slug:
+    string;
+
+  description:
+    string | null;
 
   parentId:
-    | string
-    | null;
+    string | null;
 
-  sortOrder: number;
+  sortOrder:
+    number;
 };
 
 type ShopClientProps = {
@@ -66,9 +73,649 @@ type ShopClientProps = {
       string[]
     >;
 
+  primaryCategoryMap:
+    Record<
+      string,
+      string
+    >;
+
   itemsPerPage:
     number;
 };
+
+type FilterState = {
+  category:
+    string;
+
+  sizes:
+    string[];
+
+  colors:
+    string[];
+
+  maxPrice:
+    string;
+
+  onlyStock:
+    boolean;
+
+  offersOnly:
+    boolean;
+};
+
+type CategoryOption = {
+  category:
+    ShopCategory;
+
+  depth:
+    number;
+};
+
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+
+const CATEGORY_PRODUCT_LIMIT =
+  8;
+
+const PRICE_PRESETS = [
+  {
+    label:
+      "Any price",
+
+    value:
+      "",
+  },
+
+  {
+    label:
+      "Under ৳500",
+
+    value:
+      "500",
+  },
+
+  {
+    label:
+      "Under ৳1,000",
+
+    value:
+      "1000",
+  },
+
+  {
+    label:
+      "Under ৳1,500",
+
+    value:
+      "1500",
+  },
+
+  {
+    label:
+      "Under ৳2,000",
+
+    value:
+      "2000",
+  },
+
+  {
+    label:
+      "Under ৳3,000",
+
+    value:
+      "3000",
+  },
+];
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function parseList(
+  value:
+    string | null,
+) {
+  if (!value) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      value
+        .split(",")
+        .map(
+          (
+            item,
+          ) =>
+            item.trim(),
+        )
+        .filter(
+          Boolean,
+        ),
+    ),
+  ];
+}
+
+function toggleValue(
+  values:
+    string[],
+
+  value:
+    string,
+) {
+  return values.includes(
+    value,
+  )
+    ? values.filter(
+        (
+          item,
+        ) =>
+          item !==
+          value,
+      )
+    : [
+        ...values,
+        value,
+      ];
+}
+
+function collectAllowedCategoryIds(
+  slug:
+    string,
+
+  categoryBySlug:
+    Map<
+      string,
+      ShopCategory
+    >,
+
+  childrenByParent:
+    Map<
+      string | null,
+      ShopCategory[]
+    >,
+) {
+  if (
+    slug ===
+    "all"
+  ) {
+    return null;
+  }
+
+  const selected =
+    categoryBySlug.get(
+      slug,
+    );
+
+  if (!selected) {
+    return new Set<
+      string
+    >();
+  }
+
+  const ids =
+    new Set<
+      string
+    >();
+
+  function walk(
+    categoryId:
+      string,
+  ) {
+    if (
+      ids.has(
+        categoryId,
+      )
+    ) {
+      return;
+    }
+
+    ids.add(
+      categoryId,
+    );
+
+    const children =
+      childrenByParent.get(
+        categoryId,
+      ) ??
+      [];
+
+    children.forEach(
+      (
+        child,
+      ) =>
+        walk(
+          child.id,
+        ),
+    );
+  }
+
+  walk(
+    selected.id,
+  );
+
+  return ids;
+}
+
+function getRootCategoryId(
+  categoryId:
+    string,
+
+  categoryById:
+    Map<
+      string,
+      ShopCategory
+    >,
+) {
+  let current =
+    categoryById.get(
+      categoryId,
+    );
+
+  const visited =
+    new Set<
+      string
+    >();
+
+  while (
+    current?.parentId &&
+    !visited.has(
+      current.id,
+    )
+  ) {
+    visited.add(
+      current.id,
+    );
+
+    const parent =
+      categoryById.get(
+        current.parentId,
+      );
+
+    if (!parent) {
+      break;
+    }
+
+    current =
+      parent;
+  }
+
+  return (
+    current?.id ??
+    categoryId
+  );
+}
+
+function flattenCategoryTree(
+  roots:
+    ShopCategory[],
+
+  childrenByParent:
+    Map<
+      string | null,
+      ShopCategory[]
+    >,
+) {
+  const result:
+    CategoryOption[] =
+    [];
+
+  function walk(
+    category:
+      ShopCategory,
+
+    depth:
+      number,
+  ) {
+    result.push({
+      category,
+      depth,
+    });
+
+    const children =
+      childrenByParent.get(
+        category.id,
+      ) ??
+      [];
+
+    children.forEach(
+      (
+        child,
+      ) =>
+        walk(
+          child,
+          depth +
+            1,
+        ),
+    );
+  }
+
+  roots.forEach(
+    (
+      root,
+    ) =>
+      walk(
+        root,
+        0,
+      ),
+  );
+
+  return result;
+}
+
+function filterProducts(
+  products:
+    Product[],
+
+  productCategoryMap:
+    Record<
+      string,
+      string[]
+    >,
+
+  allowedCategoryIds:
+    Set<
+      string
+    > | null,
+
+  filters:
+    FilterState,
+
+  keyword:
+    string,
+) {
+  const cleanKeyword =
+    keyword
+      .trim()
+      .toLowerCase();
+
+  return products.filter(
+    (
+      product,
+    ) => {
+      /* ===============================================
+         SEARCH
+         =============================================== */
+
+      const searchable =
+        [
+          product.name,
+
+          product.category,
+
+          ...product.sizes,
+
+          ...product.colors,
+
+          ...(
+            product.variants ??
+            []
+          ).flatMap(
+            (
+              variant,
+            ) => [
+              variant.sku,
+              variant.size,
+              variant.color,
+            ],
+          ),
+        ]
+          .join(
+            " ",
+          )
+          .toLowerCase();
+
+      const matchesSearch =
+        !cleanKeyword ||
+        searchable.includes(
+          cleanKeyword,
+        );
+
+      /* ===============================================
+         CATEGORY
+         =============================================== */
+
+      const assignedCategories =
+        productCategoryMap[
+          product.id
+        ] ??
+        [];
+
+      const matchesCategory =
+        allowedCategoryIds ===
+        null
+          ? true
+          : assignedCategories.some(
+              (
+                categoryId,
+              ) =>
+                allowedCategoryIds.has(
+                  categoryId,
+                ),
+            );
+
+      /* ===============================================
+         STOCK
+         =============================================== */
+
+      const matchesStock =
+        !filters.onlyStock ||
+        product.stock >
+          0;
+
+      /* ===============================================
+         SIZE + COLOR
+
+         When both are selected, an actual
+         purchasable variant must satisfy both.
+         =============================================== */
+
+      const needsVariantFilter =
+        filters.sizes.length >
+          0 ||
+        filters.colors.length >
+          0;
+
+      const variants =
+        product.variants ??
+        [];
+
+      const matchesVariant =
+        !needsVariantFilter
+          ? true
+          : variants.length >
+              0
+            ? variants.some(
+                (
+                  variant,
+                ) =>
+                  variant.stock >
+                    0 &&
+                  (
+                    filters.sizes.length ===
+                      0 ||
+                    filters.sizes.includes(
+                      variant.size,
+                    )
+                  ) &&
+                  (
+                    filters.colors.length ===
+                      0 ||
+                    filters.colors.includes(
+                      variant.color,
+                    )
+                  ),
+              )
+            : (
+                filters.sizes.length ===
+                  0 ||
+                filters.sizes.some(
+                  (
+                    selectedSize,
+                  ) =>
+                    product.sizes.includes(
+                      selectedSize,
+                    ),
+                )
+              ) &&
+              (
+                filters.colors.length ===
+                  0 ||
+                filters.colors.some(
+                  (
+                    selectedColor,
+                  ) =>
+                    product.colors.includes(
+                      selectedColor,
+                    ),
+                )
+              );
+
+      /* ===============================================
+         PRICE
+         =============================================== */
+
+      const numericMax =
+        Number(
+          filters.maxPrice,
+        );
+
+      const matchesPrice =
+        !filters.maxPrice ||
+        !Number.isFinite(
+          numericMax,
+        ) ||
+        product.price <=
+          numericMax;
+
+      /* ===============================================
+         OFFERS
+         =============================================== */
+
+      const matchesOffers =
+        !filters.offersOnly ||
+        Boolean(
+          product.oldPrice &&
+            product.oldPrice >
+              product.price,
+        );
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesStock &&
+        matchesVariant &&
+        matchesPrice &&
+        matchesOffers
+      );
+    },
+  );
+}
+
+function sortProducts(
+  products:
+    Product[],
+
+  sort:
+    string,
+
+  originalOrder:
+    Map<
+      string,
+      number
+    >,
+) {
+  const result = [
+    ...products,
+  ];
+
+  result.sort(
+    (
+      first,
+      second,
+    ) => {
+      if (
+        sort ===
+        "low"
+      ) {
+        return (
+          first.price -
+          second.price
+        );
+      }
+
+      if (
+        sort ===
+        "high"
+      ) {
+        return (
+          second.price -
+          first.price
+        );
+      }
+
+      if (
+        sort ===
+        "newest"
+      ) {
+        return (
+          (
+            originalOrder.get(
+              first.id,
+            ) ??
+            0
+          ) -
+          (
+            originalOrder.get(
+              second.id,
+            ) ??
+            0
+          )
+        );
+      }
+
+      const featuredFirst =
+        first.badge ===
+        "FEATURED"
+          ? 1
+          : 0;
+
+      const featuredSecond =
+        second.badge ===
+        "FEATURED"
+          ? 1
+          : 0;
+
+      if (
+        featuredFirst !==
+        featuredSecond
+      ) {
+        return (
+          featuredSecond -
+          featuredFirst
+        );
+      }
+
+      return (
+        (
+          originalOrder.get(
+            first.id,
+          ) ??
+          0
+        ) -
+        (
+          originalOrder.get(
+            second.id,
+          ) ??
+          0
+        )
+      );
+    },
+  );
+
+  return result;
+}
 
 /* =========================================================
    SHOP
@@ -78,117 +725,107 @@ export function ShopClient({
   products,
   categories,
   productCategoryMap,
+  primaryCategoryMap,
   itemsPerPage,
 }: ShopClientProps) {
-  const router =
-    useRouter();
-
   const pathname =
     usePathname();
 
   const searchParams =
     useSearchParams();
 
-  const urlStateKey =
-    searchParams.toString();
-
   /* =======================================================
-     URL-BACKED STATE
+     APPLIED URL STATE
      ======================================================= */
 
-  const [
-    search,
-    setSearch,
-  ] =
-    useState(
-      searchParams.get(
-        "q",
-      ) ??
-        "",
-    );
+  const appliedQuery =
+    searchParams.get(
+      "q",
+    ) ??
+    "";
 
-  const [
-    category,
-    setCategory,
-  ] =
-    useState(
+  const appliedSort =
+    searchParams.get(
+      "sort",
+    ) ??
+    "featured";
+
+  const appliedFilters:
+    FilterState = {
+    category:
       searchParams.get(
         "category",
       ) ??
-        "all",
-    );
+      "all",
 
-  const [
-    sort,
-    setSort,
-  ] =
-    useState(
-      searchParams.get(
-        "sort",
-      ) ??
-        "featured",
-    );
+    sizes:
+      parseList(
+        searchParams.get(
+          "size",
+        ),
+      ),
 
-  const [
-    size,
-    setSize,
-  ] =
-    useState(
-      searchParams.get(
-        "size",
-      ) ??
-        "all",
-    );
+    colors:
+      parseList(
+        searchParams.get(
+          "color",
+        ),
+      ),
 
-  const [
-    color,
-    setColor,
-  ] =
-    useState(
-      searchParams.get(
-        "color",
-      ) ??
-        "all",
-    );
-
-  const [
-    maxPrice,
-    setMaxPrice,
-  ] =
-    useState(
+    maxPrice:
       searchParams.get(
         "max",
       ) ??
-        "",
-    );
+      "",
 
-  const [
-    onlyStock,
-    setOnlyStock,
-  ] =
-    useState(
+    onlyStock:
       searchParams.get(
         "stock",
       ) ===
-        "1",
-    );
+      "1",
 
-  const [
-    offersOnly,
-    setOffersOnly,
-  ] =
-    useState(
+    offersOnly:
       searchParams.get(
         "offers",
       ) ===
-        "1",
+      "1",
+  };
+
+  /* =======================================================
+     LOCAL UI STATE
+     ======================================================= */
+
+  const [
+    searchDraft,
+    setSearchDraft,
+  ] =
+    useState(
+      appliedQuery,
     );
+
+  const [
+    draftFilters,
+    setDraftFilters,
+  ] =
+    useState<FilterState>({
+      ...appliedFilters,
+
+      sizes: [
+        ...appliedFilters.sizes,
+      ],
+
+      colors: [
+        ...appliedFilters.colors,
+      ],
+    });
 
   const [
     filtersOpen,
     setFiltersOpen,
   ] =
-    useState(false);
+    useState(
+      false,
+    );
 
   const [
     visibleCount,
@@ -208,269 +845,8 @@ export function ShopClient({
       "grid",
     );
 
-  const deferredSearch =
-    useDeferredValue(
-      search,
-    );
-
   /* =======================================================
-     BACK/FORWARD URL SYNC
-     ======================================================= */
-
-  useEffect(() => {
-    setSearch(
-      searchParams.get(
-        "q",
-      ) ??
-        "",
-    );
-
-    setCategory(
-      searchParams.get(
-        "category",
-      ) ??
-        "all",
-    );
-
-    setSort(
-      searchParams.get(
-        "sort",
-      ) ??
-        "featured",
-    );
-
-    setSize(
-      searchParams.get(
-        "size",
-      ) ??
-        "all",
-    );
-
-    setColor(
-      searchParams.get(
-        "color",
-      ) ??
-        "all",
-    );
-
-    setMaxPrice(
-      searchParams.get(
-        "max",
-      ) ??
-        "",
-    );
-
-    setOnlyStock(
-      searchParams.get(
-        "stock",
-      ) ===
-        "1",
-    );
-
-    setOffersOnly(
-      searchParams.get(
-        "offers",
-      ) ===
-        "1",
-    );
-  }, [
-    searchParams,
-    urlStateKey,
-  ]);
-
-  /* =======================================================
-     WRITE SHOP STATE TO URL
-     ======================================================= */
-
-  useEffect(() => {
-    const timer =
-      window.setTimeout(
-        () => {
-          const params =
-            new URLSearchParams(
-              searchParams.toString(),
-            );
-
-          const cleanSearch =
-            search.trim();
-
-          if (
-            cleanSearch
-          ) {
-            params.set(
-              "q",
-              cleanSearch,
-            );
-          } else {
-            params.delete(
-              "q",
-            );
-          }
-
-          if (
-            category !==
-            "all"
-          ) {
-            params.set(
-              "category",
-              category,
-            );
-          } else {
-            params.delete(
-              "category",
-            );
-          }
-
-          if (
-            sort !==
-            "featured"
-          ) {
-            params.set(
-              "sort",
-              sort,
-            );
-          } else {
-            params.delete(
-              "sort",
-            );
-          }
-
-          if (
-            size !==
-            "all"
-          ) {
-            params.set(
-              "size",
-              size,
-            );
-          } else {
-            params.delete(
-              "size",
-            );
-          }
-
-          if (
-            color !==
-            "all"
-          ) {
-            params.set(
-              "color",
-              color,
-            );
-          } else {
-            params.delete(
-              "color",
-            );
-          }
-
-          if (
-            maxPrice
-          ) {
-            params.set(
-              "max",
-              maxPrice,
-            );
-          } else {
-            params.delete(
-              "max",
-            );
-          }
-
-          if (
-            onlyStock
-          ) {
-            params.set(
-              "stock",
-              "1",
-            );
-          } else {
-            params.delete(
-              "stock",
-            );
-          }
-
-          if (
-            offersOnly
-          ) {
-            params.set(
-              "offers",
-              "1",
-            );
-          } else {
-            params.delete(
-              "offers",
-            );
-          }
-
-          const nextQuery =
-            params.toString();
-
-          const currentQuery =
-            searchParams.toString();
-
-          if (
-            nextQuery ===
-            currentQuery
-          ) {
-            return;
-          }
-
-          router.replace(
-            nextQuery
-              ? `${pathname}?${nextQuery}`
-              : pathname,
-
-            {
-              scroll:
-                false,
-            },
-          );
-        },
-
-        120,
-      );
-
-    return () => {
-      window.clearTimeout(
-        timer,
-      );
-    };
-  }, [
-    category,
-    color,
-    maxPrice,
-    offersOnly,
-    onlyStock,
-    pathname,
-    router,
-    search,
-    searchParams,
-    size,
-    sort,
-  ]);
-
-  /* =======================================================
-     RESET PAGINATION
-     ======================================================= */
-
-  useEffect(() => {
-    setVisibleCount(
-      itemsPerPage,
-    );
-  }, [
-    category,
-    color,
-    itemsPerPage,
-    maxPrice,
-    offersOnly,
-    onlyStock,
-    search,
-    size,
-    sort,
-  ]);
-
-  /* =======================================================
-     FILTER DRAWER LOCK
+     BODY LOCK
      ======================================================= */
 
   useEffect(() => {
@@ -480,14 +856,14 @@ export function ShopClient({
       return;
     }
 
-    const previousOverflow =
+    const previous =
       document.body.style
         .overflow;
 
     document.body.style.overflow =
       "hidden";
 
-    function handleEscape(
+    function escape(
       event:
         KeyboardEvent,
     ) {
@@ -503,16 +879,16 @@ export function ShopClient({
 
     window.addEventListener(
       "keydown",
-      handleEscape,
+      escape,
     );
 
     return () => {
       document.body.style.overflow =
-        previousOverflow;
+        previous;
 
       window.removeEventListener(
         "keydown",
-        handleEscape,
+        escape,
       );
     };
   }, [
@@ -520,7 +896,7 @@ export function ShopClient({
   ]);
 
   /* =======================================================
-     CATEGORY LOOKUPS
+     CATEGORY MAPS
      ======================================================= */
 
   const categoryById =
@@ -529,10 +905,10 @@ export function ShopClient({
         new Map(
           categories.map(
             (
-              item,
+              category,
             ) => [
-              item.id,
-              item,
+              category.id,
+              category,
             ],
           ),
         ),
@@ -548,10 +924,10 @@ export function ShopClient({
         new Map(
           categories.map(
             (
-              item,
+              category,
             ) => [
-              item.slug,
-              item,
+              category.slug,
+              category,
             ],
           ),
         ),
@@ -570,42 +946,44 @@ export function ShopClient({
             ShopCategory[]
           >();
 
-        for (
-          const item
-          of categories
-        ) {
-          const current =
-            map.get(
-              item.parentId,
-            ) ??
-            [];
+        categories.forEach(
+          (
+            category,
+          ) => {
+            const current =
+              map.get(
+                category.parentId,
+              ) ??
+              [];
 
-          current.push(
-            item,
-          );
+            current.push(
+              category,
+            );
 
-          map.set(
-            item.parentId,
-            current,
-          );
-        }
+            map.set(
+              category.parentId,
+              current,
+            );
+          },
+        );
 
-        for (
-          const children
-          of map.values()
-        ) {
-          children.sort(
-            (
-              first,
-              second,
-            ) =>
-              first.sortOrder -
-                second.sortOrder ||
-              first.name.localeCompare(
-                second.name,
-              ),
-          );
-        }
+        map.forEach(
+          (
+            children,
+          ) => {
+            children.sort(
+              (
+                first,
+                second,
+              ) =>
+                first.sortOrder -
+                  second.sortOrder ||
+                first.name.localeCompare(
+                  second.name,
+                ),
+            );
+          },
+        );
 
         return map;
       },
@@ -624,204 +1002,89 @@ export function ShopClient({
           ) ??
           [];
 
-        return roots.length
-          ? roots
-          : categories;
+        return [
+          ...roots,
+        ].sort(
+          (
+            first,
+            second,
+          ) =>
+            first.sortOrder -
+              second.sortOrder ||
+            first.name.localeCompare(
+              second.name,
+            ),
+        );
       },
 
       [
-        categories,
         childrenByParent,
       ],
     );
 
+  const categoryOptions =
+    useMemo(
+      () =>
+        flattenCategoryTree(
+          rootCategories,
+          childrenByParent,
+        ),
+
+      [
+        childrenByParent,
+        rootCategories,
+      ],
+    );
+
+  /* =======================================================
+     ACTIVE CATEGORY
+     ======================================================= */
+
   const selectedCategory =
-    category ===
+    appliedFilters.category ===
     "all"
       ? null
       : categoryBySlug.get(
-          category,
+          appliedFilters.category,
         ) ??
         null;
 
-  /* =======================================================
-     ROOT CATEGORY
-     ======================================================= */
-
   const activeRootCategory =
-    useMemo(
-      () => {
-        if (
-          !selectedCategory
-        ) {
-          return null;
-        }
+    selectedCategory
+      ? categoryById.get(
+          getRootCategoryId(
+            selectedCategory.id,
+            categoryById,
+          ),
+        ) ??
+        null
+      : null;
 
-        let current =
-          selectedCategory;
-
-        const visited =
-          new Set<string>();
-
-        while (
-          current.parentId &&
-          !visited.has(
-            current.id,
+  const activeSubcategories =
+    activeRootCategory
+      ? categoryOptions
+          .filter(
+            (
+              option,
+            ) =>
+              option.depth >
+                0 &&
+              getRootCategoryId(
+                option.category.id,
+                categoryById,
+              ) ===
+                activeRootCategory.id,
           )
-        ) {
-          visited.add(
-            current.id,
-          );
-
-          const parent =
-            categoryById.get(
-              current.parentId,
-            );
-
-          if (!parent) {
-            break;
-          }
-
-          current =
-            parent;
-        }
-
-        return current;
-      },
-
-      [
-        categoryById,
-        selectedCategory,
-      ],
-    );
+          .map(
+            (
+              option,
+            ) =>
+              option.category,
+          )
+      : [];
 
   /* =======================================================
-     ROOT DESCENDANTS
-     ======================================================= */
-
-  const activeRootDescendants =
-    useMemo(
-      () => {
-        if (
-          !activeRootCategory
-        ) {
-          return [];
-        }
-
-        const result:
-          ShopCategory[] =
-          [];
-
-        function walk(
-          parentId:
-            string,
-        ) {
-          const children =
-            childrenByParent.get(
-              parentId,
-            ) ??
-            [];
-
-          for (
-            const child
-            of children
-          ) {
-            result.push(
-              child,
-            );
-
-            walk(
-              child.id,
-            );
-          }
-        }
-
-        walk(
-          activeRootCategory.id,
-        );
-
-        return result;
-      },
-
-      [
-        activeRootCategory,
-        childrenByParent,
-      ],
-    );
-
-  /* =======================================================
-     CATEGORY FILTER IDS
-     ======================================================= */
-
-  const allowedCategoryIds =
-    useMemo(
-      () => {
-        if (
-          category ===
-          "all"
-        ) {
-          return null;
-        }
-
-        if (
-          !selectedCategory
-        ) {
-          return new Set<
-            string
-          >();
-        }
-
-        const ids =
-          new Set<string>();
-
-        function walk(
-          categoryId:
-            string,
-        ) {
-          if (
-            ids.has(
-              categoryId,
-            )
-          ) {
-            return;
-          }
-
-          ids.add(
-            categoryId,
-          );
-
-          const children =
-            childrenByParent.get(
-              categoryId,
-            ) ??
-            [];
-
-          for (
-            const child
-            of children
-          ) {
-            walk(
-              child.id,
-            );
-          }
-        }
-
-        walk(
-          selectedCategory.id,
-        );
-
-        return ids;
-      },
-
-      [
-        category,
-        childrenByParent,
-        selectedCategory,
-      ],
-    );
-
-  /* =======================================================
-     AVAILABLE SIZES
+     FILTER VALUES
      ======================================================= */
 
   const sizes =
@@ -851,9 +1114,6 @@ export function ShopClient({
                 {
                   numeric:
                     true,
-
-                  sensitivity:
-                    "base",
                 },
               ),
           ),
@@ -862,10 +1122,6 @@ export function ShopClient({
         products,
       ],
     );
-
-  /* =======================================================
-     AVAILABLE COLORS
-     ======================================================= */
 
   const colors =
     useMemo(
@@ -901,37 +1157,41 @@ export function ShopClient({
   const colorSwatches =
     useMemo(
       () => {
-        const swatches =
+        const map =
           new Map<
             string,
             string
           >();
 
-        for (
-          const product
-          of products
-        ) {
-          for (
-            const variant
-            of product.variants ??
+        products.forEach(
+          (
+            product,
+          ) => {
+            (
+              product.variants ??
               []
-          ) {
-            if (
-              variant.color &&
-              variant.colorHex &&
-              !swatches.has(
-                variant.color,
-              )
-            ) {
-              swatches.set(
-                variant.color,
-                variant.colorHex,
-              );
-            }
-          }
-        }
+            ).forEach(
+              (
+                variant,
+              ) => {
+                if (
+                  variant.color &&
+                  variant.colorHex &&
+                  !map.has(
+                    variant.color,
+                  )
+                ) {
+                  map.set(
+                    variant.color,
+                    variant.colorHex,
+                  );
+                }
+              },
+            );
+          },
+        );
 
-        return swatches;
+        return map;
       },
 
       [
@@ -939,33 +1199,22 @@ export function ShopClient({
       ],
     );
 
-  /* =======================================================
-     HIGHEST PRICE
-     ======================================================= */
-
   const highestPrice =
-    useMemo(
-      () =>
-        Math.ceil(
-          Math.max(
-            ...products.map(
-              (
-                product,
-              ) =>
-                product.price,
-            ),
-
-            0,
-          ),
+    Math.ceil(
+      Math.max(
+        ...products.map(
+          (
+            product,
+          ) =>
+            product.price,
         ),
 
-      [
-        products,
-      ],
+        0,
+      ),
     );
 
   /* =======================================================
-     ORIGINAL DATABASE ORDER
+     ORIGINAL PRODUCT ORDER
      ======================================================= */
 
   const originalOrder =
@@ -975,10 +1224,10 @@ export function ShopClient({
           products.map(
             (
               product,
-              productIndex,
+              index,
             ) => [
               product.id,
-              productIndex,
+              index,
             ],
           ),
         ),
@@ -989,311 +1238,234 @@ export function ShopClient({
     );
 
   /* =======================================================
-     FILTER PRODUCTS
+     APPLIED PRODUCTS
      ======================================================= */
 
+  const appliedAllowedCategories =
+    collectAllowedCategoryIds(
+      appliedFilters.category,
+      categoryBySlug,
+      childrenByParent,
+    );
+
   const filteredProducts =
-    useMemo(
-      () => {
-        const keyword =
-          deferredSearch
-            .trim()
-            .toLowerCase();
-
-        const result =
-          products.filter(
-            (
-              product,
-            ) => {
-              /* ===========================================
-                 SEARCH
-                 =========================================== */
-
-              const searchable =
-                [
-                  product.name,
-
-                  product.category,
-
-                  ...product.sizes,
-
-                  ...product.colors,
-
-                  ...(
-                    product.variants ??
-                    []
-                  ).flatMap(
-                    (
-                      variant,
-                    ) => [
-                      variant.sku,
-                      variant.size,
-                      variant.color,
-                    ],
-                  ),
-                ]
-                  .join(
-                    " ",
-                  )
-                  .toLowerCase();
-
-              const matchesSearch =
-                !keyword ||
-                searchable.includes(
-                  keyword,
-                );
-
-              /* ===========================================
-                 CATEGORY
-                 =========================================== */
-
-              const productCategories =
-                productCategoryMap[
-                  product.id
-                ] ??
-                [];
-
-              const matchesCategory =
-                allowedCategoryIds ===
-                null
-                  ? true
-                  : productCategories.some(
-                      (
-                        categoryId,
-                      ) =>
-                        allowedCategoryIds.has(
-                          categoryId,
-                        ),
-                    );
-
-              /* ===========================================
-                 STOCK
-                 =========================================== */
-
-              const matchesStock =
-                !onlyStock ||
-                product.stock >
-                  0;
-
-              /* ===========================================
-                 SIZE + COLOR COMBINATION
-
-                 Only show a product when an actual
-                 in-stock variant satisfies the
-                 selected size/color combination.
-                 =========================================== */
-
-              const needsVariantFilter =
-                size !==
-                  "all" ||
-                color !==
-                  "all";
-
-              const variants =
-                product.variants ??
-                [];
-
-              const matchesVariant =
-                !needsVariantFilter
-                  ? true
-                  : variants.some(
-                      (
-                        variant,
-                      ) =>
-                        variant.stock >
-                          0 &&
-                        (
-                          size ===
-                            "all" ||
-                          variant.size ===
-                            size
-                        ) &&
-                        (
-                          color ===
-                            "all" ||
-                          variant.color ===
-                            color
-                        ),
-                    );
-
-              /* ===========================================
-                 PRICE
-                 =========================================== */
-
-              const numericMaxPrice =
-                Number(
-                  maxPrice,
-                );
-
-              const matchesPrice =
-                !maxPrice ||
-                !Number.isFinite(
-                  numericMaxPrice,
-                ) ||
-                product.price <=
-                  numericMaxPrice;
-
-              /* ===========================================
-                 OFFERS
-                 =========================================== */
-
-              const matchesOffers =
-                !offersOnly ||
-                Boolean(
-                  product.oldPrice &&
-                    product.oldPrice >
-                      product.price,
-                );
-
-              return (
-                matchesSearch &&
-                matchesCategory &&
-                matchesStock &&
-                matchesVariant &&
-                matchesPrice &&
-                matchesOffers
-              );
-            },
-          );
-
-        /* ===============================================
-           SORTING
-           =============================================== */
-
-        result.sort(
-          (
-            first,
-            second,
-          ) => {
-            if (
-              sort ===
-              "low"
-            ) {
-              return (
-                first.price -
-                second.price
-              );
-            }
-
-            if (
-              sort ===
-              "high"
-            ) {
-              return (
-                second.price -
-                first.price
-              );
-            }
-
-            if (
-              sort ===
-              "newest"
-            ) {
-              return (
-                (
-                  originalOrder.get(
-                    first.id,
-                  ) ??
-                  0
-                ) -
-                (
-                  originalOrder.get(
-                    second.id,
-                  ) ??
-                  0
-                )
-              );
-            }
-
-            const featuredFirst =
-              first.badge ===
-              "FEATURED"
-                ? 1
-                : 0;
-
-            const featuredSecond =
-              second.badge ===
-              "FEATURED"
-                ? 1
-                : 0;
-
-            if (
-              featuredFirst !==
-              featuredSecond
-            ) {
-              return (
-                featuredSecond -
-                featuredFirst
-              );
-            }
-
-            return (
-              (
-                originalOrder.get(
-                  first.id,
-                ) ??
-                0
-              ) -
-              (
-                originalOrder.get(
-                  second.id,
-                ) ??
-                0
-              )
-            );
-          },
-        );
-
-        return result;
-      },
-
-      [
-        allowedCategoryIds,
-        color,
-        deferredSearch,
-        maxPrice,
-        offersOnly,
-        onlyStock,
-        originalOrder,
-        productCategoryMap,
+    sortProducts(
+      filterProducts(
         products,
-        size,
-        sort,
-      ],
+        productCategoryMap,
+        appliedAllowedCategories,
+        appliedFilters,
+        appliedQuery,
+      ),
+
+      appliedSort,
+      originalOrder,
     );
 
   /* =======================================================
-     FILTER COUNTS
+     DRAFT / LIVE FILTER COUNT
      ======================================================= */
 
-  const activeFiltersCount =
-    [
-      category !==
-        "all",
+  const draftAllowedCategories =
+    collectAllowedCategoryIds(
+      draftFilters.category,
+      categoryBySlug,
+      childrenByParent,
+    );
 
-      size !==
-        "all",
-
-      color !==
-        "all",
-
-      Boolean(
-        maxPrice,
-      ),
-
-      onlyStock,
-
-      offersOnly,
-    ].filter(
-      Boolean,
+  const draftResultCount =
+    filterProducts(
+      products,
+      productCategoryMap,
+      draftAllowedCategories,
+      draftFilters,
+      appliedQuery,
     ).length;
 
-  const hasRefinements =
+  /* =======================================================
+     GROUPED DEFAULT VIEW
+     ======================================================= */
+
+  const hasAppliedFilters =
     Boolean(
-      search.trim(),
+      appliedQuery.trim(),
     ) ||
-    activeFiltersCount >
+    appliedFilters.category !==
+      "all" ||
+    appliedFilters.sizes.length >
+      0 ||
+    appliedFilters.colors.length >
+      0 ||
+    Boolean(
+      appliedFilters.maxPrice,
+    ) ||
+    appliedFilters.onlyStock ||
+    appliedFilters.offersOnly;
+
+  const rootOrder =
+    new Map(
+      rootCategories.map(
+        (
+          category,
+          index,
+        ) => [
+          category.id,
+          index,
+        ],
+      ),
+    );
+
+  function productRootId(
+    product:
+      Product,
+  ) {
+    const primaryCategoryId =
+      primaryCategoryMap[
+        product.id
+      ];
+
+    if (
+      primaryCategoryId
+    ) {
+      return getRootCategoryId(
+        primaryCategoryId,
+        categoryById,
+      );
+    }
+
+    const assigned =
+      productCategoryMap[
+        product.id
+      ] ??
+      [];
+
+    const rootIds = [
+      ...new Set(
+        assigned.map(
+          (
+            categoryId,
+          ) =>
+            getRootCategoryId(
+              categoryId,
+              categoryById,
+            ),
+        ),
+      ),
+    ];
+
+    rootIds.sort(
+      (
+        first,
+        second,
+      ) =>
+        (
+          rootOrder.get(
+            first,
+          ) ??
+          9999
+        ) -
+        (
+          rootOrder.get(
+            second,
+          ) ??
+          9999
+        ),
+    );
+
+    return (
+      rootIds[0] ??
+      null
+    );
+  }
+
+  const allSortedProducts =
+    sortProducts(
+      products,
+      appliedSort,
+      originalOrder,
+    );
+
+  const categorySections =
+    rootCategories
+      .map(
+        (
+          category,
+          index,
+        ) => {
+          const sectionProducts =
+            allSortedProducts.filter(
+              (
+                product,
+              ) =>
+                productRootId(
+                  product,
+                ) ===
+                category.id,
+            );
+
+          return {
+            category,
+
+            index,
+
+            products:
+              sectionProducts,
+
+            visible:
+              sectionProducts.slice(
+                0,
+                Math.min(
+                  CATEGORY_PRODUCT_LIMIT,
+                  Math.max(
+                    4,
+                    itemsPerPage,
+                  ),
+                ),
+              ),
+          };
+        },
+      )
+      .filter(
+        (
+          section,
+        ) =>
+          section.products.length >
+          0,
+      );
+
+  const showGroupedView =
+    !hasAppliedFilters &&
+    categorySections.length >
       0;
+
+  /* =======================================================
+     COUNTS
+     ======================================================= */
+
+  const appliedFilterCount =
+    (
+      appliedFilters.category !==
+      "all"
+        ? 1
+        : 0
+    ) +
+    appliedFilters.sizes.length +
+    appliedFilters.colors.length +
+    (
+      appliedFilters.maxPrice
+        ? 1
+        : 0
+    ) +
+    (
+      appliedFilters.onlyStock
+        ? 1
+        : 0
+    ) +
+    (
+      appliedFilters.offersOnly
+        ? 1
+        : 0
+    );
 
   const visibleProducts =
     filteredProducts.slice(
@@ -1302,63 +1474,352 @@ export function ShopClient({
     );
 
   /* =======================================================
-     ACTIONS
+     NAVIGATION
      ======================================================= */
 
-  function selectCategory(
+  function navigate(
+    update:
+      (
+        params:
+          URLSearchParams,
+      ) => void,
+  ) {
+    const params =
+      new URLSearchParams(
+        searchParams.toString(),
+      );
+
+    update(
+      params,
+    );
+
+    const query =
+      params.toString();
+
+    window.location.assign(
+      query
+        ? `${pathname}?${query}`
+        : pathname,
+    );
+  }
+
+  /* =======================================================
+     SEARCH
+     ======================================================= */
+
+  function submitSearch(
+    event:
+      FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    navigate(
+      (
+        params,
+      ) => {
+        const value =
+          searchDraft.trim();
+
+        if (
+          value
+        ) {
+          params.set(
+            "q",
+            value,
+          );
+        } else {
+          params.delete(
+            "q",
+          );
+        }
+      },
+    );
+  }
+
+  /* =======================================================
+     CATEGORY QUICK NAVIGATION
+     ======================================================= */
+
+  function applyCategory(
     slug:
       string,
   ) {
-    setCategory(
-      slug,
+    navigate(
+      (
+        params,
+      ) => {
+        if (
+          slug ===
+          "all"
+        ) {
+          params.delete(
+            "category",
+          );
+        } else {
+          params.set(
+            "category",
+            slug,
+          );
+        }
+      },
     );
   }
 
-  function resetFilters() {
-    setCategory(
-      "all",
-    );
+  /* =======================================================
+     SORT
+     ======================================================= */
 
-    setSize(
-      "all",
-    );
-
-    setColor(
-      "all",
-    );
-
-    setMaxPrice(
-      "",
-    );
-
-    setOnlyStock(
-      false,
-    );
-
-    setOffersOnly(
-      false,
+  function applySort(
+    value:
+      string,
+  ) {
+    navigate(
+      (
+        params,
+      ) => {
+        if (
+          value ===
+          "featured"
+        ) {
+          params.delete(
+            "sort",
+          );
+        } else {
+          params.set(
+            "sort",
+            value,
+          );
+        }
+      },
     );
   }
 
-  function clearEverything() {
-    setSearch(
-      "",
-    );
+  /* =======================================================
+     OPEN FILTERS
+     ======================================================= */
 
-    setSort(
-      "featured",
-    );
+  function openFilters() {
+    setDraftFilters({
+      ...appliedFilters,
 
-    resetFilters();
+      sizes: [
+        ...appliedFilters.sizes,
+      ],
+
+      colors: [
+        ...appliedFilters.colors,
+      ],
+    });
+
+    setFiltersOpen(
+      true,
+    );
   }
+
+  /* =======================================================
+     APPLY DRAFT FILTERS
+     ======================================================= */
+
+  function showProducts() {
+    const params =
+      new URLSearchParams(
+        searchParams.toString(),
+      );
+
+    if (
+      draftFilters.category ===
+      "all"
+    ) {
+      params.delete(
+        "category",
+      );
+    } else {
+      params.set(
+        "category",
+        draftFilters.category,
+      );
+    }
+
+    if (
+      draftFilters.sizes.length
+    ) {
+      params.set(
+        "size",
+        draftFilters.sizes.join(
+          ",",
+        ),
+      );
+    } else {
+      params.delete(
+        "size",
+      );
+    }
+
+    if (
+      draftFilters.colors.length
+    ) {
+      params.set(
+        "color",
+        draftFilters.colors.join(
+          ",",
+        ),
+      );
+    } else {
+      params.delete(
+        "color",
+      );
+    }
+
+    if (
+      draftFilters.maxPrice
+    ) {
+      params.set(
+        "max",
+        draftFilters.maxPrice,
+      );
+    } else {
+      params.delete(
+        "max",
+      );
+    }
+
+    if (
+      draftFilters.onlyStock
+    ) {
+      params.set(
+        "stock",
+        "1",
+      );
+    } else {
+      params.delete(
+        "stock",
+      );
+    }
+
+    if (
+      draftFilters.offersOnly
+    ) {
+      params.set(
+        "offers",
+        "1",
+      );
+    } else {
+      params.delete(
+        "offers",
+      );
+    }
+
+    const query =
+      params.toString();
+
+    window.location.assign(
+      query
+        ? `${pathname}?${query}`
+        : pathname,
+    );
+  }
+
+  function resetDraftFilters() {
+    setDraftFilters({
+      category:
+        "all",
+
+      sizes:
+        [],
+
+      colors:
+        [],
+
+      maxPrice:
+        "",
+
+      onlyStock:
+        false,
+
+      offersOnly:
+        false,
+    });
+  }
+
+  function clearAllApplied() {
+    navigate(
+      (
+        params,
+      ) => {
+        [
+          "q",
+          "category",
+          "size",
+          "color",
+          "max",
+          "stock",
+          "offers",
+        ].forEach(
+          (
+            key,
+          ) =>
+            params.delete(
+              key,
+            ),
+        );
+      },
+    );
+  }
+
+  function removeAppliedListValue(
+    key:
+      "size" | "color",
+
+    value:
+      string,
+  ) {
+    navigate(
+      (
+        params,
+      ) => {
+        const values =
+          parseList(
+            params.get(
+              key,
+            ),
+          ).filter(
+            (
+              item,
+            ) =>
+              item !==
+              value,
+          );
+
+        if (
+          values.length
+        ) {
+          params.set(
+            key,
+            values.join(
+              ",",
+            ),
+          );
+        } else {
+          params.delete(
+            key,
+          );
+        }
+      },
+    );
+  }
+
+  /* =======================================================
+     COLLECTION TITLE
+     ======================================================= */
 
   const collectionTitle =
-    selectedCategory
-      ?.name ??
+    selectedCategory?.name ??
     (
-      offersOnly
+      appliedFilters.offersOnly
         ? "Offers"
-        : "All Products"
+        : appliedQuery
+          ? `Search Results`
+          : "All Products"
     );
 
   /* =======================================================
@@ -1368,144 +1829,154 @@ export function ShopClient({
   return (
     <>
       {/* ===================================================
-          DISCOVERY + FILTER CONTROLS
+          DISCOVERY
           =================================================== */}
 
-      <section className="premium-shop-controls">
-        <div className="container premium-shop-controls-inner">
-          {/* ===============================================
-              CATEGORY HEADING
-              =============================================== */}
+      <section className={styles.discovery}>
+        <div className={`container ${styles.discoveryInner}`}>
+          <div className={styles.discoveryHeading}>
+            <div>
+              <span>
+                Shop Game On Garb
+              </span>
 
-          <div className="premium-shop-control-heading">
-            <span>
-              Shop by Category
-            </span>
+              <h2>
+                Find Your Style
+              </h2>
+            </div>
 
-            <small>
-              {
-                products.length
-              }{" "}
-              styles available
-            </small>
+            <p>
+              Browse by category,
+              search products or
+              refine by size,
+              colour and price.
+            </p>
           </div>
 
           {/* ===============================================
-              ROOT CATEGORIES
+              CATEGORY NAV
               =============================================== */}
 
-          <div
-            className="premium-shop-categories"
-            aria-label="Product categories"
-          >
-            <CategoryButton
-              active={
-                category ===
+          <div className={styles.categoryNav}>
+            <button
+              type="button"
+              className={`${styles.categoryButton} ${
+                appliedFilters.category ===
                 "all"
-              }
+                  ? styles.categoryActive
+                  : ""
+              }`}
               onClick={() =>
-                selectCategory(
+                applyCategory(
                   "all",
                 )
               }
             >
               All
-            </CategoryButton>
+            </button>
 
             {rootCategories.map(
               (
-                item,
+                category,
               ) => (
-                <CategoryButton
+                <button
                   key={
-                    item.id
+                    category.id
                   }
-                  active={
+                  type="button"
+                  className={`${styles.categoryButton} ${
                     activeRootCategory
                       ?.id ===
-                      item.id
-                  }
+                    category.id
+                      ? styles.categoryActive
+                      : ""
+                  }`}
                   onClick={() =>
-                    selectCategory(
-                      item.slug,
+                    applyCategory(
+                      category.slug,
                     )
                   }
                 >
                   {
-                    item.name
+                    category.name
                   }
-                </CategoryButton>
+                </button>
               ),
             )}
           </div>
 
           {/* ===============================================
-              SUBCATEGORIES
+              SUBCATEGORY NAV
               =============================================== */}
 
           {activeRootCategory &&
-          activeRootDescendants.length >
+          activeSubcategories.length >
             0 ? (
-            <div className="premium-shop-subcategory-wrap">
+            <div className={styles.subcategoryNav}>
               <span>
                 {
                   activeRootCategory.name
                 }
               </span>
 
-              <div className="premium-shop-subcategories">
-                <CategoryButton
-                  active={
-                    category ===
-                    activeRootCategory
-                      .slug
-                  }
-                  onClick={() =>
-                    selectCategory(
-                      activeRootCategory.slug,
-                    )
-                  }
-                >
-                  All{" "}
-                  {
-                    activeRootCategory.name
-                  }
-                </CategoryButton>
+              <button
+                type="button"
+                className={
+                  appliedFilters.category ===
+                  activeRootCategory.slug
+                    ? styles.subcategoryActive
+                    : ""
+                }
+                onClick={() =>
+                  applyCategory(
+                    activeRootCategory.slug,
+                  )
+                }
+              >
+                All
+              </button>
 
-                {activeRootDescendants.map(
-                  (
-                    item,
-                  ) => (
-                    <CategoryButton
-                      key={
-                        item.id
-                      }
-                      active={
-                        category ===
-                        item.slug
-                      }
-                      onClick={() =>
-                        selectCategory(
-                          item.slug,
-                        )
-                      }
-                    >
-                      {
-                        item.name
-                      }
-                    </CategoryButton>
-                  ),
-                )}
-              </div>
+              {activeSubcategories.map(
+                (
+                  category,
+                ) => (
+                  <button
+                    key={
+                      category.id
+                    }
+                    type="button"
+                    className={
+                      appliedFilters.category ===
+                      category.slug
+                        ? styles.subcategoryActive
+                        : ""
+                    }
+                    onClick={() =>
+                      applyCategory(
+                        category.slug,
+                      )
+                    }
+                  >
+                    {
+                      category.name
+                    }
+                  </button>
+                ),
+              )}
             </div>
           ) : null}
 
           {/* ===============================================
-              SEARCH + SHOP ACTIONS
+              SEARCH + TOOLS
               =============================================== */}
 
-          <div className="premium-shop-discovery-row">
-            <label className="premium-shop-search">
+          <div className={styles.toolsRow}>
+            <form
+              className={styles.search}
+              onSubmit={
+                submitSearch
+              }
+            >
               <Search
                 size={18}
                 strokeWidth={
@@ -1516,56 +1987,60 @@ export function ShopClient({
               <input
                 type="search"
                 value={
-                  search
+                  searchDraft
                 }
+                placeholder="Search polo, jersey, trouser, SKU..."
                 aria-label="Search products"
-                placeholder="Search product, category, SKU, size..."
                 onChange={(
                   event,
                 ) =>
-                  setSearch(
-                    event
-                      .target
+                  setSearchDraft(
+                    event.target
                       .value,
                   )
                 }
               />
 
-              {search ? (
+              {searchDraft ? (
                 <button
                   type="button"
+                  className={styles.searchClear}
                   aria-label="Clear search"
                   onClick={() =>
-                    setSearch(
+                    setSearchDraft(
                       "",
                     )
                   }
                 >
                   <X
-                    size={16}
+                    size={15}
                   />
                 </button>
               ) : null}
-            </label>
 
-            <div className="premium-shop-discovery-actions">
-              {/* ===========================================
-                  SORT
-                  =========================================== */}
+              <button
+                type="submit"
+                className={styles.searchButton}
+              >
+                Search
+              </button>
+            </form>
 
-              <div className="premium-shop-select-wrap">
+            <div className={styles.toolActions}>
+              <label className={styles.sortWrap}>
+                <span>
+                  Sort
+                </span>
+
                 <select
                   value={
-                    sort
+                    appliedSort
                   }
-                  aria-label="Sort products"
-                  className="premium-shop-sort-select"
                   onChange={(
                     event,
                   ) =>
-                    setSort(
-                      event
-                        .target
+                    applySort(
+                      event.target
                         .value,
                     )
                   }
@@ -1588,58 +2063,46 @@ export function ShopClient({
                 </select>
 
                 <ChevronDown
-                  size={15}
+                  size={14}
                 />
-              </div>
-
-              {/* ===========================================
-                  FILTER DRAWER
-                  =========================================== */}
+              </label>
 
               <button
                 type="button"
-                className={`premium-shop-filter-button ${
-                  activeFiltersCount >
+                className={`${styles.filterButton} ${
+                  appliedFilterCount >
                   0
-                    ? "has-filters"
+                    ? styles.filterButtonActive
                     : ""
                 }`}
-                onClick={() =>
-                  setFiltersOpen(
-                    true,
-                  )
+                onClick={
+                  openFilters
                 }
               >
                 <SlidersHorizontal
                   size={17}
                 />
 
-                <span>
-                  Filter
-                </span>
+                Filters
 
-                {activeFiltersCount >
+                {appliedFilterCount >
                 0 ? (
                   <b>
                     {
-                      activeFiltersCount
+                      appliedFilterCount
                     }
                   </b>
                 ) : null}
               </button>
 
-              {/* ===========================================
-                  GRID VIEW
-                  =========================================== */}
-
-              <div className="premium-shop-view-switch">
+              <div className={styles.viewSwitch}>
                 <button
                   type="button"
                   aria-label="Standard grid"
                   className={
                     gridMode ===
                     "grid"
-                      ? "is-active"
+                      ? styles.viewActive
                       : ""
                   }
                   onClick={() =>
@@ -1659,7 +2122,7 @@ export function ShopClient({
                   className={
                     gridMode ===
                     "compact"
-                      ? "is-active"
+                      ? styles.viewActive
                       : ""
                   }
                   onClick={() =>
@@ -1677,93 +2140,132 @@ export function ShopClient({
           </div>
 
           {/* ===============================================
-              ACTIVE FILTERS
+              APPLIED FILTER CHIPS
               =============================================== */}
 
-          {hasRefinements ? (
-            <div className="premium-shop-active-filters">
-              <span className="premium-shop-active-label">
-                Active
+          {hasAppliedFilters ? (
+            <div className={styles.activeFilters}>
+              <span>
+                Applied
               </span>
 
-              {search ? (
-                <ActiveFilter
-                  label={`Search: ${search}`}
+              {appliedQuery ? (
+                <FilterPill
+                  label={`Search: ${appliedQuery}`}
                   onRemove={() =>
-                    setSearch(
-                      "",
+                    navigate(
+                      (
+                        params,
+                      ) =>
+                        params.delete(
+                          "q",
+                        ),
                     )
                   }
                 />
               ) : null}
 
               {selectedCategory ? (
-                <ActiveFilter
+                <FilterPill
                   label={
                     selectedCategory.name
                   }
                   onRemove={() =>
-                    setCategory(
-                      "all",
+                    navigate(
+                      (
+                        params,
+                      ) =>
+                        params.delete(
+                          "category",
+                        ),
                     )
                   }
                 />
               ) : null}
 
-              {size !==
-              "all" ? (
-                <ActiveFilter
-                  label={`Size: ${size}`}
-                  onRemove={() =>
-                    setSize(
-                      "all",
-                    )
-                  }
-                />
-              ) : null}
+              {appliedFilters.sizes.map(
+                (
+                  value,
+                ) => (
+                  <FilterPill
+                    key={`size-${value}`}
+                    label={`Size ${value}`}
+                    onRemove={() =>
+                      removeAppliedListValue(
+                        "size",
+                        value,
+                      )
+                    }
+                  />
+                ),
+              )}
 
-              {color !==
-              "all" ? (
-                <ActiveFilter
-                  label={`Color: ${color}`}
-                  onRemove={() =>
-                    setColor(
-                      "all",
-                    )
-                  }
-                />
-              ) : null}
+              {appliedFilters.colors.map(
+                (
+                  value,
+                ) => (
+                  <FilterPill
+                    key={`color-${value}`}
+                    label={
+                      value
+                    }
+                    onRemove={() =>
+                      removeAppliedListValue(
+                        "color",
+                        value,
+                      )
+                    }
+                  />
+                ),
+              )}
 
-              {maxPrice ? (
-                <ActiveFilter
+              {appliedFilters.maxPrice ? (
+                <FilterPill
                   label={`Up to ৳${Number(
-                    maxPrice,
-                  ).toLocaleString()}`}
+                    appliedFilters.maxPrice,
+                  ).toLocaleString(
+                    "en-BD",
+                  )}`}
                   onRemove={() =>
-                    setMaxPrice(
-                      "",
+                    navigate(
+                      (
+                        params,
+                      ) =>
+                        params.delete(
+                          "max",
+                        ),
                     )
                   }
                 />
               ) : null}
 
-              {onlyStock ? (
-                <ActiveFilter
+              {appliedFilters.onlyStock ? (
+                <FilterPill
                   label="In stock"
                   onRemove={() =>
-                    setOnlyStock(
-                      false,
+                    navigate(
+                      (
+                        params,
+                      ) =>
+                        params.delete(
+                          "stock",
+                        ),
                     )
                   }
                 />
               ) : null}
 
-              {offersOnly ? (
-                <ActiveFilter
+              {appliedFilters.offersOnly ? (
+                <FilterPill
                   label="Offers"
                   onRemove={() =>
-                    setOffersOnly(
-                      false,
+                    navigate(
+                      (
+                        params,
+                      ) =>
+                        params.delete(
+                          "offers",
+                        ),
                     )
                   }
                 />
@@ -1771,9 +2273,9 @@ export function ShopClient({
 
               <button
                 type="button"
-                className="premium-shop-clear-all"
+                className={styles.clearAll}
                 onClick={
-                  clearEverything
+                  clearAllApplied
                 }
               >
                 Clear all
@@ -1784,125 +2286,192 @@ export function ShopClient({
       </section>
 
       {/* ===================================================
-          PRODUCT COLLECTION
+          GROUPED CATEGORY SHOP
           =================================================== */}
 
-      <section className="container premium-shop-main">
-        <div className="premium-shop-results-heading">
-          <div>
-            <span>
-              Shop Collection
-            </span>
+      {showGroupedView ? (
+        <section className={`container ${styles.categorySections}`}>
+          {categorySections.map(
+            (
+              section,
+              sectionIndex,
+            ) => (
+              <section
+                key={
+                  section.category.id
+                }
+                className={styles.categorySection}
+              >
+                <div className={styles.sectionHeading}>
+                  <div>
+                    <span>
+                      {String(
+                        sectionIndex +
+                          1,
+                      ).padStart(
+                        2,
+                        "0",
+                      )}{" "}
+                      / Collection
+                    </span>
 
-            <h2>
-              {
-                collectionTitle
-              }
-            </h2>
-          </div>
+                    <h2>
+                      {
+                        section.category.name
+                      }
+                    </h2>
 
-          <p>
-            Showing{" "}
-            <strong>
-              {
-                visibleProducts.length
-              }
-            </strong>{" "}
-            of{" "}
-            <strong>
-              {
-                filteredProducts.length
-              }
-            </strong>{" "}
-            products
-          </p>
-        </div>
+                    {section.category.description ? (
+                      <p>
+                        {
+                          section.category.description
+                        }
+                      </p>
+                    ) : null}
+                  </div>
 
-        {filteredProducts.length >
-        0 ? (
-          <>
-            <div
-              className={`premium-shop-grid ${
-                gridMode ===
-                "compact"
-                  ? "is-compact"
-                  : ""
-              }`}
-            >
-              {visibleProducts.map(
-                (
-                  product,
-                ) => (
-                  <ProductCard
-                    key={
-                      product.id
+                  <button
+                    type="button"
+                    className={styles.viewCategory}
+                    onClick={() =>
+                      applyCategory(
+                        section.category.slug,
+                      )
                     }
-                    product={
-                      product
+                  >
+                    View All{" "}
+                    {
+                      section.products.length
                     }
-                  />
-                ),
-              )}
-            </div>
 
-            {filteredProducts.length >
-            visibleCount ? (
-              <div className="premium-shop-pagination">
-                <button
-                  type="button"
-                  className="premium-shop-load-more"
-                  onClick={() =>
-                    setVisibleCount(
-                      (
-                        current,
-                      ) =>
-                        current +
-                        itemsPerPage,
-                    )
+                    <span>
+                      ↗
+                    </span>
+                  </button>
+                </div>
+
+                <ProductGrid
+                  products={
+                    section.visible
                   }
-                >
-                  Load More Products
+                  compact={
+                    gridMode ===
+                    "compact"
+                  }
+                />
+              </section>
+            ),
+          )}
+        </section>
+      ) : (
+        /* =================================================
+           FILTERED / SEARCH RESULTS
+           ================================================= */
 
-                  <span>
-                    +
-                  </span>
-                </button>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="premium-shop-empty">
-            <div className="premium-shop-empty-icon">
-              <Search
-                size={27}
-              />
+        <section className={`container ${styles.results}`}>
+          <div className={styles.resultsHeading}>
+            <div>
+              <span>
+                Shop Collection
+              </span>
+
+              <h2>
+                {
+                  collectionTitle
+                }
+              </h2>
             </div>
-
-            <span>
-              No Match
-            </span>
-
-            <h2>
-              No products found
-            </h2>
 
             <p>
-              Try another search,
-              category or filter.
+              Showing{" "}
+              <strong>
+                {
+                  visibleProducts.length
+                }
+              </strong>{" "}
+              of{" "}
+              <strong>
+                {
+                  filteredProducts.length
+                }
+              </strong>{" "}
+              products
             </p>
-
-            <button
-              type="button"
-              className="premium-shop-empty-reset"
-              onClick={
-                clearEverything
-              }
-            >
-              View All Products
-            </button>
           </div>
-        )}
-      </section>
+
+          {filteredProducts.length >
+          0 ? (
+            <>
+              <ProductGrid
+                products={
+                  visibleProducts
+                }
+                compact={
+                  gridMode ===
+                  "compact"
+                }
+              />
+
+              {visibleCount <
+              filteredProducts.length ? (
+                <div className={styles.loadMoreWrap}>
+                  <button
+                    type="button"
+                    className={styles.loadMore}
+                    onClick={() =>
+                      setVisibleCount(
+                        (
+                          current,
+                        ) =>
+                          current +
+                          itemsPerPage,
+                      )
+                    }
+                  >
+                    Load More Products
+
+                    <span>
+                      +
+                    </span>
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className={styles.empty}>
+              <div>
+                <Search
+                  size={26}
+                />
+              </div>
+
+              <span>
+                No Match
+              </span>
+
+              <h2>
+                No products found
+              </h2>
+
+              <p>
+                Try another
+                category, size,
+                colour or price
+                range.
+              </p>
+
+              <button
+                type="button"
+                onClick={
+                  clearAllApplied
+                }
+              >
+                View All Products
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ===================================================
           FILTER DRAWER
@@ -1910,7 +2479,7 @@ export function ShopClient({
 
       {filtersOpen ? (
         <div
-          className="premium-filter-overlay"
+          className={styles.filterOverlay}
           role="presentation"
           onMouseDown={() =>
             setFiltersOpen(
@@ -1919,7 +2488,7 @@ export function ShopClient({
           }
         >
           <aside
-            className="premium-filter-drawer"
+            className={styles.filterDrawer}
             role="dialog"
             aria-modal="true"
             aria-labelledby="shop-filter-title"
@@ -1929,17 +2498,26 @@ export function ShopClient({
               event.stopPropagation()
             }
           >
-            <div className="premium-filter-header">
+            <header className={styles.filterHeader}>
               <div>
                 <span>
-                  Refine
+                  Refine Your Shop
                 </span>
 
                 <h2
                   id="shop-filter-title"
                 >
-                  Shop Filters
+                  Filter Products
                 </h2>
+
+                <p>
+                  {
+                    draftResultCount
+                  }{" "}
+                  products match
+                  your current
+                  selection.
+                </p>
               </div>
 
               <button
@@ -1952,199 +2530,284 @@ export function ShopClient({
                 }
               >
                 <X
-                  size={19}
+                  size={18}
                 />
               </button>
-            </div>
+            </header>
 
-            <div className="premium-filter-body">
+            <div className={styles.filterBody}>
               {/* ===========================================
                   CATEGORY
                   =========================================== */}
 
-              <FilterSection title="Category">
-                <div className="premium-filter-size-grid">
-                  <FilterChip
-                    active={
-                      category ===
+              <FilterAccordion
+                title="Category"
+                value={
+                  draftFilters.category ===
+                  "all"
+                    ? "All"
+                    : categoryBySlug.get(
+                        draftFilters.category,
+                      )?.name ??
+                      "Selected"
+                }
+                defaultOpen
+              >
+                <div className={styles.radioList}>
+                  <RadioRow
+                    checked={
+                      draftFilters.category ===
                       "all"
                     }
-                    onClick={() =>
-                      setCategory(
-                        "all",
+                    label="All Categories"
+                    onChange={() =>
+                      setDraftFilters(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
+
+                          category:
+                            "all",
+                        }),
                       )
                     }
-                  >
-                    All
-                  </FilterChip>
+                  />
 
-                  {rootCategories.map(
+                  {categoryOptions.map(
                     (
-                      item,
+                      option,
                     ) => (
-                      <FilterChip
+                      <RadioRow
                         key={
-                          item.id
+                          option.category.id
                         }
-                        active={
-                          activeRootCategory
-                            ?.id ===
-                          item.id
+                        checked={
+                          draftFilters.category ===
+                          option.category.slug
                         }
-                        onClick={() =>
-                          setCategory(
-                            item.slug,
+                        label={`${option.depth ? `${"— ".repeat(option.depth)}` : ""}${option.category.name}`}
+                        onChange={() =>
+                          setDraftFilters(
+                            (
+                              current,
+                            ) => ({
+                              ...current,
+
+                              category:
+                                option.category.slug,
+                            }),
                           )
                         }
-                      >
-                        {
-                          item.name
-                        }
-                      </FilterChip>
+                      />
                     ),
                   )}
                 </div>
-              </FilterSection>
+              </FilterAccordion>
 
               {/* ===========================================
                   SIZE
                   =========================================== */}
 
-              <FilterSection title="Size">
-                <div className="premium-filter-size-grid">
-                  <FilterChip
-                    active={
-                      size ===
-                      "all"
-                    }
-                    onClick={() =>
-                      setSize(
-                        "all",
-                      )
-                    }
-                  >
-                    All
-                  </FilterChip>
-
+              <FilterAccordion
+                title="Size"
+                value={
+                  draftFilters.sizes.length
+                    ? `${draftFilters.sizes.length} selected`
+                    : "Any"
+                }
+              >
+                <div className={styles.sizeGrid}>
                   {sizes.map(
                     (
                       value,
-                    ) => (
-                      <FilterChip
-                        key={
-                          value
-                        }
-                        active={
-                          size ===
-                          value
-                        }
-                        onClick={() =>
-                          setSize(
-                            value,
-                          )
-                        }
-                      >
-                        {
-                          value
-                        }
-                      </FilterChip>
-                    ),
-                  )}
-                </div>
-              </FilterSection>
+                    ) => {
+                      const checked =
+                        draftFilters.sizes.includes(
+                          value,
+                        );
 
-              {/* ===========================================
-                  COLOR
-                  =========================================== */}
+                      return (
+                        <label
+                          key={
+                            value
+                          }
+                          className={`${styles.sizeCheck} ${
+                            checked
+                              ? styles.sizeCheckActive
+                              : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              checked
+                            }
+                            onChange={() =>
+                              setDraftFilters(
+                                (
+                                  current,
+                                ) => ({
+                                  ...current,
 
-              <FilterSection title="Color">
-                <div className="premium-filter-color-list">
-                  <button
-                    type="button"
-                    className={`premium-filter-color-option ${
-                      color ===
-                      "all"
-                        ? "is-active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      setColor(
-                        "all",
-                      )
-                    }
-                  >
-                    <span className="premium-filter-color-all" />
+                                  sizes:
+                                    toggleValue(
+                                      current.sizes,
+                                      value,
+                                    ),
+                                }),
+                              )
+                            }
+                          />
 
-                    <span>
-                      All Colors
-                    </span>
-
-                    {color ===
-                    "all" ? (
-                      <Check
-                        size={14}
-                      />
-                    ) : null}
-                  </button>
-
-                  {colors.map(
-                    (
-                      value,
-                    ) => (
-                      <button
-                        type="button"
-                        key={
-                          value
-                        }
-                        className={`premium-filter-color-option ${
-                          color ===
-                          value
-                            ? "is-active"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setColor(
-                            value,
-                          )
-                        }
-                      >
-                        <span
-                          className="premium-filter-color-dot"
-                          style={{
-                            background:
-                              colorSwatches.get(
-                                value,
-                              ) ??
-                              value,
-                          }}
-                        />
-
-                        <span>
                           {
                             value
                           }
-                        </span>
-
-                        {color ===
-                        value ? (
-                          <Check
-                            size={14}
-                          />
-                        ) : null}
-                      </button>
-                    ),
+                        </label>
+                      );
+                    },
                   )}
                 </div>
-              </FilterSection>
+              </FilterAccordion>
+
+              {/* ===========================================
+                  COLOUR
+                  =========================================== */}
+
+              <FilterAccordion
+                title="Colour"
+                value={
+                  draftFilters.colors.length
+                    ? `${draftFilters.colors.length} selected`
+                    : "Any"
+                }
+              >
+                <div className={styles.checkList}>
+                  {colors.map(
+                    (
+                      value,
+                    ) => {
+                      const checked =
+                        draftFilters.colors.includes(
+                          value,
+                        );
+
+                      return (
+                        <label
+                          key={
+                            value
+                          }
+                          className={styles.checkRow}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              checked
+                            }
+                            onChange={() =>
+                              setDraftFilters(
+                                (
+                                  current,
+                                ) => ({
+                                  ...current,
+
+                                  colors:
+                                    toggleValue(
+                                      current.colors,
+                                      value,
+                                    ),
+                                }),
+                              )
+                            }
+                          />
+
+                          <span className={styles.checkBox}>
+                            {checked ? (
+                              <Check
+                                size={11}
+                              />
+                            ) : null}
+                          </span>
+
+                          <span
+                            className={styles.colorDot}
+                            style={{
+                              background:
+                                colorSwatches.get(
+                                  value,
+                                ) ??
+                                value,
+                            }}
+                          />
+
+                          <span className={styles.checkLabel}>
+                            {
+                              value
+                            }
+                          </span>
+                        </label>
+                      );
+                    },
+                  )}
+                </div>
+              </FilterAccordion>
 
               {/* ===========================================
                   PRICE
                   =========================================== */}
 
-              <FilterSection title="Price">
-                <label className="premium-filter-price">
+              <FilterAccordion
+                title="Price"
+                value={
+                  draftFilters.maxPrice
+                    ? `Up to ৳${Number(
+                        draftFilters.maxPrice,
+                      ).toLocaleString(
+                        "en-BD",
+                      )}`
+                    : "Any"
+                }
+              >
+                <div className={styles.pricePresets}>
+                  {PRICE_PRESETS.map(
+                    (
+                      preset,
+                    ) => (
+                      <button
+                        key={
+                          preset.label
+                        }
+                        type="button"
+                        className={
+                          draftFilters.maxPrice ===
+                          preset.value
+                            ? styles.pricePresetActive
+                            : ""
+                        }
+                        onClick={() =>
+                          setDraftFilters(
+                            (
+                              current,
+                            ) => ({
+                              ...current,
+
+                              maxPrice:
+                                preset.value,
+                            }),
+                          )
+                        }
+                      >
+                        {
+                          preset.label
+                        }
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                <label className={styles.customPrice}>
                   <span>
-                    Maximum price
+                    Custom maximum
                   </span>
 
                   <div>
@@ -2159,7 +2822,7 @@ export function ShopClient({
                         highestPrice
                       }
                       value={
-                        maxPrice
+                        draftFilters.maxPrice
                       }
                       placeholder={
                         highestPrice
@@ -2171,88 +2834,99 @@ export function ShopClient({
                       onChange={(
                         event,
                       ) =>
-                        setMaxPrice(
-                          event
-                            .target
-                            .value,
+                        setDraftFilters(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            maxPrice:
+                              event.target
+                                .value,
+                          }),
                         )
                       }
                     />
                   </div>
                 </label>
-              </FilterSection>
+              </FilterAccordion>
 
               {/* ===========================================
                   AVAILABILITY
                   =========================================== */}
 
-              <FilterSection title="Availability">
-                <div className="premium-filter-checkbox-list">
-                  <label className="premium-filter-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={
-                        onlyStock
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        setOnlyStock(
-                          event
-                            .target
-                            .checked,
-                        )
-                      }
-                    />
+              <FilterAccordion
+                title="Availability & Offers"
+                value={
+                  draftFilters.onlyStock ||
+                  draftFilters.offersOnly
+                    ? "Filtered"
+                    : "Any"
+                }
+                defaultOpen
+              >
+                <div className={styles.checkList}>
+                  <CheckRow
+                    checked={
+                      draftFilters.onlyStock
+                    }
+                    label="In stock only"
+                    description="Hide products that are currently sold out."
+                    onChange={() =>
+                      setDraftFilters(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
 
-                    <span className="premium-filter-checkmark">
-                      <Check
-                        size={11}
-                      />
-                    </span>
+                          onlyStock:
+                            !current.onlyStock,
+                        }),
+                      )
+                    }
+                  />
 
-                    <span>
-                      In stock only
-                    </span>
-                  </label>
+                  <CheckRow
+                    checked={
+                      draftFilters.offersOnly
+                    }
+                    label="Discounted / offers"
+                    description="Show products with an active reduced price."
+                    onChange={() =>
+                      setDraftFilters(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
 
-                  <label className="premium-filter-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={
-                        offersOnly
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        setOffersOnly(
-                          event
-                            .target
-                            .checked,
-                        )
-                      }
-                    />
-
-                    <span className="premium-filter-checkmark">
-                      <Check
-                        size={11}
-                      />
-                    </span>
-
-                    <span>
-                      Offers only
-                    </span>
-                  </label>
+                          offersOnly:
+                            !current.offersOnly,
+                        }),
+                      )
+                    }
+                  />
                 </div>
-              </FilterSection>
+
+                <div className={styles.bdCheckoutNote}>
+                  Cash on Delivery
+                  and bKash options
+                  are available at
+                  checkout according
+                  to store settings.
+                </div>
+              </FilterAccordion>
             </div>
 
-            <div className="premium-filter-footer">
+            {/* =============================================
+                FILTER FOOTER
+                ============================================= */}
+
+            <footer className={styles.filterFooter}>
               <button
                 type="button"
-                className="premium-filter-reset"
+                className={styles.resetButton}
                 onClick={
-                  resetFilters
+                  resetDraftFilters
                 }
               >
                 Reset
@@ -2260,20 +2934,18 @@ export function ShopClient({
 
               <button
                 type="button"
-                className="premium-filter-apply"
-                onClick={() =>
-                  setFiltersOpen(
-                    false,
-                  )
+                className={styles.showProductsButton}
+                onClick={
+                  showProducts
                 }
               >
-                View{" "}
+                Show{" "}
                 {
-                  filteredProducts.length
+                  draftResultCount
                 }{" "}
                 Products
               </button>
-            </div>
+            </footer>
           </aside>
         </div>
       ) : null}
@@ -2282,50 +2954,50 @@ export function ShopClient({
 }
 
 /* =========================================================
-   CATEGORY BUTTON
+   PRODUCT GRID
    ========================================================= */
 
-function CategoryButton({
-  active,
-  onClick,
-  children,
+function ProductGrid({
+  products,
+  compact,
 }: {
-  active:
+  products:
+    Product[];
+
+  compact:
     boolean;
-
-  onClick:
-    () => void;
-
-  children:
-    ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={
-        active
-      }
-      className={`premium-shop-category-chip ${
-        active
-          ? "is-active"
+    <div
+      className={`${styles.productGrid} ${
+        compact
+          ? styles.productGridCompact
           : ""
       }`}
-      onClick={
-        onClick
-      }
     >
-      {
-        children
-      }
-    </button>
+      {products.map(
+        (
+          product,
+        ) => (
+          <ProductCard
+            key={
+              product.id
+            }
+            product={
+              product
+            }
+          />
+        ),
+      )}
+    </div>
   );
 }
 
 /* =========================================================
-   ACTIVE FILTER
+   FILTER PILL
    ========================================================= */
 
-function ActiveFilter({
+function FilterPill({
   label,
   onRemove,
 }: {
@@ -2338,89 +3010,204 @@ function ActiveFilter({
   return (
     <button
       type="button"
-      className="premium-shop-active-chip"
+      className={styles.filterPill}
       onClick={
         onRemove
       }
     >
-      <span>
-        {
-          label
-        }
-      </span>
+      {
+        label
+      }
 
       <X
-        size={12}
+        size={11}
       />
     </button>
   );
 }
 
 /* =========================================================
-   FILTER SECTION
+   FILTER ACCORDION
    ========================================================= */
 
-function FilterSection({
+function FilterAccordion({
   title,
+  value,
+  defaultOpen = false,
   children,
 }: {
   title:
     string;
 
+  value:
+    string;
+
+  defaultOpen?:
+    boolean;
+
   children:
     ReactNode;
 }) {
-  return (
-    <section className="premium-filter-section">
-      <div className="premium-filter-section-title">
-        {
-          title
-        }
-      </div>
+  const [
+    open,
+    setOpen,
+  ] =
+    useState(
+      defaultOpen,
+    );
 
-      {
-        children
-      }
+  return (
+    <section className={styles.filterAccordion}>
+      <button
+        type="button"
+        className={styles.filterAccordionButton}
+        aria-expanded={
+          open
+        }
+        onClick={() =>
+          setOpen(
+            (
+              current,
+            ) =>
+              !current,
+          )
+        }
+      >
+        <span>
+          <strong>
+            {
+              title
+            }
+          </strong>
+
+          <small>
+            {
+              value
+            }
+          </small>
+        </span>
+
+        <ChevronDown
+          size={16}
+          className={
+            open
+              ? styles.chevronOpen
+              : ""
+          }
+        />
+      </button>
+
+      {open ? (
+        <div className={styles.filterAccordionContent}>
+          {
+            children
+          }
+        </div>
+      ) : null}
     </section>
   );
 }
 
 /* =========================================================
-   FILTER CHIP
+   RADIO ROW
    ========================================================= */
 
-function FilterChip({
-  active,
-  onClick,
-  children,
+function RadioRow({
+  checked,
+  label,
+  onChange,
 }: {
-  active:
+  checked:
     boolean;
 
-  onClick:
-    () => void;
+  label:
+    string;
 
-  children:
-    ReactNode;
+  onChange:
+    () => void;
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={
-        active
-      }
-      className={`premium-filter-chip ${
-        active
-          ? "is-active"
-          : ""
-      }`}
-      onClick={
-        onClick
-      }
-    >
-      {
-        children
-      }
-    </button>
+    <label className={styles.radioRow}>
+      <input
+        type="radio"
+        checked={
+          checked
+        }
+        onChange={
+          onChange
+        }
+      />
+
+      <span className={styles.radioCircle}>
+        {checked ? (
+          <span />
+        ) : null}
+      </span>
+
+      <span>
+        {
+          label
+        }
+      </span>
+    </label>
+  );
+}
+
+/* =========================================================
+   SIMPLE COLOUR CHECK ROW
+   ========================================================= */
+
+function CheckRow({
+  checked,
+  label,
+  description,
+  onChange,
+}: {
+  checked:
+    boolean;
+
+  label:
+    string;
+
+  description:
+    string;
+
+  onChange:
+    () => void;
+}) {
+  return (
+    <label className={styles.checkRow}>
+      <input
+        type="checkbox"
+        checked={
+          checked
+        }
+        onChange={
+          onChange
+        }
+      />
+
+      <span className={styles.checkBox}>
+        {checked ? (
+          <Check
+            size={11}
+          />
+        ) : null}
+      </span>
+
+      <span className={styles.checkText}>
+        <strong>
+          {
+            label
+          }
+        </strong>
+
+        <small>
+          {
+            description
+          }
+        </small>
+      </span>
+    </label>
   );
 }
