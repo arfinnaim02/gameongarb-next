@@ -249,49 +249,205 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  border: 1px solid #2f332f;
-  border-radius: 10px;
-  background: #171918;
+  gap: 20px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid #2c302c;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      #141615 0%,
+      #1d201e 100%
+    );
   color: #fff;
+  box-shadow:
+    0 12px 30px
+    rgb(0 0 0 / 10%);
 }
 
-.bulkBar > div:first-child {
+.bulkSummary {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  min-width: 190px;
 }
 
-.bulkBar span {
-  color: #bfc3bf;
-  font-size: 12px;
+.bulkCount {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 1px solid
+    rgb(255 255 255 / 12%);
+  border-radius: 10px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.bulkSummary > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bulkSummary strong {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.bulkSummary span {
+  color: #aeb4ae;
+  font-size: 10px;
 }
 
 .bulkActions {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 7px;
+  flex-wrap: wrap;
+}
+
+.bulkStatusSelect {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding-left: 11px;
+  border: 1px solid
+    rgb(255 255 255 / 14%);
+  border-radius: 8px;
+  background:
+    rgb(255 255 255 / 7%);
+  color: #c9cec9;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.bulkStatusSelect:focus-within {
+  border-color:
+    rgb(255 126 28 / 70%);
+  background:
+    rgb(255 255 255 / 10%);
+}
+
+.bulkStatusSelect select {
+  min-width: 178px;
+  height: 36px;
+  padding: 0 30px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.bulkStatusSelect select option {
+  background: #fff;
+  color: #171918;
+}
+
+.bulkStatusSelect select:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .bulkActions button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid rgb(255 255 255 / 16%);
-  border-radius: 6px;
-  background: rgb(255 255 255 / 8%);
-  color: #fff;
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 750;
+  transition:
+    transform 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.bulkActions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.bulkApplyButton {
+  border: 1px solid
+    var(--orange) !important;
+  background:
+    var(--orange) !important;
+  color: #fff !important;
+}
+
+.bulkApplyButton:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+
+.bulkExportButton {
+  border: 1px solid
+    rgb(255 255 255 / 16%) !important;
+  background:
+    rgb(255 255 255 / 8%) !important;
+  color: #fff !important;
+}
+
+.bulkClearButton {
+  border: 1px solid
+    rgb(255 255 255 / 12%) !important;
+  background:
+    transparent !important;
+  color: #aeb4ae !important;
 }
 
 .bulkActions button:disabled {
-  cursor: wait;
-  opacity: 0.55;
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+@media (max-width: 900px) {
+  .bulkBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bulkActions {
+    justify-content: flex-start;
+  }
+
+  .bulkStatusSelect {
+    flex: 1;
+    min-width: 210px;
+  }
+
+  .bulkStatusSelect select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .bulkActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bulkStatusSelect {
+    grid-column: 1 / -1;
+  }
+
+  .bulkApplyButton {
+    grid-column: 1 / -1;
+  }
 }
 
 .success,
