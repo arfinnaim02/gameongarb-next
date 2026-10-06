@@ -974,15 +974,38 @@ export function OrdersDashboard({
           },
         );
 
-      const result =
-        await response
-          .json()
-          .catch(
-            () => ({
-              error:
-                "Request failed.",
-            }),
-          );
+const responseText =
+  await response.text();
+
+let result: {
+  error?: string;
+  message?: string;
+  failed?: {
+    orderId: string;
+    orderNumber?: string;
+    reason?: string;
+  }[];
+  skipped?: {
+    orderId: string;
+    orderNumber?: string;
+    reason?: string;
+  }[];
+} = {};
+
+if (
+  responseText
+) {
+  try {
+    result =
+      JSON.parse(
+        responseText,
+      );
+  } catch {
+    throw new Error(
+      `Bulk courier request failed with HTTP ${response.status}.`,
+    );
+  }
+}
 
       if (
         !response.ok
