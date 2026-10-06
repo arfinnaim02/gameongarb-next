@@ -193,10 +193,11 @@
 
 .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(
-    4,
-    minmax(0, 1fr)
-  );
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -827,125 +828,6 @@
   line-height: 1.5;
 }
 
-@media (
-  max-width: 1100px
-) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    grid-template-columns:
-      1fr 1fr;
-  }
-}
-
-@media (
-  max-width: 850px
-) {
-  .summaryGrid {
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-  .sidebar {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (
-  max-width: 650px
-) {
-  .topbar,
-  .header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .topActions {
-    width: 100%;
-  }
-
-  .topActions button {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .statusAction select {
-    width: 100%;
-  }
-
-  .summaryGrid {
-    grid-template-columns:
-      1fr 1fr;
-  }
-
-  .summaryCard {
-    padding: 13px;
-  }
-
-  .summaryCard strong {
-    font-size: 16px;
-  }
-
-  .item {
-    grid-template-columns:
-      64px
-      1fr;
-  }
-
-  .itemImage {
-    width: 64px;
-    height: 70px;
-  }
-
-  .itemQty,
-  .itemPrice {
-    grid-column: 2;
-    text-align: left;
-  }
-
-  .itemQty {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .itemQty span,
-  .itemQty strong {
-    display: inline;
-    margin: 0;
-  }
-
-  .paymentSummary {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media print {
-  .topbar,
-  .statusAction,
-  .contactActions,
-  .notesFooter {
-    display: none !important;
-  }
-
-  .page {
-    background: #fff;
-  }
-
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .card,
-  .header,
-  .summaryCard {
-    break-inside: avoid;
-    box-shadow: none;
-  }
-}
-
 .courierProviderBadge {
   display: inline-flex;
   align-items: center;
@@ -1110,4 +992,125 @@
   margin-top: 4px;
   color: #aaa;
   font-size: 8px;
+}
+
+@media (
+  max-width: 1100px
+) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    grid-template-columns:
+      1fr 1fr;
+  }
+}
+
+@media (
+  max-width: 850px
+) {
+  .summaryGrid {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (
+  max-width: 650px
+) {
+  .topbar,
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .topActions {
+    width: 100%;
+  }
+
+  .topActions button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .statusAction select {
+    width: 100%;
+  }
+
+  .summaryGrid {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .summaryCard {
+    padding: 13px;
+  }
+
+  .summaryCard strong {
+    font-size: 16px;
+  }
+
+  .item {
+    grid-template-columns:
+      64px
+      1fr;
+  }
+
+  .itemImage {
+    width: 64px;
+    height: 70px;
+  }
+
+  .itemQty,
+  .itemPrice {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .itemQty {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .itemQty span,
+  .itemQty strong {
+    display: inline;
+    margin: 0;
+  }
+
+  .paymentSummary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .topbar,
+  .statusAction,
+  .contactActions,
+  .notesFooter,
+  .courierPrimaryButton,
+  .courierDisabledButton {
+    display: none !important;
+  }
+
+  .page {
+    background: #fff;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .header,
+  .summaryCard {
+    break-inside: avoid;
+    box-shadow: none;
+  }
 }

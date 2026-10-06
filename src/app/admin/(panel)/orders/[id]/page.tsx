@@ -358,91 +358,145 @@ shipment: {
       ),
 
     shipment:
-  order.shipment
-    ? {
-        id:
-          order.shipment.id,
+      order.shipment
+        ? {
+            id:
+              order.shipment.id,
 
-        provider:
-          order.shipment
-            .provider,
+            provider:
+              order.shipment
+                .provider,
 
-        consignmentId:
-          order.shipment
-            .consignmentId,
+            consignmentId:
+              order.shipment
+                .consignmentId,
 
-        trackingId:
-          order.shipment
-            .trackingId,
+            trackingId:
+              order.shipment
+                .trackingId,
 
-        status:
-          order.shipment
-            .status,
+            status:
+              order.shipment
+                .status,
 
-        labelUrl:
-          order.shipment
-            .labelUrl,
+            labelUrl:
+              order.shipment
+                .labelUrl,
 
-        trackingUrl:
-          order.shipment
-            .trackingUrl,
+            trackingUrl:
+              order.shipment
+                .trackingUrl,
 
-        codAmount:
-          order.shipment
-            .codAmount
-            ? Number(
-                order.shipment
-                  .codAmount,
-              )
-            : null,
+            codAmount:
+              order.shipment
+                .codAmount
+                ? Number(
+                    order.shipment
+                      .codAmount,
+                  )
+                : null,
 
-        lastSyncedAt:
-          order.shipment
-            .lastSyncedAt
-            ?.toISOString() ??
-          null,
+            lastSyncedAt:
+              order.shipment
+                .lastSyncedAt
+                ?.toISOString() ??
+              null,
 
-        events:
-          order.shipment
-            .events
-            .map(
-              (
-                event,
-              ) => ({
-                id:
-                  event.id,
+            events:
+              order.shipment
+                .events
+                .map(
+                  (
+                    event,
+                  ) => ({
+                    id:
+                      event.id,
 
-                status:
-                  event.status,
+                    status:
+                      event.status,
 
-                message:
-                  event.message,
+                    message:
+                      event.message,
 
-                source:
-                  event.source,
+                    source:
+                      event.source,
 
-                externalAt:
-                  event.externalAt
-                    ?.toISOString() ??
-                  null,
+                    externalAt:
+                      event.externalAt
+                        ?.toISOString() ??
+                      null,
 
-                createdAt:
-                  event.createdAt
-                    .toISOString(),
-              }),
-            ),
+                    createdAt:
+                      event.createdAt
+                        .toISOString(),
+                  }),
+                ),
 
-        createdAt:
-          order.shipment
-            .createdAt
-            .toISOString(),
+            createdAt:
+              order.shipment
+                .createdAt
+                .toISOString(),
 
-        updatedAt:
-          order.shipment
-            .updatedAt
-            .toISOString(),
-      }
-    : null,
+            updatedAt:
+              order.shipment
+                .updatedAt
+                .toISOString(),
+          }
+        : null,
+
+    customerHistory: {
+      totalOrders:
+        customerOrders.length,
+
+      previousOrders:
+        previousOrders.length,
+
+      delivered:
+        deliveredOrders.length,
+
+      cancelled:
+        cancelledOrders.length,
+
+      failedDelivery:
+        failedOrders.length,
+
+      returned:
+        returnedOrders.length,
+
+      deliveredValue,
+
+      recentOrders:
+        previousOrders
+          .slice(
+            0,
+            5,
+          )
+          .map(
+            (
+              customerOrder,
+            ) => ({
+              id:
+                customerOrder.id,
+
+              number:
+                customerOrder.number,
+
+              total:
+                Number(
+                  customerOrder.total,
+                ),
+
+              status:
+                customerOrder.status,
+
+              paymentMethod:
+                customerOrder.paymentMethod,
+
+              createdAt:
+                customerOrder.createdAt.toISOString(),
+            }),
+          ),
+    },
 
     risk: {
       status:
