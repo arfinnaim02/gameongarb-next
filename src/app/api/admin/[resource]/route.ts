@@ -1039,12 +1039,21 @@ if (resource === "orders") {
     "/account/orders",
   );
 
-  return ok(
-    "Order status updated",
-  );
-},
-      { status: 404 },
-    );
+return ok(
+  "Order status updated",
+);
+}
+
+return NextResponse.json(
+  {
+    error:
+      "Unsupported resource",
+  },
+  {
+    status:
+      404,
+  },
+);
   } catch (error) {
     return fail(error);
   }
