@@ -253,57 +253,66 @@ type PaymentData = {
 
 
 type ShipmentData = {
-
-  id: string;
-
-
+  id:
+    string;
 
   provider:
-
     string;
-
-
 
   consignmentId:
-
     string |
-
     null;
-
-
 
   trackingId:
-
     string |
-
     null;
-
-
 
   status:
-
     string;
-
-
 
   labelUrl:
-
     string |
-
     null;
 
+  trackingUrl:
+    string |
+    null;
 
+  codAmount:
+    number |
+    null;
+
+  lastSyncedAt:
+    string |
+    null;
+
+  events: {
+    id:
+      string;
+
+    status:
+      string |
+      null;
+
+    message:
+      string;
+
+    source:
+      string;
+
+    externalAt:
+      string |
+      null;
+
+    createdAt:
+      string;
+  }[];
 
   createdAt:
-
     string;
-
-
 
   updatedAt:
-
     string;
-
 };
 
 
@@ -898,6 +907,18 @@ export function OrderDetailClient({
 
     );
 
+    const [
+  courierBusy,
+  setCourierBusy,
+] =
+  useState<
+    "send" |
+    "refresh" |
+    null
+  >(
+    null,
+  );
+
 
 
   const [
@@ -942,6 +963,48 @@ export function OrderDetailClient({
 
     [];
 
+    const courierBookingReady =
+  data.order.status ===
+    "READY_TO_SHIP" ||
+  data.order.status ===
+    "SHIPPED";
+
+const unpaidBkash =
+  data.order
+    .paymentMethod ===
+    "BKASH" &&
+  data.order
+    .paymentStatus !==
+    "PAID";
+
+const failedSteadfastBooking =
+  data.shipment
+    ?.provider ===
+    "STEADFAST" &&
+  !data.shipment
+    .consignmentId &&
+  !data.shipment
+    .trackingId &&
+  data.shipment
+    .status ===
+    "booking_failed";
+
+const canSendToSteadfast =
+  courierBookingReady &&
+  !unpaidBkash &&
+  (
+    !data.shipment ||
+    failedSteadfastBooking
+  );
+
+const canRefreshSteadfast =
+  data.shipment
+    ?.provider ===
+    "STEADFAST" &&
+  Boolean(
+    data.shipment
+      .consignmentId,
+  );
 
 
   const itemQuantity =
@@ -1352,7 +1415,157 @@ const successRate =
 
   }
 
+async function sendToSteadfast() {
+  if (
+    !canSendToSteadfast
+  ) {
+    return;
+  }
 
+  if (
+    !window.confirm(
+      failedSteadfastBooking
+        ? "Retry sending this order to Steadfast?"
+        : "Send this order to Steadfast now?",
+    )
+  ) {
+    return;
+  }
+
+  setCourierBusy(
+    "send",
+  );
+
+  setMessage(
+    "",
+  );
+
+  setError(
+    "",
+  );
+
+  try {
+    const response =
+      await fetch(
+        `/api/admin/orders/${data.order.id}/steadfast`,
+        {
+          method:
+            "POST",
+        },
+      );
+
+    const result =
+      await response
+        .json()
+        .catch(
+          () => ({
+            error:
+              "Request failed.",
+          }),
+        );
+
+    if (
+      !response.ok
+    ) {
+      throw new Error(
+        result.error ??
+          "Unable to send order to Steadfast.",
+      );
+    }
+
+    setMessage(
+      result.message ??
+        "Order sent to Steadfast.",
+    );
+
+    router.refresh();
+  } catch (
+    caught
+  ) {
+    setError(
+      caught instanceof
+        Error
+        ? caught.message
+        : "Unable to send order to Steadfast.",
+    );
+
+    router.refresh();
+  } finally {
+    setCourierBusy(
+      null,
+    );
+  }
+}
+
+async function refreshSteadfastStatus() {
+  if (
+    !canRefreshSteadfast
+  ) {
+    return;
+  }
+
+  setCourierBusy(
+    "refresh",
+  );
+
+  setMessage(
+    "",
+  );
+
+  setError(
+    "",
+  );
+
+  try {
+    const response =
+      await fetch(
+        `/api/admin/orders/${data.order.id}/steadfast/status`,
+        {
+          method:
+            "POST",
+        },
+      );
+
+    const result =
+      await response
+        .json()
+        .catch(
+          () => ({
+            error:
+              "Request failed.",
+          }),
+        );
+
+    if (
+      !response.ok
+    ) {
+      throw new Error(
+        result.error ??
+          "Unable to refresh courier status.",
+      );
+    }
+
+    setMessage(
+      result.message ??
+        "Courier status refreshed.",
+    );
+
+    router.refresh();
+  } catch (
+    caught
+  ) {
+    setError(
+      caught instanceof
+        Error
+        ? caught.message
+        : "Unable to refresh courier status.",
+    );
+  } finally {
+    setCourierBusy(
+      null,
+    );
+  }
+}
 
   const whatsapp =
 

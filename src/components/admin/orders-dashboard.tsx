@@ -476,122 +476,120 @@ const STATUS_TABS = [
 
 
 
+const EDITABLE_ORDER_STATUSES = [
+  "NEW",
+  "CONFIRMED",
+  "PACKING",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURN_REQUESTED",
+  "RETURNED",
+  "FAILED_DELIVERY",
+];
+
 const TRANSITIONS:
-
   Record<
-
     string,
-
     string[]
-
   > = {
+  NEW:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "NEW",
+    ),
 
-  NEW: [
+  CONFIRMED:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "CONFIRMED",
+    ),
 
-    "CONFIRMED",
+  PACKING:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "PACKING",
+    ),
 
-    "CANCELLED",
+  READY_TO_SHIP:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "READY_TO_SHIP",
+    ),
 
-  ],
+  SHIPPED:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "SHIPPED",
+    ),
 
+  CANCELLED:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "CANCELLED",
+    ),
 
+  RETURN_REQUESTED:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "RETURN_REQUESTED",
+    ),
 
-  CONFIRMED: [
+  RETURNED:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "RETURNED",
+    ),
 
-    "PACKING",
+  FAILED_DELIVERY:
+    EDITABLE_ORDER_STATUSES.filter(
+      (
+        status,
+      ) =>
+        status !==
+        "FAILED_DELIVERY",
+    ),
 
-    "CANCELLED",
-
-  ],
-
-
-
-  PACKING: [
-
-    "READY_TO_SHIP",
-
-    "CANCELLED",
-
-  ],
-
-
-
-  READY_TO_SHIP: [
-
-    "SHIPPED",
-
-    "CANCELLED",
-
-  ],
-
-
-
-  SHIPPED: [
-
-    "DELIVERED",
-
-    "FAILED_DELIVERY",
-
-    "RETURN_REQUESTED",
-
-  ],
-
-
-
-  DELIVERED: [
-
-    "RETURN_REQUESTED",
-
-  ],
-
-
-
-  RETURN_REQUESTED: [
-
-    "RETURNED",
-
-  ],
-
-
-
-  FAILED_DELIVERY: [
-
-    "RETURNED",
-
-  ],
-
-
-
-  CANCELLED: [],
-
-
-
-  RETURNED: [],
-
+  DELIVERED: [],
 };
 
 
-
 const BULK_STATUS_OPTIONS = [
-
+  "NEW",
   "CONFIRMED",
-
   "PACKING",
-
   "READY_TO_SHIP",
-
   "SHIPPED",
-
   "DELIVERED",
-
   "CANCELLED",
-
   "FAILED_DELIVERY",
-
   "RETURN_REQUESTED",
-
   "RETURNED",
-
 ] as const;
 
 

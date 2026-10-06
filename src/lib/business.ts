@@ -591,65 +591,40 @@ export function categoryMoveIsValid(
    ORDER STATUS
    ========================================================= */
 
-const transitions:
-  Record<
-    string,
-    string[]
-  > = {
-  NEW: [
-    "CONFIRMED",
-    "CANCELLED",
-  ],
-
-  CONFIRMED: [
-    "PACKING",
-    "CANCELLED",
-  ],
-
-  PACKING: [
-    "READY_TO_SHIP",
-    "CANCELLED",
-  ],
-
-  READY_TO_SHIP: [
-    "SHIPPED",
-    "CANCELLED",
-  ],
-
-  SHIPPED: [
-    "DELIVERED",
-    "FAILED_DELIVERY",
-    "RETURN_REQUESTED",
-  ],
-
-  DELIVERED: [
-    "RETURN_REQUESTED",
-  ],
-
-  RETURN_REQUESTED: [
-    "RETURNED",
-  ],
-
-  FAILED_DELIVERY: [
-    "RETURNED",
-  ],
-
-  CANCELLED: [],
-
-  RETURNED: [],
-};
+const ORDER_STATUSES = [
+  "NEW",
+  "CONFIRMED",
+  "PACKING",
+  "READY_TO_SHIP",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "RETURN_REQUESTED",
+  "RETURNED",
+  "FAILED_DELIVERY",
+] as const;
 
 export function canTransition(
   from: string,
   to: string,
 ) {
-  return (
-    transitions[
-      from
-    ]?.includes(
-      to,
-    ) ??
-    false
+  if (
+    from ===
+    "DELIVERED"
+  ) {
+    return false;
+  }
+
+  if (
+    from ===
+    to
+  ) {
+    return false;
+  }
+
+  return ORDER_STATUSES.includes(
+    to as
+      (typeof ORDER_STATUSES)[number],
   );
 }
 

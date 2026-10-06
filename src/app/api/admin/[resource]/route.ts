@@ -859,10 +859,12 @@ if (resource === "orders") {
          RESTORE INVENTORY ON CANCELLATION
          =================================================== */
 
-      if (
-        nextStatus ===
-        "CANCELLED"
-      ) {
+        if (
+          nextStatus ===
+            "CANCELLED" &&
+          order.status !==
+            "CANCELLED"
+        ) {
         /*
          * Combine quantities by variant.
          *
@@ -969,6 +971,127 @@ if (resource === "orders") {
           });
         }
       }
+
+
+      /* ===================================================
+   RE-DEDUCT INVENTORY WHEN REOPENING CANCELLED ORDER
+   =================================================== */
+
+if (
+  order.status ===
+    "CANCELLED" &&
+  nextStatus !==
+    "CANCELLED"
+) {
+  const quantityByVariant =
+    new Map<
+      string,
+      number
+    >();
+
+  for (
+    const item
+    of order.items
+  ) {
+    if (
+      !item.variantId
+    ) {
+      continue;
+    }
+
+    quantityByVariant.set(
+      item.variantId,
+      (
+        quantityByVariant.get(
+          item.variantId,
+        ) ??
+        0
+      ) +
+        item.quantity,
+    );
+  }
+
+  for (
+    const [
+      variantId,
+      quantity,
+    ]
+    of quantityByVariant
+  ) {
+    const variant =
+      await tx.productVariant.findUniqueOrThrow(
+        {
+          where: {
+            id:
+              variantId,
+          },
+
+          select: {
+            id:
+              true,
+
+            stock:
+              true,
+          },
+        },
+      );
+
+    if (
+      variant.stock <
+      quantity
+    ) {
+      throw new Error(
+        `Cannot reopen ${order.number}. Not enough stock is available.`,
+      );
+    }
+
+    const afterQuantity =
+      variant.stock -
+      quantity;
+
+    await tx.productVariant.update({
+      where: {
+        id:
+          variant.id,
+      },
+
+      data: {
+        stock: {
+          decrement:
+            quantity,
+        },
+      },
+    });
+
+    await tx.inventoryTransaction.create({
+      data: {
+        variantId:
+          variant.id,
+
+        quantityChange:
+          -quantity,
+
+        beforeQuantity:
+          variant.stock,
+
+        afterQuantity,
+
+        type:
+          "CORRECTION",
+
+        reference:
+          order.number,
+
+        reason:
+          `Order reopened from CANCELLED to ${nextStatus}`,
+
+        createdById:
+          auth.id,
+      },
+    });
+  }
+}
+
 
       /* ===================================================
          UPDATE ORDER + HISTORY

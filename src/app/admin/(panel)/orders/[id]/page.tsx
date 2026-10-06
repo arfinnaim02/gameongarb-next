@@ -69,8 +69,19 @@ export default async function AdminOrderDetail({
           },
         },
 
-        shipment:
-          true,
+shipment: {
+  include: {
+    events: {
+      orderBy: {
+        createdAt:
+          "desc",
+      },
+
+      take:
+        10,
+    },
+  },
+},
       },
     });
 
@@ -347,87 +358,91 @@ export default async function AdminOrderDetail({
       ),
 
     shipment:
-      order.shipment
-        ? {
-            id:
-              order.shipment.id,
+  order.shipment
+    ? {
+        id:
+          order.shipment.id,
 
-            provider:
-              order.shipment.provider,
+        provider:
+          order.shipment
+            .provider,
 
-            consignmentId:
-              order.shipment.consignmentId,
+        consignmentId:
+          order.shipment
+            .consignmentId,
 
-            trackingId:
-              order.shipment.trackingId,
+        trackingId:
+          order.shipment
+            .trackingId,
 
-            status:
-              order.shipment.status,
+        status:
+          order.shipment
+            .status,
 
-            labelUrl:
-              order.shipment.labelUrl,
+        labelUrl:
+          order.shipment
+            .labelUrl,
 
-            createdAt:
-              order.shipment.createdAt.toISOString(),
+        trackingUrl:
+          order.shipment
+            .trackingUrl,
 
-            updatedAt:
-              order.shipment.updatedAt.toISOString(),
-          }
-        : null,
+        codAmount:
+          order.shipment
+            .codAmount
+            ? Number(
+                order.shipment
+                  .codAmount,
+              )
+            : null,
 
-    customerHistory: {
-      totalOrders:
-        customerOrders.length,
+        lastSyncedAt:
+          order.shipment
+            .lastSyncedAt
+            ?.toISOString() ??
+          null,
 
-      previousOrders:
-        previousOrders.length,
+        events:
+          order.shipment
+            .events
+            .map(
+              (
+                event,
+              ) => ({
+                id:
+                  event.id,
 
-      delivered:
-        deliveredOrders.length,
+                status:
+                  event.status,
 
-      cancelled:
-        cancelledOrders.length,
+                message:
+                  event.message,
 
-      failedDelivery:
-        failedOrders.length,
+                source:
+                  event.source,
 
-      returned:
-        returnedOrders.length,
+                externalAt:
+                  event.externalAt
+                    ?.toISOString() ??
+                  null,
 
-      deliveredValue,
+                createdAt:
+                  event.createdAt
+                    .toISOString(),
+              }),
+            ),
 
-      recentOrders:
-        previousOrders
-          .slice(
-            0,
-            5,
-          )
-          .map(
-            (
-              customerOrder,
-            ) => ({
-              id:
-                customerOrder.id,
+        createdAt:
+          order.shipment
+            .createdAt
+            .toISOString(),
 
-              number:
-                customerOrder.number,
-
-              total:
-                Number(
-                  customerOrder.total,
-                ),
-
-              status:
-                customerOrder.status,
-
-              paymentMethod:
-                customerOrder.paymentMethod,
-
-              createdAt:
-                customerOrder.createdAt.toISOString(),
-            }),
-          ),
-    },
+        updatedAt:
+          order.shipment
+            .updatedAt
+            .toISOString(),
+      }
+    : null,
 
     risk: {
       status:
