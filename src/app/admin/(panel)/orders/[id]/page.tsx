@@ -1,186 +1,448 @@
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { formatBDT } from "@/lib/money";
-import { hasPermission } from "@/lib/business";
-import { requireAdmin } from "@/lib/session";
+import {
+  notFound,
+} from "next/navigation";
 
-export const dynamic = "force-dynamic";
+import {
+  OrderDetailClient,
+  type OrderDetailData,
+} from "@/components/admin/order-detail-client";
+
+import {
+  hasPermission,
+} from "@/lib/business";
+
+import {
+  db,
+} from "@/lib/db";
+
+import {
+  requireAdmin,
+} from "@/lib/session";
+
+export const dynamic =
+  "force-dynamic";
 
 export default async function AdminOrderDetail({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{
+    id: string;
+  }>;
 }) {
-  const { id } = await params;
-  const user = await requireAdmin();
-  if (!hasPermission(user.role, "orders")) notFound();
-  const order = await db.order.findUnique({
-    where: { id },
-    include: {
-      items: true,
-      history: { orderBy: { createdAt: "asc" } },
-      payments: { orderBy: { createdAt: "desc" } },
-      shipment: true,
-    },
-  });
-  if (!order) notFound();
-  return (
-    <>
-      <Link href="/admin/orders" className="muted" style={{ fontSize: 12 }}>
-        ← Back to orders
-      </Link>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 20,
-          alignItems: "start",
-          marginTop: 14,
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0 }}>{order.number}</h1>
-          <p className="muted">Placed {order.createdAt.toLocaleString()}</p>
-        </div>
-        <span
-          className={`badge ${order.status === "DELIVERED" ? "green" : order.status === "CANCELLED" ? "red" : "orange"}`}
-        >
-          {order.status}
-        </span>
-      </div>
-      <div
-        className="admin-dashboard-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0,1.4fr) minmax(280px,.6fr)",
-          gap: 18,
-        }}
-      >
-        <div style={{ display: "grid", gap: 18 }}>
-          <section className="card" style={{ padding: 20 }}>
-            <h2>Items</h2>
-            {order.items.map((item) => (
-              <article
-                key={item.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "64px 1fr auto",
-                  gap: 12,
-                  alignItems: "center",
-                  padding: "12px 0",
-                  borderBottom: "1px solid var(--line)",
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    width: 64,
-                    height: 70,
-                    background: "#f4f4f1",
-                  }}
-                >
-                  <Image
-                    src={item.image ?? "/images/products/tshirt.svg"}
-                    alt={item.name}
-                    fill
-                    style={{ objectFit: "contain" }}
-                  />
-                </div>
-                <div>
-                  <b>{item.name}</b>
-                  <small className="muted" style={{ display: "block" }}>
-                    {item.sku} · {item.color ?? "Default"} /{" "}
-                    {item.size ?? "One Size"} · Qty {item.quantity}
-                  </small>
-                </div>
-                <b>{formatBDT(Number(item.lineTotal))}</b>
-              </article>
-            ))}
-          </section>
-          <section className="card" style={{ padding: 20 }}>
-            <h2>Status History</h2>
-            {order.history.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "150px 1fr",
-                  gap: 12,
-                  padding: "10px 0",
-                  borderBottom: "1px solid var(--line)",
-                }}
-              >
-                <small className="muted">
-                  {event.createdAt.toLocaleString()}
-                </small>
-                <div>
-                  <b>
-                    {event.oldStatus ? `${event.oldStatus} → ` : ""}
-                    {event.newStatus}
-                  </b>
-                  <small className="muted" style={{ display: "block" }}>
-                    {event.note ?? event.source}
-                  </small>
-                </div>
-              </div>
-            ))}
-          </section>
-        </div>
-        <aside style={{ display: "grid", gap: 18 }}>
-          <section className="card" style={{ padding: 20 }}>
-            <h2>Customer</h2>
-            <b>{order.customerName}</b>
-            <p className="muted" style={{ lineHeight: 1.6 }}>
-              {order.phone}
-              <br />
-              {order.email ?? "No email"}
-              <br />
-              {order.shippingAddress}, {order.thana}, {order.district},{" "}
-              {order.division}
-            </p>
-          </section>
-          <section className="card" style={{ padding: 20 }}>
-            <h2>Totals</h2>
-            <Total label="Subtotal" value={Number(order.subtotal)} />
-            <Total label="Discount" value={-Number(order.discount)} />
-            <Total label="Delivery" value={Number(order.deliveryCharge)} />
-            <Total label="Total" value={Number(order.total)} strong />
-            <p className="muted" style={{ fontSize: 12 }}>
-              {order.paymentMethod} · {order.paymentStatus}
-            </p>
-          </section>
-        </aside>
-      </div>
-    </>
-  );
-}
+  const {
+    id,
+  } =
+    await params;
 
-function Total({
-  label,
-  value,
-  strong = false,
-}: {
-  label: string;
-  value: number;
-  strong?: boolean;
-}) {
+  const admin =
+    await requireAdmin();
+
+  if (
+    !hasPermission(
+      admin.role,
+      "orders",
+    )
+  ) {
+    notFound();
+  }
+
+  const order =
+    await db.order.findUnique({
+      where: {
+        id,
+      },
+
+      include: {
+        items: true,
+
+        history: {
+          orderBy: {
+            createdAt:
+              "asc",
+          },
+        },
+
+        payments: {
+          orderBy: {
+            createdAt:
+              "desc",
+          },
+        },
+
+        shipment:
+          true,
+      },
+    });
+
+  if (!order) {
+    notFound();
+  }
+
+  const customerOrders =
+    await db.order.findMany({
+      where: {
+        phone:
+          order.phone,
+      },
+
+      orderBy: {
+        createdAt:
+          "desc",
+      },
+
+      select: {
+        id:
+          true,
+
+        number:
+          true,
+
+        total:
+          true,
+
+        status:
+          true,
+
+        paymentMethod:
+          true,
+
+        createdAt:
+          true,
+      },
+    });
+
+  const previousOrders =
+    customerOrders.filter(
+      (
+        customerOrder,
+      ) =>
+        customerOrder.id !==
+        order.id,
+    );
+
+  const deliveredOrders =
+    customerOrders.filter(
+      (
+        customerOrder,
+      ) =>
+        customerOrder.status ===
+        "DELIVERED",
+    );
+
+  const cancelledOrders =
+    customerOrders.filter(
+      (
+        customerOrder,
+      ) =>
+        customerOrder.status ===
+        "CANCELLED",
+    );
+
+  const failedOrders =
+    customerOrders.filter(
+      (
+        customerOrder,
+      ) =>
+        customerOrder.status ===
+        "FAILED_DELIVERY",
+    );
+
+  const returnedOrders =
+    customerOrders.filter(
+      (
+        customerOrder,
+      ) =>
+        customerOrder.status ===
+          "RETURNED" ||
+        customerOrder.status ===
+          "RETURN_REQUESTED",
+    );
+
+  const deliveredValue =
+    deliveredOrders.reduce(
+      (
+        total,
+        customerOrder,
+      ) =>
+        total +
+        Number(
+          customerOrder.total,
+        ),
+      0,
+    );
+
+  const data:
+    OrderDetailData = {
+    order: {
+      id:
+        order.id,
+
+      number:
+        order.number,
+
+      status:
+        order.status,
+
+      paymentMethod:
+        order.paymentMethod,
+
+      paymentStatus:
+        order.paymentStatus,
+
+      customerName:
+        order.customerName,
+
+      phone:
+        order.phone,
+
+      email:
+        order.email,
+
+      division:
+        order.division,
+
+      district:
+        order.district,
+
+      thana:
+        order.thana,
+
+      shippingAddress:
+        order.shippingAddress,
+
+      subtotal:
+        Number(
+          order.subtotal,
+        ),
+
+      discount:
+        Number(
+          order.discount,
+        ),
+
+      deliveryCharge:
+        Number(
+          order.deliveryCharge,
+        ),
+
+      total:
+        Number(
+          order.total,
+        ),
+
+      couponCode:
+        order.couponCode,
+
+      internalNotes:
+        order.internalNotes ??
+        "",
+
+      createdAt:
+        order.createdAt.toISOString(),
+
+      updatedAt:
+        order.updatedAt.toISOString(),
+    },
+
+    items:
+      order.items.map(
+        (
+          item,
+        ) => ({
+          id:
+            item.id,
+
+          productId:
+            item.productId,
+
+          variantId:
+            item.variantId,
+
+          name:
+            item.name,
+
+          sku:
+            item.sku,
+
+          size:
+            item.size,
+
+          color:
+            item.color,
+
+          image:
+            item.image,
+
+          unitPrice:
+            Number(
+              item.unitPrice,
+            ),
+
+          quantity:
+            item.quantity,
+
+          lineTotal:
+            Number(
+              item.lineTotal,
+            ),
+        }),
+      ),
+
+    history:
+      order.history.map(
+        (
+          event,
+        ) => ({
+          id:
+            event.id,
+
+          oldStatus:
+            event.oldStatus,
+
+          newStatus:
+            event.newStatus,
+
+          changedBy:
+            event.changedBy,
+
+          note:
+            event.note,
+
+          source:
+            event.source,
+
+          createdAt:
+            event.createdAt.toISOString(),
+        }),
+      ),
+
+    payments:
+      order.payments.map(
+        (
+          payment,
+        ) => ({
+          id:
+            payment.id,
+
+          method:
+            payment.method,
+
+          status:
+            payment.status,
+
+          amount:
+            Number(
+              payment.amount,
+            ),
+
+          providerReference:
+            payment.providerReference,
+
+          createdAt:
+            payment.createdAt.toISOString(),
+
+          updatedAt:
+            payment.updatedAt.toISOString(),
+        }),
+      ),
+
+    shipment:
+      order.shipment
+        ? {
+            id:
+              order.shipment.id,
+
+            provider:
+              order.shipment.provider,
+
+            consignmentId:
+              order.shipment.consignmentId,
+
+            trackingId:
+              order.shipment.trackingId,
+
+            status:
+              order.shipment.status,
+
+            labelUrl:
+              order.shipment.labelUrl,
+
+            createdAt:
+              order.shipment.createdAt.toISOString(),
+
+            updatedAt:
+              order.shipment.updatedAt.toISOString(),
+          }
+        : null,
+
+    customerHistory: {
+      totalOrders:
+        customerOrders.length,
+
+      previousOrders:
+        previousOrders.length,
+
+      delivered:
+        deliveredOrders.length,
+
+      cancelled:
+        cancelledOrders.length,
+
+      failedDelivery:
+        failedOrders.length,
+
+      returned:
+        returnedOrders.length,
+
+      deliveredValue,
+
+      recentOrders:
+        previousOrders
+          .slice(
+            0,
+            5,
+          )
+          .map(
+            (
+              customerOrder,
+            ) => ({
+              id:
+                customerOrder.id,
+
+              number:
+                customerOrder.number,
+
+              total:
+                Number(
+                  customerOrder.total,
+                ),
+
+              status:
+                customerOrder.status,
+
+              paymentMethod:
+                customerOrder.paymentMethod,
+
+              createdAt:
+                customerOrder.createdAt.toISOString(),
+            }),
+          ),
+    },
+
+    risk: {
+      status:
+        "PENDING",
+
+      score:
+        null,
+    },
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "8px 0",
-        borderTop: strong ? "1px solid var(--line)" : undefined,
-        fontWeight: strong ? 800 : 400,
-      }}
-    >
-      <span>{label}</span>
-      <span>
-        {value < 0 ? "−" : ""}
-        {formatBDT(Math.abs(value))}
-      </span>
-    </div>
+    <OrderDetailClient
+      data={
+        data
+      }
+    />
   );
 }

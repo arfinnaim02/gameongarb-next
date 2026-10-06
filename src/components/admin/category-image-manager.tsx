@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import {
   ChangeEvent,
-  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -137,109 +136,164 @@ export function CategoryImageManager() {
         selectedId,
       ],
     );
+async function fetchCategories() {
+  const response =
+    await fetch(
+      "/api/admin/homepage/category-images",
+      {
+        method:
+          "GET",
 
-  const loadCategories =
-    useCallback(
-      async (
-        silent = false,
-      ) => {
-        if (silent) {
-          setRefreshing(
-            true,
-          );
-        } else {
-          setLoading(
-            true,
-          );
-        }
-
-        setError("");
-
-        try {
-          const response =
-            await fetch(
-              "/api/admin/homepage/category-images",
-              {
-                method:
-                  "GET",
-
-                cache:
-                  "no-store",
-              },
-            );
-
-          const result =
-            (await response.json()) as
-              | CategoryResponse
-              | {
-                  error?: string;
-                };
-
-          if (!response.ok) {
-            throw new Error(
-              "error" in
-                result &&
-                result.error
-                ? result.error
-                : "Unable to load categories.",
-            );
-          }
-
-          const next =
-            (
-              result as CategoryResponse
-            ).categories;
-
-          setCategories(
-            next,
-          );
-
-          if (
-            next.length >
-            0
-          ) {
-            const first =
-              next[0];
-
-            setSelectedId(
-              first.id,
-            );
-
-            setImage(
-              first.image ??
-                "",
-            );
-          } else {
-            setSelectedId(
-              "",
-            );
-
-            setImage("");
-          }
-        } catch (
-          caught
-        ) {
-          setError(
-            getErrorMessage(
-              caught,
-            ),
-          );
-        } finally {
-          setLoading(
-            false,
-          );
-
-          setRefreshing(
-            false,
-          );
-        }
+        cache:
+          "no-store",
       },
-      [],
     );
 
-  useEffect(() => {
-    void loadCategories();
-  }, [loadCategories]);
+  const result =
+    (await response.json()) as
+      | CategoryResponse
+      | {
+          error?: string;
+        };
+
+  if (!response.ok) {
+    throw new Error(
+      "error" in result &&
+        result.error
+        ? result.error
+        : "Unable to load categories.",
+    );
+  }
+
+  return (
+    result as CategoryResponse
+  ).categories;
+}
+
+function applyCategories(
+  next: CategoryItem[],
+) {
+  setCategories(
+    next,
+  );
+
+  if (
+    next.length >
+    0
+  ) {
+    const first =
+      next[0];
+
+    setSelectedId(
+      first.id,
+    );
+
+    setImage(
+      first.image ??
+        "",
+    );
+  } else {
+    setSelectedId(
+      "",
+    );
+
+    setImage(
+      "",
+    );
+  }
+}
+
+useEffect(() => {
+  let cancelled =
+    false;
+
+  void fetchCategories()
+    .then(
+      (
+        next,
+      ) => {
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        applyCategories(
+          next,
+        );
+      },
+    )
+    .catch(
+      (
+        caught,
+      ) => {
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        setError(
+          getErrorMessage(
+            caught,
+          ),
+        );
+      },
+    )
+    .finally(
+      () => {
+        if (
+          cancelled
+        ) {
+          return;
+        }
+
+        setLoading(
+          false,
+        );
+      },
+    );
+
+  return () => {
+    cancelled =
+      true;
+  };
+}, []);
+
+async function refreshCategories() {
+  setRefreshing(
+    true,
+  );
+
+  setError(
+    "",
+  );
+
+  setMessage(
+    "",
+  );
+
+  try {
+    const next =
+      await fetchCategories();
+
+    applyCategories(
+      next,
+    );
+  } catch (
+    caught
+  ) {
+    setError(
+      getErrorMessage(
+        caught,
+      ),
+    );
+  } finally {
+    setRefreshing(
+      false,
+    );
+  }
+}
 
   function handleCategoryChange(
     categoryId: string,
@@ -525,9 +579,7 @@ export function CategoryImageManager() {
               saving
             }
             onClick={() =>
-              void loadCategories(
-                true,
-              )
+              void refreshCategories()
             }
           >
             {refreshing ? (

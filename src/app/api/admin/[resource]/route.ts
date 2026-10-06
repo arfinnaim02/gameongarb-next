@@ -815,77 +815,234 @@ export async function PATCH(
       revalidatePath("/");
       return ok("Homepage updated");
     }
-    if (resource === "orders") {
-      const nextStatus = z
-        .enum([
-          "NEW",
-          "CONFIRMED",
-          "PACKING",
-          "READY_TO_SHIP",
-          "SHIPPED",
-          "DELIVERED",
-          "CANCELLED",
-          "RETURN_REQUESTED",
-          "RETURNED",
-          "FAILED_DELIVERY",
-        ])
-        .parse(body.status);
-      await db.$transaction(async (tx) => {
-        const order = await tx.order.findUniqueOrThrow({
-          where: { id },
-          include: { items: true },
-        });
-        if (!canTransition(order.status, nextStatus))
-          throw new Error(
-            `Cannot move order from ${order.status} to ${nextStatus}.`,
-          );
-        if (nextStatus === "CANCELLED") {
-          for (const item of order.items)
-            if (item.variantId) {
-              const variant = await tx.productVariant.findUniqueOrThrow({
-                where: { id: item.variantId },
-              });
-              await tx.productVariant.update({
-                where: { id: variant.id },
-                data: { stock: { increment: item.quantity } },
-              });
-              await tx.inventoryTransaction.create({
-                data: {
-                  variantId: variant.id,
-                  quantityChange: item.quantity,
-                  beforeQuantity: variant.stock,
-                  afterQuantity: variant.stock + item.quantity,
-                  type: "CANCELLATION_RESTORE",
-                  reference: order.number,
-                  reason: "Order cancelled",
-                  createdById: auth.id,
-                },
-              });
-            }
-        }
-        await tx.order.update({
-          where: { id },
-          data: {
-            status: nextStatus,
-            history: {
-              create: {
-                oldStatus: order.status,
-                newStatus: nextStatus,
-                changedBy: auth.id,
-                source: "ADMIN",
-              },
-            },
+if (resource === "orders") {
+  const nextStatus = z
+    .enum([
+      "NEW",
+      "CONFIRMED",
+      "PACKING",
+      "READY_TO_SHIP",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+      "RETURN_REQUESTED",
+      "RETURNED",
+      "FAILED_DELIVERY",
+    ])
+    .parse(body.status);
+
+  await db.$transaction(
+    async (tx) => {
+      const order =
+        await tx.order.findUniqueOrThrow({
+          where: {
+            id,
+          },
+
+          include: {
+            items: true,
           },
         });
+
+      if (
+        !canTransition(
+          order.status,
+          nextStatus,
+        )
+      ) {
+        throw new Error(
+          `Cannot move order from ${order.status} to ${nextStatus}.`,
+        );
+      }
+
+      /* ===================================================
+         RESTORE INVENTORY ON CANCELLATION
+         =================================================== */
+
+      if (
+        nextStatus ===
+        "CANCELLED"
+      ) {
+        /*
+         * Combine quantities by variant.
+         *
+         * This also protects us if the same
+         * variant somehow appears more than
+         * once in an historical order.
+         */
+        const quantityByVariant =
+          new Map<
+            string,
+            number
+          >();
+
+        for (
+          const item
+          of order.items
+        ) {
+          if (
+            !item.variantId
+          ) {
+            continue;
+          }
+
+          quantityByVariant.set(
+            item.variantId,
+            (
+              quantityByVariant.get(
+                item.variantId,
+              ) ??
+              0
+            ) +
+              item.quantity,
+          );
+        }
+
+        for (
+          const [
+            variantId,
+            quantity,
+          ]
+          of quantityByVariant
+        ) {
+          const variant =
+            await tx.productVariant.findUniqueOrThrow(
+              {
+                where: {
+                  id:
+                    variantId,
+                },
+
+                select: {
+                  id:
+                    true,
+
+                  stock:
+                    true,
+                },
+              },
+            );
+
+          const afterQuantity =
+            variant.stock +
+            quantity;
+
+          await tx.productVariant.update({
+            where: {
+              id:
+                variant.id,
+            },
+
+            data: {
+              stock: {
+                increment:
+                  quantity,
+              },
+            },
+          });
+
+          await tx.inventoryTransaction.create({
+            data: {
+              variantId:
+                variant.id,
+
+              quantityChange:
+                quantity,
+
+              beforeQuantity:
+                variant.stock,
+
+              afterQuantity,
+
+              type:
+                "CANCELLATION_RESTORE",
+
+              reference:
+                order.number,
+
+              reason:
+                "Order cancelled",
+
+              createdById:
+                auth.id,
+            },
+          });
+        }
+      }
+
+      /* ===================================================
+         UPDATE ORDER + HISTORY
+         =================================================== */
+
+      await tx.order.update({
+        where: {
+          id,
+        },
+
+        data: {
+          status:
+            nextStatus,
+
+          history: {
+            create: {
+              oldStatus:
+                order.status,
+
+              newStatus:
+                nextStatus,
+
+              changedBy:
+                auth.id,
+
+              source:
+                "ADMIN",
+            },
+          },
+        },
       });
-      await audit(auth.id, "ORDER_STATUS_CHANGED", "Order", id, {
-        status: nextStatus,
-      });
-      revalidatePath("/account/orders");
-      return ok("Order status updated");
-    }
-    return NextResponse.json(
-      { error: "Unsupported resource" },
+    },
+
+    {
+      /*
+       * Neon/database latency can make
+       * cancellation transactions take
+       * longer than Prisma's default 5s.
+       */
+      maxWait:
+        10_000,
+
+      timeout:
+        20_000,
+    },
+  );
+
+  await audit(
+    auth.id,
+    "ORDER_STATUS_CHANGED",
+    "Order",
+    id,
+    {
+      status:
+        nextStatus,
+    },
+  );
+
+  revalidatePath(
+    "/admin/orders",
+  );
+
+  revalidatePath(
+    `/admin/orders/${id}`,
+  );
+
+  revalidatePath(
+    "/account/orders",
+  );
+
+  return ok(
+    "Order status updated",
+  );
+},
       { status: 404 },
     );
   } catch (error) {
