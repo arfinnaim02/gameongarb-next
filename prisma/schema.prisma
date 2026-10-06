@@ -675,12 +675,36 @@ model CourierShipment {
   orderId       String   @unique
   provider      String
   consignmentId String?  @unique
-  trackingId    String?
+  trackingId    String?  @unique
   status        String
   labelUrl      String?
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  trackingUrl   String?
+  codAmount     Decimal? @db.Decimal(12, 2)
+  lastSyncedAt  DateTime?
+
+  order  Order                  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events CourierTrackingEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([provider, status])
+  @@index([trackingId])
+}
+
+model CourierTrackingEvent {
+  id         String   @id @default(cuid())
+  shipmentId String
+  status     String?
+  message    String
+  source     String   @default("API")
+  externalAt DateTime?
+
+  shipment CourierShipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([shipmentId, createdAt])
 }
 
 model ActivityLog {

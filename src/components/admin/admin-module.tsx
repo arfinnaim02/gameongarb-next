@@ -6,6 +6,10 @@ import { FormEvent, useMemo, useState } from "react";
 import { GripVertical, Plus, Search, X } from "lucide-react";
 import { formatBDT } from "@/lib/money";
 
+import {
+  SteadfastSettings,
+} from "@/components/admin/steadfast-settings";
+
 type Row = Record<string, unknown>;
 const meta: Record<string, { title: string; desc: string; action: string }> = {
   products: {
@@ -1423,6 +1427,8 @@ function Settings({
         </button>
         {message && <p>{message}</p>}
       </form>
+
+      <SteadfastSettings />
     </>
   );
 }
