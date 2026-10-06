@@ -42,11 +42,11 @@
 
 .secondaryButton,
 .iconButton {
+  min-height: 42px;
   border: 1px solid var(--line);
+  border-radius: 8px;
   background: #fff;
   color: #171918;
-  min-height: 42px;
-  border-radius: 8px;
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -72,13 +72,20 @@
 .secondaryButton:hover,
 .iconButton:hover {
   border-color: #bbbeba;
-  box-shadow: 0 7px 20px rgb(0 0 0 / 5%);
-  transform: translateY(-1px);
+  box-shadow:
+    0 7px 20px
+    rgb(0 0 0 / 5%);
+  transform:
+    translateY(-1px);
 }
 
 .kpiGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -89,7 +96,11 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, #fff 0%, #fbfbf9 100%);
+    linear-gradient(
+      180deg,
+      #fff 0%,
+      #fbfbf9 100%
+    );
 }
 
 .kpi span {
@@ -105,7 +116,12 @@
   display: block;
   margin: 8px 0 4px;
   overflow-wrap: anywhere;
-  font-size: clamp(24px, 3vw, 33px);
+  font-size:
+    clamp(
+      24px,
+      3vw,
+      33px
+    );
   line-height: 1;
   letter-spacing: -0.04em;
 }
@@ -132,11 +148,11 @@
 
 .tab,
 .activeTab {
-  flex: 0 0 auto;
   display: inline-flex;
+  min-height: 38px;
+  flex: 0 0 auto;
   align-items: center;
   gap: 9px;
-  min-height: 38px;
   padding: 0 13px;
   border-radius: 999px;
   cursor: pointer;
@@ -172,20 +188,22 @@
 }
 
 .activeTab strong {
-  background: rgb(255 255 255 / 15%);
+  background:
+    rgb(255 255 255 / 15%);
 }
 
 .filterCard {
   padding: 14px;
+  margin-bottom: 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fff;
-  margin-bottom: 14px;
 }
 
 .searchForm {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns:
+    auto 1fr auto;
   align-items: center;
   gap: 10px;
   min-height: 45px;
@@ -213,7 +231,8 @@
   align-self: stretch;
   padding: 0 18px;
   border: 0;
-  border-radius: 0 7px 7px 0;
+  border-radius:
+    0 7px 7px 0;
   background: #171918;
   color: #fff;
   cursor: pointer;
@@ -244,6 +263,10 @@
   align-items: center;
   gap: 6px;
 }
+
+/* =========================================================
+   BULK ACTION BAR
+   ========================================================= */
 
 .bulkBar {
   display: flex;
@@ -307,17 +330,17 @@
 
 .bulkActions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 7px;
-  flex-wrap: wrap;
 }
 
 .bulkStatusSelect {
   display: flex;
+  height: 38px;
   align-items: center;
   gap: 7px;
-  height: 38px;
   padding-left: 11px;
   border: 1px solid
     rgb(255 255 255 / 14%);
@@ -340,7 +363,8 @@
 .bulkStatusSelect select {
   min-width: 178px;
   height: 36px;
-  padding: 0 30px 0 0;
+  padding:
+    0 30px 0 0;
   border: 0;
   outline: 0;
   background: transparent;
@@ -362,10 +386,10 @@
 
 .bulkActions button {
   display: inline-flex;
+  min-height: 38px;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 38px;
   padding: 0 13px;
   border-radius: 8px;
   cursor: pointer;
@@ -374,11 +398,13 @@
   transition:
     transform 120ms ease,
     background 120ms ease,
-    border-color 120ms ease;
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .bulkActions button:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform:
+    translateY(-1px);
 }
 
 .bulkApplyButton {
@@ -390,7 +416,53 @@
 }
 
 .bulkApplyButton:hover:not(:disabled) {
-  filter: brightness(1.04);
+  filter:
+    brightness(1.04);
+}
+
+/*
+ * Production courier action.
+ * Separate green treatment so admins
+ * do not confuse a courier booking
+ * with a normal status change.
+ */
+.bulkCourierButton {
+  border: 1px solid
+    #238148 !important;
+  background:
+    linear-gradient(
+      180deg,
+      #2f9658 0%,
+      #237b48 100%
+    ) !important;
+  color: #fff !important;
+  box-shadow:
+    0 4px 12px
+    rgb(27 111 62 / 14%);
+}
+
+.bulkCourierButton:hover:not(:disabled) {
+  border-color:
+    #1e7340 !important;
+  background:
+    linear-gradient(
+      180deg,
+      #2c8e53 0%,
+      #1f7041 100%
+    ) !important;
+  box-shadow:
+    0 7px 18px
+    rgb(27 111 62 / 20%);
+}
+
+.bulkCourierButton:disabled {
+  border-color:
+    rgb(255 255 255 / 10%) !important;
+  background:
+    rgb(255 255 255 / 6%) !important;
+  color:
+    rgb(255 255 255 / 35%) !important;
+  box-shadow: none;
 }
 
 .bulkExportButton {
@@ -415,40 +487,9 @@
   transform: none;
 }
 
-@media (max-width: 900px) {
-  .bulkBar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .bulkActions {
-    justify-content: flex-start;
-  }
-
-  .bulkStatusSelect {
-    flex: 1;
-    min-width: 210px;
-  }
-
-  .bulkStatusSelect select {
-    width: 100%;
-  }
-}
-
-@media (max-width: 560px) {
-  .bulkActions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bulkStatusSelect {
-    grid-column: 1 / -1;
-  }
-
-  .bulkApplyButton {
-    grid-column: 1 / -1;
-  }
-}
+/* =========================================================
+   MESSAGES
+   ========================================================= */
 
 .success,
 .error {
@@ -471,6 +512,10 @@
   color: #a1261c;
 }
 
+/* =========================================================
+   TABLE
+   ========================================================= */
+
 .tableCard {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -480,9 +525,9 @@
 
 .tableHeader {
   display: flex;
+  min-height: 54px;
   align-items: center;
   justify-content: space-between;
-  min-height: 54px;
   padding: 0 15px;
   border-bottom: 1px solid var(--line);
 }
@@ -530,7 +575,8 @@
 }
 
 .table tbody tr {
-  transition: background 140ms ease;
+  transition:
+    background 140ms ease;
 }
 
 .table tbody tr:hover {
@@ -549,7 +595,8 @@
 .checkboxCell input {
   width: 15px;
   height: 15px;
-  accent-color: var(--orange);
+  accent-color:
+    var(--orange);
   cursor: pointer;
 }
 
@@ -636,8 +683,8 @@
 .riskPending,
 .unassigned {
   display: inline-flex;
-  align-items: center;
   min-height: 24px;
+  align-items: center;
   padding: 0 8px;
   border-radius: 999px;
   font-size: 9px;
@@ -663,8 +710,8 @@
 
 .status {
   display: inline-flex;
-  align-items: center;
   min-height: 25px;
+  align-items: center;
   padding: 0 8px;
   border-radius: 999px;
   white-space: nowrap;
@@ -737,10 +784,10 @@
 .actions select {
   min-height: 32px;
   max-width: 135px;
+  padding: 0 8px;
   border: 1px solid #d8dad7;
   border-radius: 6px;
   background: #fff;
-  padding: 0 8px;
   color: #333733;
   cursor: pointer;
   font-size: 11px;
@@ -775,12 +822,16 @@
   cursor: pointer;
 }
 
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
 .pagination {
   display: flex;
+  min-height: 60px;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 60px;
   padding: 0 15px;
   border-top: 1px solid var(--line);
   color: #767b76;
@@ -795,15 +846,15 @@
 
 .pagination button {
   display: inline-flex;
+  min-height: 34px;
   align-items: center;
   gap: 4px;
-  min-height: 34px;
   padding: 0 10px;
   border: 1px solid #d9dcd8;
   border-radius: 6px;
   background: #fff;
-  cursor: pointer;
   color: #343834;
+  cursor: pointer;
   font-size: 11px;
   font-weight: 700;
 }
@@ -813,13 +864,43 @@
   opacity: 0.4;
 }
 
-@media (max-width: 1050px) {
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (
+  max-width: 1050px
+) {
   .kpiGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .bulkBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bulkActions {
+    justify-content: flex-start;
+  }
+
+  .bulkStatusSelect {
+    flex: 1;
+    min-width: 210px;
+  }
+
+  .bulkStatusSelect select {
+    width: 100%;
   }
 }
 
-@media (max-width: 700px) {
+@media (
+  max-width: 700px
+) {
   .header {
     flex-direction: column;
   }
@@ -833,7 +914,11 @@
   }
 
   .kpiGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
   }
 
   .kpi {
@@ -845,19 +930,23 @@
   }
 
   .searchForm {
-    grid-template-columns: auto 1fr;
+    grid-template-columns:
+      auto 1fr;
   }
 
   .searchForm button {
-    grid-column: 1 / -1;
+    grid-column:
+      1 / -1;
     min-height: 39px;
+    margin:
+      0 9px 9px 0;
     border-radius: 6px;
-    margin: 0 9px 9px 0;
   }
 
   .filters {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+      1fr 1fr;
   }
 
   .filters select,
@@ -865,18 +954,26 @@
     width: 100%;
   }
 
-  .bulkBar {
-    align-items: stretch;
-    flex-direction: column;
+  .bulkActions {
+    display: grid;
+    grid-template-columns:
+      1fr 1fr;
+    width: 100%;
   }
 
-  .bulkBar > div:first-child {
-    justify-content: space-between;
+  .bulkStatusSelect {
+    grid-column:
+      1 / -1;
   }
 
-  .bulkActions button {
-    flex: 1;
-    justify-content: center;
+  .bulkApplyButton {
+    grid-column:
+      1 / -1;
+  }
+
+  .bulkCourierButton {
+    grid-column:
+      1 / -1;
   }
 
   .pagination {
@@ -886,13 +983,17 @@
   }
 
   .pagination > div {
-    justify-content: space-between;
+    justify-content:
+      space-between;
   }
 }
 
-@media (max-width: 450px) {
+@media (
+  max-width: 450px
+) {
   .kpiGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+      1fr 1fr;
     gap: 8px;
   }
 
@@ -909,6 +1010,12 @@
   }
 
   .bulkActions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .bulkStatusSelect,
+  .bulkApplyButton,
+  .bulkCourierButton {
+    grid-column: 1;
   }
 }
