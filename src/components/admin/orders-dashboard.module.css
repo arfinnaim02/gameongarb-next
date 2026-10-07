@@ -698,6 +698,97 @@
   color: #757a75;
 }
 
+.riskCheckButton {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #dedfdb;
+  border-radius: 7px;
+  background: #fff;
+  color: #353935;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
+}
+
+.riskCheckButton:hover:not(:disabled) {
+  border-color: #bfc3bd;
+  background: #f8f9f6;
+  transform: translateY(-1px);
+}
+
+.riskCheckButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.riskResult {
+  display: flex;
+  min-width: 105px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.riskBadge {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.risk_LOW {
+  background: #e9f8ed;
+  color: #167237;
+}
+
+.risk_MEDIUM {
+  background: #fff7e3;
+  color: #946300;
+}
+
+.risk_HIGH {
+  background: #fff0e9;
+  color: #b65016;
+}
+
+.risk_VERY_HIGH {
+  background: #fff0ef;
+  color: #b42318;
+}
+
+.risk_NO_HISTORY {
+  background: #f1f2ef;
+  color: #707570;
+}
+
+.riskMeta {
+  color: #777c77;
+  font-size: 8px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.riskFraudReport {
+  color: #b42318;
+  font-size: 8px;
+  font-weight: 750;
+  white-space: nowrap;
+}
 .unassigned {
   background: #f6f1e8;
   color: #8a6222;

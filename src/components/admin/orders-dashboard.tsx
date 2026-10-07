@@ -19,6 +19,7 @@ import {
   PackageCheck,
   RefreshCw,
   Search,
+  ShieldCheck,
   Truck,
 } from "lucide-react";
 
@@ -71,6 +72,46 @@ export type OrderDashboardRow = {
       | null;
   };
 };
+
+type FraudCheckResult = {
+  phone:
+    string;
+
+  totalParcels:
+    number;
+
+  delivered:
+    number;
+
+  cancelled:
+    number;
+
+  fraudReports:
+    number;
+
+  riskStatus:
+    | "NO_HISTORY"
+    | "LOW"
+    | "MEDIUM"
+    | "HIGH"
+    | "VERY_HIGH";
+
+  riskScore:
+    number |
+    null;
+
+  deliveryRate:
+    number |
+    null;
+
+  cancellationRate:
+    number |
+    null;
+
+  checkedAt:
+    string;
+};
+
 
 export type OrdersDashboardData = {
   rows: OrderDashboardRow[];
@@ -385,6 +426,30 @@ export function OrdersDashboard({
       "",
     );
 
+  const [
+    fraudBusyOrder,
+    setFraudBusyOrder,
+  ] =
+    useState<
+      string |
+      null
+    >(
+      null,
+    );
+
+  const [
+    fraudResults,
+    setFraudResults,
+  ] =
+    useState<
+      Record<
+        string,
+        FraudCheckResult
+      >
+    >(
+      {},
+    );
+
   const allSelected =
     data.rows.length >
       0 &&
@@ -622,7 +687,110 @@ export function OrdersDashboard({
       },
     );
   }
+  async function checkFraud(
+    id:
+      string,
+  ) {
+    setFraudBusyOrder(
+      id,
+    );
 
+    setError(
+      "",
+    );
+
+    setMessage(
+      "",
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${id}/fraud`,
+          {
+            method:
+              "POST",
+          },
+        );
+
+      const responseText =
+        await response.text();
+
+      let result: {
+        error?:
+          string;
+
+        message?:
+          string;
+
+        result?:
+          FraudCheckResult;
+      } = {};
+
+      if (
+        responseText
+      ) {
+        try {
+          result =
+            JSON.parse(
+              responseText,
+            );
+        } catch {
+          throw new Error(
+            `Fraud check failed with HTTP ${response.status}.`,
+          );
+        }
+      }
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to check fraud history.",
+        );
+      }
+
+      if (
+        !result.result
+      ) {
+        throw new Error(
+          "Steadfast did not return a fraud-check result.",
+        );
+      }
+
+      setFraudResults(
+        (
+          current,
+        ) => ({
+          ...current,
+
+          [id]:
+            result.result!,
+        }),
+      );
+
+      setMessage(
+        result.message ??
+          "Fraud check completed.",
+      );
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to check fraud history.",
+      );
+    } finally {
+      setFraudBusyOrder(
+        null,
+      );
+    }
+  }
+
+  
   async function updateStatus(
     id:
       string,
@@ -2004,8 +2172,11 @@ if (
 
               {bulkBusy
                 ? "Processing..."
-                : `Send to Steadfast (${steadfastEligibleRows.length})`}
+                : `Send to Steadfast 
+                (${steadfastEligibleRows.length})`}
             </button>
+
+                    
 
             <button
               type="button"
@@ -2336,21 +2507,112 @@ if (
                       </td>
 
                       <td>
-                        <span
-                          className={
-                            styles.riskPending
-                          }
-                        >
-                          Pending
-                        </span>
+                        {fraudResults[
+                          row.id
+                        ] ? (
+                          <div
+                            className={
+                              styles.riskResult
+                            }
+                          >
+                            <span
+                              className={`${styles.riskBadge} ${
+                                styles[
+                                  `risk_${fraudResults[row.id].riskStatus}`
+                                ] ??
+                                ""
+                              }`}
+                            >
+                              {fraudResults[
+                                row.id
+                              ]
+                                .riskStatus ===
+                              "NO_HISTORY"
+                                ? "No History"
+                                : humanize(
+                                    fraudResults[
+                                      row.id
+                                    ]
+                                      .riskStatus,
+                                  )}
+                            </span>
 
-                        <small
-                          className={
-                            styles.muted
-                          }
-                        >
-                          Phase 2C
-                        </small>
+                            <small
+                              className={
+                                styles.riskMeta
+                              }
+                            >
+                              {
+                                fraudResults[
+                                  row.id
+                                ]
+                                  .delivered
+                              }{" "}
+                              delivered ·{" "}
+                              {
+                                fraudResults[
+                                  row.id
+                                ]
+                                  .cancelled
+                              }{" "}
+                              cancelled
+                            </small>
+
+                            {fraudResults[
+                              row.id
+                            ]
+                              .fraudReports >
+                            0 ? (
+                              <small
+                                className={
+                                  styles.riskFraudReport
+                                }
+                              >
+                                {
+                                  fraudResults[
+                                    row.id
+                                  ]
+                                    .fraudReports
+                                }{" "}
+                                fraud report
+                                {fraudResults[
+                                  row.id
+                                ]
+                                  .fraudReports ===
+                                1
+                                  ? ""
+                                  : "s"}
+                              </small>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className={
+                              styles.riskCheckButton
+                            }
+                            disabled={
+                              fraudBusyOrder ===
+                              row.id
+                            }
+                            onClick={() =>
+                              void checkFraud(
+                                row.id,
+                              )
+                            }
+                          >
+                            <ShieldCheck
+                              size={
+                                13
+                              }
+                            />
+
+                            {fraudBusyOrder ===
+                            row.id
+                              ? "Checking..."
+                              : "Check Fraud"}
+                          </button>
+                        )}
                       </td>
 
                       <td>
