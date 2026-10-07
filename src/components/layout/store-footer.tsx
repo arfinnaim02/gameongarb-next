@@ -325,25 +325,23 @@ export function StoreFooter({
             BRAND + CONTACT
             ================================================= */}
         <div className="store-footer-brand">
-          <div className="store-footer-brand-card">
-            <div className="store-footer-logo">
-              <Logo />
-            </div>
+          <div className="store-footer-logo">
+            <Logo />
+          </div>
 
-            <p className="store-footer-description">
-              Sports, fashion and
-              everyday essentials
-              made for people who
-              live with energy.
-            </p>
+          <p className="store-footer-description">
+            Sports, fashion and
+            everyday essentials
+            made for people who
+            live with energy.
+          </p>
 
-            <span className="store-footer-brand-line">
-              Experience The
-              Thrill.
-            </span>
+          <span className="store-footer-brand-line">
+            Experience The
+            Thrill.
+          </span>
 
-            <div className="store-footer-brand-divider" />
-
+          <div className="store-footer-contact-box">
             <div className="store-footer-contact-list">
               {phone ? (
                 <a
@@ -518,7 +516,7 @@ export function StoreFooter({
             NEWSLETTER + SOCIAL
             ================================================= */}
 
-        <div className="store-footer-newsletter">
+        <div className="store-footer-newsletter store-footer-connect">
           <span className="store-footer-newsletter-eyebrow">
             Stay In The Game
           </span>
