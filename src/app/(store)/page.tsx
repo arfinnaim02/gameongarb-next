@@ -319,6 +319,21 @@ export default async function Home() {
 
   return (
     <div className="home-page">
+      <PromotionPopup
+        enabled={
+          promotionPopup.enabled
+        }
+        image={
+          promotionPopup.image
+        }
+        redirectLink={
+          promotionPopup.redirectLink
+        }
+        delayMs={
+          promotionPopup.delayMs
+        }
+      />
+
       {homepageContent.length >
       0 ? (
         homepageContent
