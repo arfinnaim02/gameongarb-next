@@ -95,6 +95,9 @@ export async function POST(
           id,
 
         steadfast,
+
+        actorId:
+          admin.id,
       });
 
     await db
@@ -132,6 +135,14 @@ export async function POST(
             trackingEventsAdded:
               result
                 .trackingEventsAdded,
+
+            autoDelivered:
+              result
+                .autoDelivered,
+
+            orderStatus:
+              result
+                .orderStatus,
           },
         },
       });
@@ -148,17 +159,19 @@ export async function POST(
       message:
         result.skipped
           ? "Courier status was synced less than 60 seconds ago."
-          : result.changed
-            ? `Steadfast status updated to ${result.status}.`
-            : result.trackingEventsAdded >
-                0
-              ? `Steadfast status is still ${result.status}. ${result.trackingEventsAdded} new tracking update${
-                  result.trackingEventsAdded ===
-                  1
-                    ? ""
-                    : "s"
-                } added.`
-              : `Steadfast status is still ${result.status}.`,
+          : result.autoDelivered
+            ? "Steadfast confirmed final delivery. Game On Garb order was automatically marked Delivered."
+            : result.changed
+              ? `Steadfast status updated to ${result.status}.`
+              : result.trackingEventsAdded >
+                  0
+                ? `Steadfast status is still ${result.status}. ${result.trackingEventsAdded} new tracking update${
+                    result.trackingEventsAdded ===
+                    1
+                      ? ""
+                      : "s"
+                  } added.`
+                : `Steadfast status is still ${result.status}.`,
 
       ...result,
     });

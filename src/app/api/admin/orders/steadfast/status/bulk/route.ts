@@ -207,6 +207,9 @@ export async function POST(
 
       trackingEventsAdded:
         number;
+
+      autoDelivered:
+        boolean;
     }[] = [];
 
     const failed: {
@@ -238,6 +241,9 @@ export async function POST(
               order.id,
 
             steadfast,
+
+            actorId:
+              admin.id,
           });
 
         successful.push({
@@ -259,6 +265,10 @@ export async function POST(
           trackingEventsAdded:
             result
               .trackingEventsAdded,
+
+          autoDelivered:
+            result
+              .autoDelivered,
         });
       } catch (
         error
@@ -306,6 +316,14 @@ export async function POST(
         0,
       );
 
+    const autoDeliveredCount =
+      successful.filter(
+        (
+          item,
+        ) =>
+          item.autoDelivered,
+      ).length;
+
     await db
       .activityLog
       .create({
@@ -337,6 +355,9 @@ export async function POST(
             trackingEventsAdded:
               trackingAdded,
 
+            autoDelivered:
+              autoDeliveredCount,
+
             failed:
               failed.length,
 
@@ -359,6 +380,15 @@ export async function POST(
       );
     }
 
+    if (
+      autoDeliveredCount >
+      0
+    ) {
+      revalidatePath(
+        "/account/orders",
+      );
+    }
+
     return NextResponse.json({
       message:
         `${successful.length} Steadfast shipment${
@@ -366,7 +396,12 @@ export async function POST(
           1
             ? ""
             : "s"
-        } checked · ${changedCount} changed · ${trackingAdded} tracking update${
+        } checked · ${changedCount} courier status changed · ${autoDeliveredCount} order${
+          autoDeliveredCount ===
+          1
+            ? ""
+            : "s"
+        } auto-delivered · ${trackingAdded} tracking update${
           trackingAdded ===
           1
             ? ""
