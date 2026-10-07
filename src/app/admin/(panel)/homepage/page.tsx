@@ -5,6 +5,7 @@ import {
   ImageIcon,
   Images,
   Layers3,
+  Megaphone,
   Shirt,
   Trophy,
 } from "lucide-react";
@@ -82,6 +83,20 @@ const sections = [
     icon:
       Layers3,
   },
+
+  {
+    title:
+      "Promotion Popup",
+
+    description:
+      "Manage the homepage promotional popup banner, redirect link, opening delay and visibility.",
+
+    href:
+      "/admin/homepage/promotion-popup",
+
+    icon:
+      Megaphone,
+  },
 ];
 
 export default function HomepageBuilderPage() {
@@ -126,8 +141,9 @@ export default function HomepageBuilderPage() {
 
         <span>
           Hero, Sports, Polo,
-          Category Images and
+          Category Images,
           Experience The Thrill
+          and Promotion Popup
           are connected directly
           to the storefront.
         </span>

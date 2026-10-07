@@ -14674,3 +14674,7 @@ button {
     font-size: 14px;
   }
 }
+
+body.promotion-popup-open {
+  overflow: hidden;
+}

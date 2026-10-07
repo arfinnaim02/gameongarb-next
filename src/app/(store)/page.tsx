@@ -8,6 +8,7 @@ import {
 
 import { HeroSlider } from "@/components/home/hero-slider";
 import { HomeProductRail } from "@/components/home/home-product-rail";
+import { PromotionPopup } from "@/components/home/promotion-popup";
 import { Section } from "@/components/home/section";
 
 import {
@@ -25,6 +26,7 @@ export default async function Home() {
     sections,
     products,
     categories,
+    promotionSetting,
   ] = await Promise.all([
     db.homepageSection.findMany({
       where: {
@@ -53,7 +55,51 @@ export default async function Home() {
     getCategoryTree({
       homepageOnly: true,
     }),
+
+    db.storeSetting.findUnique({
+      where: {
+        key:
+          "homepage_promotion_popup",
+      },
+    }),
   ]);
+
+    const promotionValue =
+    promotionSetting?.value &&
+    typeof promotionSetting.value ===
+      "object" &&
+    !Array.isArray(
+      promotionSetting.value,
+    )
+      ? promotionSetting.value as Record<
+          string,
+          unknown
+        >
+      : null;
+
+  const promotionPopup = {
+    enabled:
+      promotionValue?.enabled ===
+      true,
+
+    image:
+      typeof promotionValue?.image ===
+      "string"
+        ? promotionValue.image
+        : null,
+
+    redirectLink:
+      typeof promotionValue?.redirectLink ===
+      "string"
+        ? promotionValue.redirectLink
+        : "/shop",
+
+    delayMs:
+      typeof promotionValue?.delayMs ===
+        "number"
+        ? promotionValue.delayMs
+        : 1400,
+  };
 
   const rendered =
     sections.map((section) => {

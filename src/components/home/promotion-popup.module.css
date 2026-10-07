@@ -1,0 +1,197 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    rgb(4 6 5 / 73%);
+  backdrop-filter:
+    blur(10px);
+  -webkit-backdrop-filter:
+    blur(10px);
+  animation:
+    popupBackdropIn
+    380ms
+    ease
+    both;
+}
+
+.modal {
+  position: relative;
+  width: min(
+    520px,
+    calc(100vw - 40px)
+  );
+  aspect-ratio: 1;
+  animation:
+    popupCardIn
+    620ms
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    )
+    both;
+}
+
+.banner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border:
+    1px solid
+    rgb(255 255 255 / 18%);
+  border-radius: 24px;
+  background: #111;
+  box-shadow:
+    0 34px 100px
+    rgb(0 0 0 / 50%);
+}
+
+.banner::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border:
+    1px solid
+    rgb(255 255 255 / 8%);
+  border-radius: inherit;
+  content: "";
+}
+
+.banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  animation:
+    promotionImageZoom
+    10s
+    cubic-bezier(
+      0.2,
+      0.7,
+      0.2,
+      1
+    )
+    forwards;
+
+  transform-origin:
+    center center;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 4;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  padding: 0;
+  border:
+    1px solid
+    rgb(255 255 255 / 25%);
+  border-radius: 999px;
+  background:
+    rgb(10 12 11 / 72%);
+  color: #fff;
+  box-shadow:
+    0 8px 24px
+    rgb(0 0 0 / 25%);
+  backdrop-filter:
+    blur(10px);
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.close:hover {
+  background:
+    var(--orange);
+  transform:
+    rotate(3deg)
+    scale(1.05);
+}
+
+@keyframes popupBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupCardIn {
+  from {
+    opacity: 0;
+    transform:
+      translateY(18px)
+      scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes promotionImageZoom {
+  from {
+    transform:
+      scale(1);
+  }
+
+  to {
+    transform:
+      scale(1.075);
+  }
+}
+
+@media (
+  max-width: 600px
+) {
+  .overlay {
+    padding: 16px;
+  }
+
+  .modal {
+    width:
+      calc(
+        100vw -
+        32px
+      );
+  }
+
+  .banner {
+    border-radius: 18px;
+  }
+
+  .close {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .overlay,
+  .modal,
+  .banner img {
+    animation: none;
+  }
+}
