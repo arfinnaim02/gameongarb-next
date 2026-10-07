@@ -755,7 +755,7 @@ export function OrdersDashboard({
         !result.result
       ) {
         throw new Error(
-          "Steadfast did not return a fraud-check result.",
+          "FraudChecker did not return a fraud-check result.",
         );
       }
 
