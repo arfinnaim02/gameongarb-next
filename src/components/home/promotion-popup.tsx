@@ -16,6 +16,19 @@ import styles from "./promotion-popup.module.css";
 const SESSION_KEY =
   "gog_home_promotion_popup_seen";
 
+/*
+ * Module state survives normal Next.js
+ * client navigation, but resets after a
+ * real browser refresh.
+ *
+ * This lets us distinguish:
+ *
+ * client navigation → keep popup hidden
+ * hard refresh      → allow popup again
+ */
+let reloadHandled =
+  false;
+
 type PromotionPopupProps = {
   enabled:
     boolean;
@@ -55,18 +68,79 @@ export function PromotionPopup({
         return;
       }
 
+      /*
+       * A real browser reload should
+       * make the popup eligible again.
+       *
+       * This only runs once per loaded
+       * document. Normal Next.js route
+       * navigation will not clear it.
+       */
       if (
+        !reloadHandled
+      ) {
+        reloadHandled =
+          true;
+
+        const navigationEntry =
+          window.performance
+            .getEntriesByType(
+              "navigation",
+            )[0] as
+              PerformanceNavigationTiming |
+              undefined;
+
+        if (
+          navigationEntry
+            ?.type ===
+          "reload"
+        ) {
+          window.sessionStorage
+            .removeItem(
+              SESSION_KEY,
+            );
+        }
+      }
+
+      const alreadySeen =
         window.sessionStorage
           .getItem(
             SESSION_KEY,
-          )
+          );
+
+      if (
+        alreadySeen
       ) {
         return;
       }
 
+      const safeDelay =
+        Number.isFinite(
+          delayMs,
+        )
+          ? Math.max(
+              0,
+              delayMs,
+            )
+          : 1400;
+
       const timer =
         window.setTimeout(
           () => {
+            /*
+             * Mark as seen when it is
+             * actually shown.
+             *
+             * This prevents it from
+             * showing again during
+             * normal SPA navigation.
+             */
+            window.sessionStorage
+              .setItem(
+                SESSION_KEY,
+                "1",
+              );
+
             setVisible(
               true,
             );
@@ -77,7 +151,8 @@ export function PromotionPopup({
                 "promotion-popup-open",
               );
           },
-          delayMs,
+
+          safeDelay,
         );
 
       return () => {
@@ -124,11 +199,12 @@ export function PromotionPopup({
         handleKeyDown,
       );
 
-      return () =>
+      return () => {
         window.removeEventListener(
           "keydown",
           handleKeyDown,
         );
+      };
     },
     [
       visible,
@@ -139,12 +215,6 @@ export function PromotionPopup({
     setVisible(
       false,
     );
-
-    window.sessionStorage
-      .setItem(
-        SESSION_KEY,
-        "1",
-      );
 
     document.body
       .classList
@@ -162,7 +232,8 @@ export function PromotionPopup({
   }
 
   const destination =
-    redirectLink?.trim() ||
+    redirectLink
+      ?.trim() ||
     "/shop";
 
   return (
@@ -173,18 +244,16 @@ export function PromotionPopup({
       role="dialog"
       aria-modal="true"
       aria-label="Game On Garb promotion"
-      onMouseDown={
-        (
-          event,
-        ) => {
-          if (
-            event.target ===
-            event.currentTarget
-          ) {
-            closePopup();
-          }
+      onMouseDown={(
+        event,
+      ) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          closePopup();
         }
-      }
+      }}
     >
       <div
         className={
@@ -216,12 +285,6 @@ export function PromotionPopup({
             styles.banner
           }
           onClick={() => {
-            window.sessionStorage
-              .setItem(
-                SESSION_KEY,
-                "1",
-              );
-
             document.body
               .classList
               .remove(
