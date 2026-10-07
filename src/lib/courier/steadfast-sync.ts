@@ -90,6 +90,12 @@ export type SteadfastSyncResult = {
   trackingEventsAdded:
     number;
 
+  autoDelivered:
+    boolean;
+
+  orderStatus:
+    string;
+
   lastSyncedAt:
     string;
 };
@@ -97,6 +103,7 @@ export type SteadfastSyncResult = {
 export async function syncSteadfastShipment({
   orderId,
   steadfast,
+  actorId = null,
   force = false,
 }: {
   orderId:
@@ -104,6 +111,10 @@ export async function syncSteadfastShipment({
 
   steadfast:
     SteadfastClient;
+
+  actorId?:
+    string |
+    null;
 
   force?:
     boolean;
@@ -177,6 +188,13 @@ export async function syncSteadfastShipment({
   const now =
     new Date();
 
+  /*
+   * Steadfast documents courier status
+   * responses as cached for 60 seconds.
+   *
+   * Avoid unnecessary provider calls
+   * unless force=true is explicitly used.
+   */
   if (
     !force &&
     order.shipment
@@ -215,6 +233,12 @@ export async function syncSteadfastShipment({
       trackingEventsAdded:
         0,
 
+      autoDelivered:
+        false,
+
+      orderStatus:
+        order.status,
+
       lastSyncedAt:
         order.shipment
           .lastSyncedAt
@@ -229,6 +253,12 @@ export async function syncSteadfastShipment({
           .consignmentId,
       );
 
+  /*
+   * Tracking history is useful but
+   * should not make the whole status
+   * refresh fail if Steadfast cannot
+   * return tracking events.
+   */
   const trackingEvents =
     await steadfast
       .getTrackingsByInvoice(
@@ -249,6 +279,43 @@ export async function syncSteadfastShipment({
     previousStatus !==
     nextStatus;
 
+  /*
+   * Only the FINAL Steadfast
+   * "delivered" state can automatically
+   * mark the GOG order Delivered.
+   *
+   * We intentionally do NOT treat:
+   *
+   * delivered_approval_pending
+   * partial_delivered
+   * partial_delivered_approval_pending
+   * cancelled
+   * cancelled_approval_pending
+   * exceptional
+   * unknown
+   * unknown_approval_pending
+   *
+   * as final delivery.
+   *
+   * READY_TO_SHIP and SHIPPED are the
+   * safe GOG states to auto-complete.
+   *
+   * A CANCELLED order is deliberately
+   * excluded because cancellation may
+   * already have restored inventory.
+   */
+  const shouldAutoDeliver =
+    nextStatus
+      .trim()
+      .toLowerCase() ===
+      "delivered" &&
+    (
+      order.status ===
+        "READY_TO_SHIP" ||
+      order.status ===
+        "SHIPPED"
+    );
+
   const existingKeys =
     new Set(
       order.shipment
@@ -267,6 +334,16 @@ export async function syncSteadfastShipment({
                 event.externalAt,
             }),
         ),
+    );
+
+  /*
+   * Also prevent duplicates that may
+   * appear multiple times inside the
+   * same provider tracking response.
+   */
+  const seenKeys =
+    new Set(
+      existingKeys,
     );
 
   const newTrackingEvents =
@@ -305,10 +382,21 @@ export async function syncSteadfastShipment({
       .filter(
         (
           event,
-        ) =>
-          !existingKeys.has(
+        ) => {
+          if (
+            seenKeys.has(
+              event.key,
+            )
+          ) {
+            return false;
+          }
+
+          seenKeys.add(
             event.key,
-          ),
+          );
+
+          return true;
+        },
       );
 
   await db
@@ -316,6 +404,9 @@ export async function syncSteadfastShipment({
       async (
         tx,
       ) => {
+        /*
+         * Update courier status first.
+         */
         await tx
           .courierShipment
           .update({
@@ -334,53 +425,89 @@ export async function syncSteadfastShipment({
             },
           });
 
+        /*
+         * Final Steadfast delivery:
+         *
+         * Courier shipment update,
+         * GOG order update and order
+         * history are kept in the same
+         * database transaction.
+         */
+        if (
+          shouldAutoDeliver
+        ) {
+          await tx
+            .order
+            .update({
+              where: {
+                id:
+                  order.id,
+              },
+
+              data: {
+                status:
+                  "DELIVERED",
+
+                history: {
+                  create: {
+                    oldStatus:
+                      order.status,
+
+                    newStatus:
+                      "DELIVERED",
+
+                    changedBy:
+                      actorId,
+
+                    note:
+                      "Automatically marked Delivered after Steadfast confirmed final delivery.",
+
+                    source:
+                      "STEADFAST",
+                  },
+                },
+              },
+            });
+        }
+
+        /*
+         * Store a courier status-change
+         * event only when the actual
+         * courier state changed.
+         */
         if (
           changed
         ) {
           const statusMessage =
             `Steadfast status changed from ${previousStatus} to ${nextStatus}.`;
 
-          const key =
-            eventKey({
-              status:
-                nextStatus,
+          await tx
+            .courierTrackingEvent
+            .create({
+              data: {
+                shipmentId:
+                  order.shipment!
+                    .id,
 
-              message:
-                statusMessage,
+                status:
+                  nextStatus,
 
-              externalAt:
-                now,
+                message:
+                  statusMessage,
+
+                source:
+                  "API",
+
+                externalAt:
+                  now,
+              },
             });
-
-          if (
-            !existingKeys.has(
-              key,
-            )
-          ) {
-            await tx
-              .courierTrackingEvent
-              .create({
-                data: {
-                  shipmentId:
-                    order.shipment!
-                      .id,
-
-                  status:
-                    nextStatus,
-
-                  message:
-                    statusMessage,
-
-                  source:
-                    "API",
-
-                  externalAt:
-                    now,
-                },
-              });
-          }
         }
 
+        /*
+         * Save previously unseen tracking
+         * events returned by Steadfast.
+         */
         for (
           const event
           of newTrackingEvents
@@ -434,6 +561,14 @@ export async function syncSteadfastShipment({
     trackingEventsAdded:
       newTrackingEvents
         .length,
+
+    autoDelivered:
+      shouldAutoDeliver,
+
+    orderStatus:
+      shouldAutoDeliver
+        ? "DELIVERED"
+        : order.status,
 
     lastSyncedAt:
       now.toISOString(),
