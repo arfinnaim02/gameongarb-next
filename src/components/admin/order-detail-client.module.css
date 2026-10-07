@@ -595,6 +595,8 @@
   font-size: 12px;
 }
 
+
+
 .riskPending span {
   margin-top: 3px;
   color: #8f826b;
@@ -602,6 +604,306 @@
   line-height: 1.5;
 }
 
+
+.fraudCheckButton {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid #d9ddd8;
+  border-radius: 7px;
+  background: #fff;
+  color: #292d29;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.fraudCheckButton:hover:not(:disabled) {
+  border-color: #babfba;
+  background: #f8f9f6;
+  transform: translateY(-1px);
+}
+
+.fraudCheckButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.fraudSpinner {
+  animation: fraudSpin 700ms linear infinite;
+}
+
+@keyframes fraudSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fraudRiskSummary {
+  display: grid;
+  grid-template-columns:
+    38px
+    minmax(0, 1fr)
+    auto;
+  gap: 10px;
+  align-items: center;
+  padding: 13px;
+  margin-top: 13px;
+  border: 1px solid #e1e4e0;
+  border-radius: 10px;
+  background: #f8f9f7;
+}
+
+.fraudRiskIcon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 65%);
+}
+
+.fraudRiskCopy span,
+.fraudRiskCopy strong,
+.fraudRiskCopy small {
+  display: block;
+}
+
+.fraudRiskCopy span {
+  color: #858a85;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.fraudRiskCopy strong {
+  margin-top: 2px;
+  font-size: 14px;
+}
+
+.fraudRiskCopy small {
+  margin-top: 3px;
+  color: #929692;
+  font-size: 8px;
+}
+
+.fraudRate {
+  min-width: 70px;
+  text-align: right;
+}
+
+.fraudRate strong,
+.fraudRate span {
+  display: block;
+}
+
+.fraudRate strong {
+  font-size: 19px;
+  letter-spacing: -0.03em;
+}
+
+.fraudRate span {
+  margin-top: 2px;
+  color: #878c87;
+  font-size: 8px;
+}
+
+.fraudRisk_LOW {
+  border-color: #cce6d4;
+  background: #f0faf3;
+}
+
+.fraudRisk_LOW .fraudRiskIcon {
+  color: #167238;
+}
+
+.fraudRisk_MEDIUM {
+  border-color: #eadbb5;
+  background: #fff9e9;
+}
+
+.fraudRisk_MEDIUM .fraudRiskIcon {
+  color: #956800;
+}
+
+.fraudRisk_HIGH {
+  border-color: #efc8ae;
+  background: #fff5ed;
+}
+
+.fraudRisk_HIGH .fraudRiskIcon {
+  color: #b85a1c;
+}
+
+.fraudRisk_VERY_HIGH {
+  border-color: #efb8b4;
+  background: #fff1f0;
+}
+
+.fraudRisk_VERY_HIGH .fraudRiskIcon {
+  color: #b42318;
+}
+
+.fraudRisk_NO_HISTORY {
+  border-color: #dfe2de;
+  background: #f5f6f3;
+}
+
+.fraudRisk_NO_HISTORY .fraudRiskIcon {
+  color: #777c77;
+}
+
+.fraudStats {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.fraudStats > div {
+  padding: 9px;
+  border-radius: 7px;
+  background: #f7f8f5;
+}
+
+.fraudStats span,
+.fraudStats strong {
+  display: block;
+}
+
+.fraudStats span {
+  color: #8c918c;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.fraudStats strong {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.fraudWarning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-top: 9px;
+  border: 1px solid #efc0bc;
+  border-radius: 8px;
+  background: #fff2f1;
+  color: #a82b21;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.courierRiskSection {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #eceeeb;
+}
+
+.courierRiskHeading {
+  margin-bottom: 8px;
+  color: #808580;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.courierRiskList {
+  display: grid;
+  gap: 7px;
+}
+
+.courierRiskItem {
+  padding: 10px;
+  border: 1px solid #e7e9e6;
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.courierRiskTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.courierRiskTop strong {
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+.courierRiskTop > span {
+  color: #2f773f;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.courierRiskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  margin-top: 5px;
+  color: #7f847f;
+  font-size: 8px;
+}
+
+.courierRiskBar {
+  height: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #e9ece8;
+}
+
+.courierRiskBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #3a9a5c;
+  transition:
+    width 450ms ease;
+}
+
+@media (
+  max-width: 500px
+) {
+  .fraudRiskSummary {
+    grid-template-columns:
+      34px
+      minmax(0, 1fr);
+  }
+
+  .fraudRate {
+    grid-column:
+      1 /
+      -1;
+    padding-top: 7px;
+    border-top: 1px solid rgb(0 0 0 / 6%);
+    text-align: left;
+  }
+
+  .fraudStats {
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+}
 .historyStats {
   display: grid;
   grid-template-columns:

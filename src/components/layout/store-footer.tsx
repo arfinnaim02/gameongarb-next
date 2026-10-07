@@ -9,6 +9,7 @@ import {
 
 import {
   ArrowRight,
+  ExternalLink,
   Mail,
   MapPin,
   Phone,
@@ -49,6 +50,38 @@ type StoreFooterProps = {
   navCategories:
     NavCategory[];
 };
+
+/* =========================================================
+   OFFICIAL STORE INFO
+   ========================================================= */
+
+const STORE_ADDRESS =
+  "Shop-03, Road-08, Mirpur-02 (Opposite of Gate-2, National Cricket Stadium, Mirpur)";
+
+const STORE_MAP_URL =
+  "https://www.google.com/maps/place/Gameon+Garb";
+
+const OFFICIAL_SOCIAL_LINKS = [
+  [
+    "whatsapp",
+    "https://api.whatsapp.com/message/7AEZ2OXYD2QZE1",
+  ],
+
+  [
+    "facebook",
+    "https://www.facebook.com/GameOnGarb",
+  ],
+
+  [
+    "instagram",
+    "https://www.instagram.com/gameon_garb/",
+  ],
+
+  [
+    "youtube",
+    "https://www.youtube.com/@gameongarb",
+  ],
+] as const;
 
 /* =========================================================
    HELPERS
@@ -187,13 +220,6 @@ export function StoreFooter({
       unknown
     >;
 
-  const social =
-    (settings.social ??
-      {}) as Record<
-      string,
-      unknown
-    >;
-
   const phone =
     String(
       contact.phone ??
@@ -207,27 +233,10 @@ export function StoreFooter({
     ).trim();
 
   const address =
-    String(
-      contact.address ??
-        "",
-    ).trim();
+    STORE_ADDRESS;
 
   const socialLinks =
-    Object.entries(
-      social,
-    ).filter(
-      (
-        entry,
-      ): entry is [
-        string,
-        string,
-      ] =>
-        typeof entry[1] ===
-          "string" &&
-        entry[1].startsWith(
-          "http",
-        ),
-    );
+    OFFICIAL_SOCIAL_LINKS;
 
   const footerCategories =
     navCategories.slice(
@@ -315,41 +324,49 @@ export function StoreFooter({
         {/* =================================================
             BRAND + CONTACT
             ================================================= */}
-
         <div className="store-footer-brand">
-          <div className="store-footer-logo">
-            <Logo />
-          </div>
+          <div className="store-footer-brand-card">
+            <div className="store-footer-logo">
+              <Logo />
+            </div>
 
-          <p className="store-footer-description">
-            Sports, fashion and
-            everyday essentials
-            made for people who
-            live with energy.
-          </p>
+            <p className="store-footer-description">
+              Sports, fashion and
+              everyday essentials
+              made for people who
+              live with energy.
+            </p>
 
-          <span className="store-footer-brand-line">
-            Experience The
-            Thrill.
-          </span>
+            <span className="store-footer-brand-line">
+              Experience The
+              Thrill.
+            </span>
 
-          {(phone ||
-            contactEmail ||
-            address) ? (
-            <div className="store-footer-brand-contact">
+            <div className="store-footer-brand-divider" />
+
+            <div className="store-footer-contact-list">
               {phone ? (
                 <a
                   href={`tel:${phone}`}
+                  className="store-footer-contact-row"
                 >
-                  <Phone
-                    size={13}
-                    strokeWidth={
-                      1.7
-                    }
-                  />
+                  <span className="store-footer-contact-icon">
+                    <Phone
+                      size={14}
+                      strokeWidth={
+                        1.8
+                      }
+                    />
+                  </span>
 
-                  <span>
-                    {phone}
+                  <span className="store-footer-contact-copy">
+                    <small>
+                      Call Us
+                    </small>
+
+                    <strong>
+                      {phone}
+                    </strong>
                   </span>
                 </a>
               ) : null}
@@ -357,38 +374,73 @@ export function StoreFooter({
               {contactEmail ? (
                 <a
                   href={`mailto:${contactEmail}`}
+                  className="store-footer-contact-row"
                 >
-                  <Mail
-                    size={13}
-                    strokeWidth={
-                      1.7
-                    }
-                  />
+                  <span className="store-footer-contact-icon">
+                    <Mail
+                      size={14}
+                      strokeWidth={
+                        1.8
+                      }
+                    />
+                  </span>
 
-                  <span>
-                    {
-                      contactEmail
-                    }
+                  <span className="store-footer-contact-copy">
+                    <small>
+                      Email Us
+                    </small>
+
+                    <strong>
+                      {
+                        contactEmail
+                      }
+                    </strong>
                   </span>
                 </a>
               ) : null}
 
-              {address ? (
-                <div>
+              <div className="store-footer-contact-row store-footer-address-row">
+                <span className="store-footer-contact-icon">
                   <MapPin
-                    size={13}
+                    size={15}
                     strokeWidth={
-                      1.7
+                      1.8
                     }
                   />
+                </span>
 
-                  <span>
+                <span className="store-footer-contact-copy">
+                  <small>
+                    Visit Our Store
+                  </small>
+
+                  <strong>
                     {address}
-                  </span>
-                </div>
-              ) : null}
+                  </strong>
+
+                  <a
+                    href={
+                      STORE_MAP_URL
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="store-footer-map-link"
+                  >
+                    Open in Google Maps
+
+                    <ExternalLink
+                      size={
+                        12
+                      }
+                      strokeWidth={
+                        1.9
+                      }
+                    />
+                  </a>
+                </span>
+              </div>
             </div>
-          ) : null}
+          </div>
         </div>
 
         {/* =================================================
@@ -396,7 +448,7 @@ export function StoreFooter({
             ================================================= */}
 
         <nav
-          className="store-footer-column"
+          className="store-footer-column store-footer-shop"
           aria-label="Footer shop navigation"
         >
           <span className="store-footer-column-title">
@@ -434,7 +486,7 @@ export function StoreFooter({
             ================================================= */}
 
         <nav
-          className="store-footer-column"
+          className="store-footer-column store-footer-customer"
           aria-label="Footer customer navigation"
         >
           <span className="store-footer-column-title">
@@ -517,7 +569,9 @@ export function StoreFooter({
               }
             >
               <ArrowRight
-                size={16}
+                size={
+                  16
+                }
                 strokeWidth={
                   1.8
                 }
@@ -531,57 +585,54 @@ export function StoreFooter({
             </small>
           ) : null}
 
-          {socialLinks.length >
-          0 ? (
-            <div className="store-footer-social-block">
-              <span className="store-footer-social-label">
-                Follow Us
-              </span>
+          <div className="store-footer-social-block">
+            <span className="store-footer-social-label">
+              Follow Us
+            </span>
 
-              <div className="store-footer-social-icons">
-                {socialLinks.map(
-                  ([
-                    network,
-                    href,
-                  ]) => {
-                    const icon =
-                      getSocialIcon(
-                        network,
-                      );
-
-                    if (!icon) {
-                      return null;
-                    }
-
-                    return (
-                      <a
-                        key={
-                          network
-                        }
-                        href={
-                          href
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={
-                          formatNetworkName(
-                            network,
-                          )
-                        }
-                        title={
-                          formatNetworkName(
-                            network,
-                          )
-                        }
-                      >
-                        {icon}
-                      </a>
+            <div className="store-footer-social-icons">
+              {socialLinks.map(
+                ([
+                  network,
+                  href,
+                ]) => {
+                  const icon =
+                    getSocialIcon(
+                      network,
                     );
-                  },
-                )}
-              </div>
+
+                  if (!icon) {
+                    return null;
+                  }
+
+                  return (
+                    <a
+                      key={
+                        network
+                      }
+                      href={
+                        href
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={
+                        formatNetworkName(
+                          network,
+                        )
+                      }
+                      title={
+                        formatNetworkName(
+                          network,
+                        )
+                      }
+                    >
+                      {icon}
+                    </a>
+                  );
+                },
+              )}
             </div>
-          ) : null}
+          </div>
         </div>
       </div>
 

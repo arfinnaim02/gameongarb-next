@@ -208,6 +208,66 @@ type RecentOrder = {
     string;
 };
 
+type FraudCourierResult = {
+  total:
+    number;
+
+  delivered:
+    number;
+
+  cancelled:
+    number;
+};
+
+type FraudCheckResult = {
+  phone:
+    string;
+
+  totalParcels:
+    number;
+
+  delivered:
+    number;
+
+  cancelled:
+    number;
+
+  fraudReports:
+    number;
+
+  riskStatus:
+    | "NO_HISTORY"
+    | "LOW"
+    | "MEDIUM"
+    | "HIGH"
+    | "VERY_HIGH";
+
+  riskScore:
+    number |
+    null;
+
+  deliveryRate:
+    number |
+    null;
+
+  cancellationRate:
+    number |
+    null;
+
+  checkedAt:
+    string;
+
+  providerRiskStatus?:
+    string |
+    null;
+
+  couriers:
+    Record<
+      string,
+      FraudCourierResult
+    >;
+};
+
 export type OrderDetailData = {
   order: {
     id:
@@ -570,6 +630,25 @@ export function OrderDetailClient({
       "",
     );
 
+  const [
+    fraudBusy,
+    setFraudBusy,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    fraudResult,
+    setFraudResult,
+  ] =
+    useState<
+      FraudCheckResult |
+      null
+    >(
+      null,
+    );
+
   const transitions =
     TRANSITIONS[
       data.order.status
@@ -658,6 +737,109 @@ export function OrderDetailClient({
             100,
         )
       : null;
+
+
+        async function checkFraud() {
+    if (
+      fraudBusy
+    ) {
+      return;
+    }
+
+    setFraudBusy(
+      true,
+    );
+
+    setMessage(
+      "",
+    );
+
+    setError(
+      "",
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${data.order.id}/fraud`,
+          {
+            method:
+              "POST",
+
+            cache:
+              "no-store",
+          },
+        );
+
+      const responseText =
+        await response.text();
+
+      let result: {
+        error?:
+          string;
+
+        message?:
+          string;
+
+        result?:
+          FraudCheckResult;
+      } = {};
+
+      if (
+        responseText
+      ) {
+        try {
+          result =
+            JSON.parse(
+              responseText,
+            );
+        } catch {
+          throw new Error(
+            `Fraud check failed with HTTP ${response.status}.`,
+          );
+        }
+      }
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to check customer fraud history.",
+        );
+      }
+
+      if (
+        !result.result
+      ) {
+        throw new Error(
+          "FraudChecker did not return a fraud-check result.",
+        );
+      }
+
+      setFraudResult(
+        result.result,
+      );
+
+      setMessage(
+        result.message ??
+          "Customer fraud history refreshed.",
+      );
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to check customer fraud history.",
+      );
+    } finally {
+      setFraudBusy(
+        false,
+      );
+    }
+  }
 
   async function updateStatus(
     nextStatus:
@@ -1868,34 +2050,384 @@ export function OrderDetailClient({
                   </h2>
 
                   <p>
-                    Fraud protection
+                    Live FraudChecker history
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div
-              className={
-                styles.riskPending
-              }
-            >
-              <ShieldAlert
-                size={
-                  22
+              <button
+                type="button"
+                className={
+                  styles.fraudCheckButton
                 }
-              />
+                disabled={
+                  fraudBusy
+                }
+                onClick={() =>
+                  void checkFraud()
+                }
+              >
+                <RefreshCw
+                  size={
+                    13
+                  }
+                  className={
+                    fraudBusy
+                      ? styles.fraudSpinner
+                      : undefined
+                  }
+                />
 
-              <div>
-                <strong>
-                  Risk check pending
-                </strong>
-
-                <span>
-                  FraudChecker integration
-                  arrives in Phase 2C.
-                </span>
-              </div>
+                {fraudBusy
+                  ? "Checking..."
+                  : fraudResult
+                    ? "Refresh"
+                    : "Check Fraud"}
+              </button>
             </div>
+
+            {fraudResult ? (
+              <>
+                <div
+                  className={`${styles.fraudRiskSummary} ${
+                    styles[
+                      `fraudRisk_${fraudResult.riskStatus}`
+                    ] ??
+                    ""
+                  }`}
+                >
+                  <div
+                    className={
+                      styles.fraudRiskIcon
+                    }
+                  >
+                    <ShieldAlert
+                      size={
+                        21
+                      }
+                    />
+                  </div>
+
+                  <div
+                    className={
+                      styles.fraudRiskCopy
+                    }
+                  >
+                    <span>
+                      FraudChecker Risk
+                    </span>
+
+                    <strong>
+                      {fraudResult
+                        .riskStatus ===
+                      "NO_HISTORY"
+                        ? "No History"
+                        : humanize(
+                            fraudResult
+                              .riskStatus,
+                          )}
+                    </strong>
+
+                    <small>
+                      Checked{" "}
+                      {formatDate(
+                        fraudResult
+                          .checkedAt,
+                      )}
+                    </small>
+                  </div>
+
+                  {fraudResult
+                    .deliveryRate !==
+                  null ? (
+                    <div
+                      className={
+                        styles.fraudRate
+                      }
+                    >
+                      <strong>
+                        {
+                          fraudResult
+                            .deliveryRate
+                        }
+                        %
+                      </strong>
+
+                      <span>
+                        Delivery rate
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div
+                  className={
+                    styles.fraudStats
+                  }
+                >
+                  <div>
+                    <span>
+                      Total Parcels
+                    </span>
+
+                    <strong>
+                      {
+                        fraudResult
+                          .totalParcels
+                      }
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Delivered
+                    </span>
+
+                    <strong
+                      className={
+                        styles.good
+                      }
+                    >
+                      {
+                        fraudResult
+                          .delivered
+                      }
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Cancelled
+                    </span>
+
+                    <strong
+                      className={
+                        fraudResult
+                          .cancelled >
+                        0
+                          ? styles.bad
+                          : ""
+                      }
+                    >
+                      {
+                        fraudResult
+                          .cancelled
+                      }
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Cancel Rate
+                    </span>
+
+                    <strong>
+                      {fraudResult
+                        .cancellationRate !==
+                      null
+                        ? `${fraudResult.cancellationRate}%`
+                        : "—"}
+                    </strong>
+                  </div>
+                </div>
+
+                {fraudResult
+                  .fraudReports >
+                0 ? (
+                  <div
+                    className={
+                      styles.fraudWarning
+                    }
+                  >
+                    <ShieldAlert
+                      size={
+                        16
+                      }
+                    />
+
+                    <span>
+                      {
+                        fraudResult
+                          .fraudReports
+                      }{" "}
+                      fraud report
+                      {fraudResult
+                        .fraudReports ===
+                      1
+                        ? ""
+                        : "s"}{" "}
+                      found for this customer.
+                    </span>
+                  </div>
+                ) : null}
+
+                {Object.keys(
+                  fraudResult
+                    .couriers,
+                ).length >
+                0 ? (
+                  <div
+                    className={
+                      styles.courierRiskSection
+                    }
+                  >
+                    <div
+                      className={
+                        styles.courierRiskHeading
+                      }
+                    >
+                      Courier History
+                    </div>
+
+                    <div
+                      className={
+                        styles.courierRiskList
+                      }
+                    >
+                      {Object.entries(
+                        fraudResult
+                          .couriers,
+                      ).map(
+                        (
+                          [
+                            courier,
+                            courierData,
+                          ],
+                        ) => {
+                          const courierRate =
+                            courierData
+                              .total >
+                            0
+                              ? Math.round(
+                                  (
+                                    courierData
+                                      .delivered /
+                                    courierData
+                                      .total
+                                  ) *
+                                    100,
+                                )
+                              : 0;
+
+                          return (
+                            <div
+                              key={
+                                courier
+                              }
+                              className={
+                                styles.courierRiskItem
+                              }
+                            >
+                              <div
+                                className={
+                                  styles.courierRiskTop
+                                }
+                              >
+                                <strong>
+                                  {
+                                    courier
+                                  }
+                                </strong>
+
+                                <span>
+                                  {
+                                    courierRate
+                                  }
+                                  %
+                                </span>
+                              </div>
+
+                              <div
+                                className={
+                                  styles.courierRiskMeta
+                                }
+                              >
+                                <span>
+                                  {
+                                    courierData
+                                      .total
+                                  }{" "}
+                                  total
+                                </span>
+
+                                <span
+                                  className={
+                                    styles.good
+                                  }
+                                >
+                                  {
+                                    courierData
+                                      .delivered
+                                  }{" "}
+                                  delivered
+                                </span>
+
+                                <span
+                                  className={
+                                    courierData
+                                      .cancelled >
+                                    0
+                                      ? styles.bad
+                                      : ""
+                                  }
+                                >
+                                  {
+                                    courierData
+                                      .cancelled
+                                  }{" "}
+                                  cancelled
+                                </span>
+                              </div>
+
+                              <div
+                                className={
+                                  styles.courierRiskBar
+                                }
+                              >
+                                <span
+                                  style={{
+                                    width:
+                                      `${Math.min(
+                                        100,
+                                        Math.max(
+                                          0,
+                                          courierRate,
+                                        ),
+                                      )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div
+                className={
+                  styles.riskPending
+                }
+              >
+                <ShieldAlert
+                  size={
+                    22
+                  }
+                />
+
+                <div>
+                  <strong>
+                    Check customer risk
+                  </strong>
+
+                  <span>
+                    Run a live FraudChecker lookup using this customer's phone number.
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div
               className={
