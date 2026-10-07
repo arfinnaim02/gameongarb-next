@@ -480,6 +480,21 @@ export function OrdersDashboard({
       ],
     );
 
+    const steadfastRefreshRows =
+  useMemo(
+    () =>
+      selectedRows.filter(
+        (
+          row,
+        ) =>
+          row.courier ===
+          "STEADFAST",
+      ),
+    [
+      selectedRows,
+    ],
+  );
+
   const steadfastSkippedCount =
     selectedRows.length -
     steadfastEligibleRows.length;
@@ -973,6 +988,127 @@ export function OrdersDashboard({
               }),
           },
         );
+
+
+        async function refreshSelectedSteadfast() {
+  if (
+    steadfastRefreshRows.length ===
+    0
+  ) {
+    setError(
+      "None of the selected orders have a Steadfast shipment.",
+    );
+
+    return;
+  }
+
+  if (
+    !window.confirm(
+      `Refresh ${steadfastRefreshRows.length} Steadfast shipment${
+        steadfastRefreshRows.length ===
+        1
+          ? ""
+          : "s"
+      } now?`,
+    )
+  ) {
+    return;
+  }
+
+  setBulkBusy(
+    true,
+  );
+
+  setMessage(
+    "",
+  );
+
+  setError(
+    "",
+  );
+
+  try {
+    const response =
+      await fetch(
+        "/api/admin/orders/steadfast/status/bulk",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "content-type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify({
+              orderIds:
+                steadfastRefreshRows.map(
+                  (
+                    row,
+                  ) =>
+                    row.id,
+                ),
+            }),
+        },
+      );
+
+    const responseText =
+      await response.text();
+
+    let result: {
+      error?:
+        string;
+
+      message?:
+        string;
+    } = {};
+
+    if (
+      responseText
+    ) {
+      try {
+        result =
+          JSON.parse(
+            responseText,
+          );
+      } catch {
+        throw new Error(
+          `Bulk courier refresh failed with HTTP ${response.status}.`,
+        );
+      }
+    }
+
+    if (
+      !response.ok
+    ) {
+      throw new Error(
+        result.error ??
+          "Unable to refresh Steadfast shipments.",
+      );
+    }
+
+    setMessage(
+      result.message ??
+        "Steadfast shipments refreshed.",
+    );
+
+    router.refresh();
+  } catch (
+    caught
+  ) {
+    setError(
+      caught instanceof
+        Error
+        ? caught.message
+        : "Unable to refresh Steadfast shipments.",
+    );
+  } finally {
+    setBulkBusy(
+      false,
+    );
+  }
+}
 
 const responseText =
   await response.text();

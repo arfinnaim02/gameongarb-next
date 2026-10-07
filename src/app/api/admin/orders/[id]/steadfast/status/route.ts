@@ -16,8 +16,11 @@ import {
 
 import {
   SteadfastClient,
-  STEADFAST_PROVIDER,
 } from "@/lib/courier/steadfast";
+
+import {
+  syncSteadfastShipment,
+} from "@/lib/courier/steadfast-sync";
 
 import {
   db,
@@ -25,16 +28,6 @@ import {
 
 export const dynamic =
   "force-dynamic";
-
-/*
- * Steadfast documents status responses
- * as cached for 60 seconds.
- *
- * Do not waste requests by polling the
- * same shipment faster than that.
- */
-const MIN_REFRESH_INTERVAL_MS =
-  60_000;
 
 export async function POST(
   _request:
@@ -53,7 +46,9 @@ export async function POST(
   const admin =
     await requireAdminApi();
 
-  if (!admin) {
+  if (
+    !admin
+  ) {
     return NextResponse.json(
       {
         error:
@@ -90,208 +85,17 @@ export async function POST(
     await params;
 
   try {
-    const order =
-      await db.order.findUnique({
-        where: {
-          id,
-        },
-
-        include: {
-          shipment:
-            true,
-        },
-      });
-
-    if (!order) {
-      return NextResponse.json(
-        {
-          error:
-            "Order not found.",
-        },
-        {
-          status:
-            404,
-        },
-      );
-    }
-
-    if (
-      !order.shipment
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "No courier shipment exists for this order.",
-        },
-        {
-          status:
-            404,
-        },
-      );
-    }
-
-    if (
-      order.shipment
-        .provider !==
-      STEADFAST_PROVIDER
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "This shipment is not a Steadfast shipment.",
-        },
-        {
-          status:
-            409,
-        },
-      );
-    }
-
-    if (
-      !order.shipment
-        .consignmentId
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            order.shipment
-              .status ===
-            "booking_failed"
-              ? "The previous Steadfast booking failed. Use Retry Steadfast first."
-              : "Steadfast has not returned a consignment ID yet.",
-        },
-        {
-          status:
-            409,
-        },
-      );
-    }
-
-    const now =
-      new Date();
-
-    if (
-      order.shipment
-        .lastSyncedAt &&
-      now.getTime() -
-        order.shipment
-          .lastSyncedAt
-          .getTime() <
-        MIN_REFRESH_INTERVAL_MS
-    ) {
-      const secondsAgo =
-        Math.max(
-          0,
-          Math.floor(
-            (
-              now.getTime() -
-              order.shipment
-                .lastSyncedAt
-                .getTime()
-            ) /
-              1000,
-          ),
-        );
-
-      return NextResponse.json({
-        message:
-          `Courier status was synced ${secondsAgo} second${
-            secondsAgo ===
-            1
-              ? ""
-              : "s"
-          } ago. Steadfast caches status for 60 seconds.`,
-
-        skipped:
-          true,
-
-        status:
-          order.shipment
-            .status,
-
-        lastSyncedAt:
-          order.shipment
-            .lastSyncedAt
-            .toISOString(),
-      });
-    }
-
     const steadfast =
       await SteadfastClient
         .fromDatabase();
 
     const result =
-      await steadfast
-        .getStatusWithReturnByConsignmentId(
-          order.shipment
-            .consignmentId,
-        );
+      await syncSteadfastShipment({
+        orderId:
+          id,
 
-    const previousStatus =
-      order.shipment
-        .status;
-
-    const nextStatus =
-      result.status;
-
-    const changed =
-      previousStatus !==
-      nextStatus;
-
-    await db
-      .$transaction(
-        async (
-          tx,
-        ) => {
-          await tx
-            .courierShipment
-            .update({
-              where: {
-                id:
-                  order.shipment!
-                    .id,
-              },
-
-              data: {
-                status:
-                  nextStatus,
-
-                lastSyncedAt:
-                  now,
-              },
-            });
-
-          /*
-           * Do not fill tracking history
-           * with identical refresh events.
-           */
-          if (
-            changed
-          ) {
-            await tx
-              .courierTrackingEvent
-              .create({
-                data: {
-                  shipmentId:
-                    order.shipment!
-                      .id,
-
-                  status:
-                    nextStatus,
-
-                  message:
-                    `Steadfast status changed from ${previousStatus} to ${nextStatus}.`,
-
-                  source:
-                    "API",
-
-                  externalAt:
-                    now,
-                },
-              });
-          }
-        },
-      );
+        steadfast,
+      });
 
     await db
       .activityLog
@@ -307,18 +111,27 @@ export async function POST(
             "Order",
 
           entityId:
-            order.id,
+            result.orderId,
 
           metadata: {
             orderNumber:
-              order.number,
+              result.orderNumber,
 
-            previousStatus,
+            previousStatus:
+              result.previousStatus,
 
             status:
-              nextStatus,
+              result.status,
 
-            changed,
+            changed:
+              result.changed,
+
+            skipped:
+              result.skipped,
+
+            trackingEventsAdded:
+              result
+                .trackingEventsAdded,
           },
         },
       });
@@ -328,22 +141,26 @@ export async function POST(
     );
 
     revalidatePath(
-      `/admin/orders/${order.id}`,
+      `/admin/orders/${result.orderId}`,
     );
 
     return NextResponse.json({
       message:
-        changed
-          ? `Steadfast status updated to ${nextStatus}.`
-          : `Steadfast status is still ${nextStatus}.`,
+        result.skipped
+          ? "Courier status was synced less than 60 seconds ago."
+          : result.changed
+            ? `Steadfast status updated to ${result.status}.`
+            : result.trackingEventsAdded >
+                0
+              ? `Steadfast status is still ${result.status}. ${result.trackingEventsAdded} new tracking update${
+                  result.trackingEventsAdded ===
+                  1
+                    ? ""
+                    : "s"
+                } added.`
+              : `Steadfast status is still ${result.status}.`,
 
-      status:
-        nextStatus,
-
-      changed,
-
-      lastSyncedAt:
-        now.toISOString(),
+      ...result,
     });
   } catch (
     error
