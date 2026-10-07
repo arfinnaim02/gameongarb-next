@@ -61,6 +61,9 @@ const STORE_ADDRESS =
 const STORE_MAP_URL =
   "https://www.google.com/maps/place/Gameon+Garb";
 
+const STORE_CONTACT_EMAIL =
+  "gameongarb@gmail.com";
+
 const OFFICIAL_SOCIAL_LINKS = [
   [
     "whatsapp",
@@ -227,10 +230,8 @@ export function StoreFooter({
     ).trim();
 
   const contactEmail =
-    String(
-      contact.email ??
-        "",
-    ).trim();
+    STORE_CONTACT_EMAIL;
+    
 
   const address =
     STORE_ADDRESS;
