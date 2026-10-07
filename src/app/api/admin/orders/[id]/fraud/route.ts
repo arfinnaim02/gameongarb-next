@@ -218,11 +218,6 @@ function riskFromHistory({
     cancellationRate ??
     0;
 
-  /*
-   * A provider fraud report is a strong
-   * manual-review signal, but this score
-   * never automatically blocks an order.
-   */
   if (
     fraudReports >
     0
