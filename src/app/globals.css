@@ -7128,7 +7128,7 @@ span {
       1fr;
 
     gap:
-      8px;
+      6px;
 
     padding:
       5px 0
@@ -7145,18 +7145,27 @@ span {
 
   .home-campaign-card {
     /*
-     * Fixed mobile frame matching
-     * the recommended 900 × 1100
-     * campaign artwork.
+     * Extra-compact mobile campaign frame.
+     *
+     * Admin still controls the mobile image.
+     * The storefront crops it inside this
+     * shorter presentation frame.
      */
     aspect-ratio:
-      900 / 1100;
+      auto;
+
+    height:
+      clamp(
+        210px,
+        58vw,
+        250px
+      );
 
     min-height:
-      0;
+      210px;
 
     padding:
-      24px 20px;
+      14px 14px;
   }
 
   .home-campaign-card::before {
@@ -7166,12 +7175,14 @@ span {
       );
 
     background-position:
-      center center;
+      center 42%;
 
     background-size:
       cover;
-  }
 
+    background-repeat:
+      no-repeat;
+  }
   .home-campaign-card::after {
     background:
       linear-gradient(
@@ -7237,42 +7248,42 @@ span {
   .home-campaign-copy
   .eyebrow {
     margin-bottom:
-      7px;
+      6px;
 
     font-size:
-      12px;
+      10px;
 
     letter-spacing:
-      .2em;
+      .18em;
   }
 
   .home-campaign-title {
     max-width:
-      7.8ch;
+      8ch;
 
     margin-bottom:
-      15px;
+      8px;
 
     font-size:
       clamp(
-        2.15rem,
-        10.5vw,
-        3.15rem
+        1.45rem,
+        6.8vw,
+        2rem
       );
 
     line-height:
-      .88;
+      .9;
   }
 
   .home-campaign-cta {
     min-height:
-      40px;
+      34px;
 
     padding:
-      0 14px;
+      0 11px;
 
     font-size:
-      13px;
+      11px;
   }
   /* =========================
      SHOP BY CATEGORY

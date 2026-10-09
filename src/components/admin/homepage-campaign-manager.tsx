@@ -846,7 +846,7 @@ export function HomepageCampaignManager({
 
           <CampaignUploader
             title="Mobile Image"
-            hint="Best frame: 900 × 1100px · other sizes are automatically cropped"
+            hint="Best frame: 900 × 650px · other sizes are automatically cropped"
             image={
               form.mobileImage
             }
