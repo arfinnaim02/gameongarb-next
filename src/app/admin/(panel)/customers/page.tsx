@@ -4,7 +4,7 @@ import {
 
 import {
   CustomerManager,
-} from "@/components/admin/customer-manager.tsx";
+} from "@/components/admin/customer-manager";
 
 import {
   db,

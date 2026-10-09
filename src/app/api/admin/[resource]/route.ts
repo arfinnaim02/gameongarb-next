@@ -952,6 +952,80 @@ export async function PATCH(
       revalidatePath("/");
       return ok("Homepage updated");
     }
+        if (
+      resource ===
+      "inventory"
+    ) {
+      const input = z
+        .object({
+          id:
+            z.string(),
+
+          lowStockThreshold:
+            z
+              .number()
+              .int()
+              .min(
+                0,
+              )
+              .optional(),
+
+          active:
+            z
+              .boolean()
+              .optional(),
+        })
+        .parse(
+          body,
+        );
+
+      await db.productVariant.update({
+        where: {
+          id:
+            input.id,
+        },
+
+        data: {
+          ...(input.lowStockThreshold !==
+            undefined && {
+            lowStockThreshold:
+              input.lowStockThreshold,
+          }),
+
+          ...(input.active !==
+            undefined && {
+            active:
+              input.active,
+          }),
+        },
+      });
+
+      await audit(
+        auth.id,
+        "INVENTORY_VARIANT_UPDATED",
+        "ProductVariant",
+        input.id,
+        {
+          fields:
+            Object.keys(
+              body,
+            ).filter(
+              (
+                key,
+              ) =>
+                key !==
+                "id",
+            ),
+        },
+      );
+
+      revalidateStore();
+
+      return ok(
+        "Inventory settings updated",
+      );
+    }
+
 if (resource === "orders") {
   const nextStatus = z
     .enum([
