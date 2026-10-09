@@ -101,8 +101,82 @@ export default async function Home() {
         : 1400,
   };
 
+  /* =======================================================
+     STOREFRONT SECTION ORDER
+
+     New Arrivals and Trending Now are intentionally shown
+     back-to-back on the storefront.
+
+     The Homepage Builder still controls:
+     - whether each section is enabled
+     - section content
+     - headings
+     - selected products
+     - images / campaigns
+     - the relative order of every other section
+
+     Any sections that were positioned between New Arrivals
+     and Trending simply continue after Trending.
+     ======================================================= */
+
+  const displaySections = [
+    ...sections,
+  ];
+
+  const newArrivalsIndex =
+    displaySections.findIndex(
+      (
+        section,
+      ) =>
+        section.type ===
+        "NEW_ARRIVALS",
+    );
+
+  const trendingIndex =
+    displaySections.findIndex(
+      (
+        section,
+      ) =>
+        section.type ===
+        "TRENDING",
+    );
+
+  if (
+    newArrivalsIndex !==
+      -1 &&
+    trendingIndex !==
+      -1 &&
+    trendingIndex !==
+      newArrivalsIndex +
+        1
+  ) {
+    const [
+      trendingSection,
+    ] =
+      displaySections.splice(
+        trendingIndex,
+        1,
+      );
+
+    const updatedNewArrivalsIndex =
+      displaySections.findIndex(
+        (
+          section,
+        ) =>
+          section.type ===
+          "NEW_ARRIVALS",
+      );
+
+    displaySections.splice(
+      updatedNewArrivalsIndex +
+        1,
+      0,
+      trendingSection,
+    );
+  }
+
   const rendered =
-    sections.map((section) => {
+    displaySections.map((section) => {
       const props = {
         section,
         products,
@@ -275,14 +349,19 @@ export default async function Home() {
 
   for (
     let index = 0;
-    index < sections.length;
+    index <
+      displaySections.length;
     index += 1
   ) {
     const current =
-      sections[index];
+      displaySections[
+        index
+      ];
 
     const next =
-      sections[index + 1];
+      displaySections[
+        index + 1
+      ];
 
     const currentIsCampaign =
       current.type === "SPORTS" ||

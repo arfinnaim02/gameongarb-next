@@ -9,7 +9,6 @@ import {
 import {
   Heart,
   Menu,
-  Search,
   ShoppingBag,
   UserRound,
   X,
@@ -19,6 +18,10 @@ import {
   useEffect,
   useState,
 } from "react";
+
+import {
+  HeaderSearch,
+} from "@/components/layout/header-search";
 
 import {
   Logo,
@@ -206,17 +209,7 @@ export function StoreHeader({
           <div className="store-header-actions">
             {/* Search */}
 
-            <Link
-              href="/shop"
-              className="store-header-action desktop-only"
-              aria-label="Search products"
-            >
-              <Search
-                size={19}
-                strokeWidth={1.7}
-                aria-hidden="true"
-              />
-            </Link>
+            <HeaderSearch />
 
             {/* Account */}
 
