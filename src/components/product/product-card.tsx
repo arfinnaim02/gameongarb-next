@@ -252,14 +252,6 @@ export function ProductCard({
           className="product-card-link"
         >
           <div className="product-card-media">
-            {product.badge ? (
-              <span className="product-card-media-badge">
-                {
-                  product.badge
-                }
-              </span>
-            ) : null}
-
             <Image
               src={
                 hovered &&

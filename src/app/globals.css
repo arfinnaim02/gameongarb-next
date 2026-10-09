@@ -3693,20 +3693,20 @@ span {
   position: relative;
 
   aspect-ratio:
-    1.13 / 1;
+    1 / 1.08;
 
   overflow: hidden;
 
   background:
-    #f5f5f2;
+    #f4f5f2;
 }
 
 .product-card-image {
   padding:
     clamp(
-      10px,
-      1.25vw,
-      18px
+      6px,
+      .7vw,
+      10px
     );
 
   object-fit:
@@ -3805,7 +3805,7 @@ span {
 
 .product-card-content {
   padding:
-    10px 3px 9px;
+    12px 4px 10px;
 }
 
 .product-card-category {
@@ -3838,28 +3838,20 @@ span {
     nowrap;
 }
 
-.product-card-title {
-  min-height:
-    2.42em;
-
-  margin:
-    0 0 5px;
-
-  overflow: hidden;
-
+.product-card
+.price {
   color:
-    #202321;
+    var(--price);
 
-  font-size: 15px;
+  font-size: 16px;
 
-  line-height:
-    1.21;
+  line-height: 1;
 
   font-weight:
-    700;
+    900;
 
   letter-spacing:
-    -.012em;
+    -.035em;
 }
 
 /* =========================================================
@@ -3979,7 +3971,7 @@ span {
     );
 
   min-height:
-    32px;
+    38px;
 
   margin:
     0 3px 3px;
@@ -5210,36 +5202,37 @@ img {
 
 /* =========================================================
    PRODUCT WIDTH — DESKTOP
-   4 PRODUCTS VISIBLE
+   3 LARGE PRODUCTS VISIBLE
    ========================================================= */
 
 .home-product-rail
 .home-rail-item {
   /*
-   * Fallback for browsers without
-   * container query units.
+   * Larger editorial product cards
+   * keep the product image as the
+   * main visual focus.
    */
   width:
     clamp(
-      245px,
-      23vw,
-      310px
+      300px,
+      30vw,
+      430px
     );
 
   /*
-   * Actual width:
-   * exactly four products visible.
+   * Exactly three products visible
+   * inside the homepage rail.
    */
   width:
     calc(
       (
         100cqw -
         (
-          3 *
+          2 *
           var(--rail-gap)
         )
       ) /
-      4
+      3
     );
 
   min-width: 0;
@@ -5407,18 +5400,15 @@ img {
   .home-product-rail
   .home-rail-item {
     width:
-      30vw;
+      44vw;
 
     width:
       calc(
         (
           100cqw -
-          (
-            2 *
-            var(--rail-gap)
-          )
+          var(--rail-gap)
         ) /
-        3
+        2
       );
   }
 }
@@ -7998,11 +7988,13 @@ span {
      ========================= */
 
   .product-card-media {
-    aspect-ratio: 1.17 / 1;
+    aspect-ratio:
+      1 / 1.08;
   }
 
   .product-card-image {
-    padding: 10px 11px;
+    padding:
+      6px 7px;
   }
 
   .product-card-wishlist {
