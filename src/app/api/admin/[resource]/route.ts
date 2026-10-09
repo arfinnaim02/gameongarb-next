@@ -686,23 +686,106 @@ export async function PATCH(
       return ok("Category updated");
     }
     if (resource === "customers") {
-      const status = z.enum(["ACTIVE", "BLOCKED"]).parse(body.status);
-      await db.$transaction(async (tx) => {
-        const customer = await tx.customer.update({
-          where: { id },
-          data: { status },
-          select: { userId: true },
-        });
-        if (customer.userId)
-          await tx.user.update({
-            where: { id: customer.userId },
-            data: { status },
-          });
-      });
-      await audit(auth.id, "CUSTOMER_STATUS_CHANGED", "Customer", id, {
-        status,
-      });
-      return ok("Customer updated");
+      const input = z
+        .object({
+          id:
+            z.string(),
+
+          status:
+            z
+              .enum([
+                "ACTIVE",
+                "BLOCKED",
+                "PENDING",
+              ])
+              .optional(),
+
+          notes:
+            z
+              .string()
+              .max(
+                2000,
+              )
+              .optional(),
+        })
+        .parse(
+          body,
+        );
+
+      await db.$transaction(
+        async (
+          tx,
+        ) => {
+          const customer =
+            await tx.customer.update({
+              where: {
+                id:
+                  input.id,
+              },
+
+              data: {
+                ...(input.status !==
+                  undefined && {
+                  status:
+                    input.status,
+                }),
+
+                ...(input.notes !==
+                  undefined && {
+                  notes:
+                    input.notes.trim() ||
+                    null,
+                }),
+              },
+
+              select: {
+                userId:
+                  true,
+              },
+            });
+
+          if (
+            customer.userId &&
+            input.status !==
+              undefined
+          ) {
+            await tx.user.update({
+              where: {
+                id:
+                  customer.userId,
+              },
+
+              data: {
+                status:
+                  input.status,
+              },
+            });
+          }
+        },
+      );
+
+      await audit(
+        auth.id,
+        "CUSTOMER_UPDATED",
+        "Customer",
+        input.id,
+        {
+          fields:
+            Object.keys(
+              body,
+            ).filter(
+              (
+                key,
+              ) =>
+                key !==
+                "id",
+            ),
+        },
+      );
+
+      return ok(
+        "Customer updated",
+      );
     }
     if (resource === "coupons") {
       const input = z
