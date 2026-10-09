@@ -287,10 +287,12 @@ export default async function Home() {
                 section.heading ??
                 "Shop by Category"
               }
-              categories={configuredCategories(
-                section,
-                categories,
-              ).slice(0, 4)}
+              categories={
+                categories.slice(
+                  0,
+                  4,
+                )
+              }
             />
           );
 
@@ -534,41 +536,6 @@ function configuredProducts(
     );
 }
 
-function configuredCategories(
-  section: HomeSection,
-  fallback: CategoryTree,
-) {
-  const ids =
-    configIds(
-      section,
-      "categoryIds",
-    );
-
-  if (!ids.length) {
-    return fallback;
-  }
-
-  const byId =
-    new Map(
-      fallback.map(
-        (category) => [
-          category.id,
-          category,
-        ],
-      ),
-    );
-
-  return ids
-    .map((id) =>
-      byId.get(id),
-    )
-    .filter(
-      (
-        category,
-      ): category is CategoryTree[number] =>
-        Boolean(category),
-    );
-}
 
 /* =========================================================
    HERO

@@ -358,6 +358,7 @@ function ModuleTable({
             <th>Shop Order</th>
             <th>Products</th>
             <th>Navigation</th>
+            <th>Homepage</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -394,7 +395,26 @@ function ModuleTable({
                   c.productCount,
                 )}
               </td>
-              <td>{c.showInNavigation ? "Visible" : "Hidden"}</td>
+              <td>
+                {c.showInNavigation
+                  ? "Visible"
+                  : "Hidden"}
+              </td>
+
+              <td>
+                <span
+                  className={`badge ${
+                    c.showOnHomepage
+                      ? "green"
+                      : "orange"
+                  }`}
+                >
+                  {c.showOnHomepage
+                    ? "Shown"
+                    : "Hidden"}
+                </span>
+              </td>
+
               <td>
                 <span className={`badge ${c.active ? "green" : "orange"}`}>
                   {c.active ? "Active" : "Inactive"}
