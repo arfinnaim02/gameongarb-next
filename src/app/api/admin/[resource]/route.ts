@@ -212,14 +212,6 @@ export async function POST(
                 z.string(),
               ])
               .optional(),
-
-          active:
-            z
-              .union([
-                z.boolean(),
-                z.string(),
-              ])
-              .optional(),
         })
         .parse(body);
       if (input.parentId) await assertCategoryDepth(input.parentId);
