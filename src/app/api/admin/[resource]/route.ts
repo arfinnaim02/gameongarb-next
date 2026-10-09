@@ -193,6 +193,22 @@ export async function POST(
                 z.string(),
               ])
               .optional(),
+
+          active:
+            z
+              .union([
+                z.boolean(),
+                z.string(),
+              ])
+              .optional(),
+
+          active:
+            z
+              .union([
+                z.boolean(),
+                z.string(),
+              ])
+              .optional(),
         })
         .parse(body);
       if (input.parentId) await assertCategoryDepth(input.parentId);
@@ -212,8 +228,19 @@ export async function POST(
             input.showInNavigation === true ||
             input.showInNavigation === "true",
           showOnHomepage:
-            input.showOnHomepage === true || input.showOnHomepage === "true",
-          active: true,
+            input.showOnHomepage ===
+              true ||
+            input.showOnHomepage ===
+              "true",
+
+          active:
+            input.active ===
+              undefined
+              ? true
+              : input.active ===
+                    true ||
+                  input.active ===
+                    "true",
         },
       });
       await audit(auth.id, "CATEGORY_CREATED", "Category", category.id, {

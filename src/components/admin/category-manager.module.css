@@ -492,17 +492,21 @@
 
   grid-template-columns:
     minmax(
-      330px,
+      300px,
       2fr
     )
-    90px
-    90px
-    70px
+    80px
+    80px
+    60px
     minmax(
-      220px,
+      190px,
       1fr
     )
-    90px;
+    80px
+    minmax(
+      260px,
+      auto
+    );
 
   align-items:
     center;
@@ -563,17 +567,21 @@
 
   grid-template-columns:
     minmax(
-      330px,
+      300px,
       2fr
     )
-    90px
-    90px
-    70px
+    80px
+    80px
+    60px
     minmax(
-      220px,
+      190px,
       1fr
     )
-    90px;
+    80px
+    minmax(
+      260px,
+      auto
+    );
 
   align-items:
     center;
@@ -850,6 +858,70 @@
     800;
 }
 
+
+.headerActions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-end;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    9px;
+}
+
+.addButton {
+  min-height:
+    42px;
+
+  padding:
+    0 15px;
+
+  border: 0;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  background:
+    var(--orange);
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.addButton:hover {
+  filter:
+    brightness(
+      .94
+    );
+}
 /* =========================================================
    STATS
    ========================================================= */
@@ -1034,6 +1106,703 @@
     #ae5522;
 }
 
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.actionsCell {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    flex-end;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    5px;
+}
+
+.actionButton,
+.actionIcon {
+  min-height:
+    30px;
+
+  border:
+    1px solid
+    #dfe2de;
+
+  background:
+    #fff;
+
+  color:
+    #4e544f;
+
+  font:
+    inherit;
+
+  font-size:
+    8px;
+
+  font-weight:
+    850;
+
+  cursor:
+    pointer;
+}
+
+.actionButton {
+  padding:
+    0 8px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    5px;
+}
+
+.actionIcon {
+  width:
+    30px;
+
+  padding: 0;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+}
+
+.actionButton:hover,
+.actionIcon:hover {
+  border-color:
+    #bcc2bd;
+
+  background:
+    #f8f9f7;
+
+  color:
+    #171a18;
+}
+
+.deleteAction {
+  color:
+    #b42318;
+}
+
+.deleteAction:hover {
+  border-color:
+    #edc8c3;
+
+  background:
+    #fff4f2;
+
+  color:
+    #a51e13;
+}
+
+.actionButton:disabled,
+.actionIcon:disabled {
+  opacity:
+    .45;
+
+  cursor:
+    not-allowed;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.successMessage,
+.errorMessage {
+  margin-top:
+    14px;
+
+  min-height:
+    40px;
+
+  padding:
+    10px 13px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+}
+
+.successMessage {
+  border:
+    1px solid
+    #cce8d7;
+
+  background:
+    #eef9f2;
+
+  color:
+    #176d3c;
+}
+
+.errorMessage {
+  border:
+    1px solid
+    #efd0cb;
+
+  background:
+    #fff4f2;
+
+  color:
+    #aa3025;
+}
+
+/* =========================================================
+   CATEGORY DRAWER
+   ========================================================= */
+
+.drawerBackdrop {
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  z-index:
+    120;
+
+  background:
+    rgb(
+      0 0 0 /
+      46%
+    );
+
+  backdrop-filter:
+    blur(
+      3px
+    );
+}
+
+.drawer {
+  position:
+    absolute;
+
+  top:
+    0;
+
+  right:
+    0;
+
+  width:
+    min(
+      520px,
+      100%
+    );
+
+  height:
+    100%;
+
+  overflow-y:
+    auto;
+
+  background:
+    #fff;
+
+  box-shadow:
+    -20px 0 60px
+    rgb(
+      0 0 0 /
+      18%
+    );
+}
+
+.drawerHeader {
+  position:
+    sticky;
+
+  top:
+    0;
+
+  z-index:
+    5;
+
+  min-height:
+    90px;
+
+  padding:
+    20px 22px;
+
+  border-bottom:
+    1px solid
+    #e5e8e4;
+
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    18px;
+
+  background:
+    #fff;
+}
+
+.drawerHeader h2 {
+  margin:
+    0;
+
+  color:
+    #181b19;
+
+  font-size:
+    22px;
+
+  line-height:
+    1.1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.035em;
+}
+
+.drawerClose {
+  width:
+    36px;
+
+  height:
+    36px;
+
+  flex:
+    0 0 36px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #dfe3df;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff;
+
+  color:
+    #626863;
+
+  cursor:
+    pointer;
+}
+
+.drawerForm {
+  padding:
+    20px 22px
+    26px;
+
+  display:
+    grid;
+
+  gap:
+    16px;
+}
+
+.formSection {
+  padding:
+    16px;
+
+  border:
+    1px solid
+    #e3e6e2;
+
+  display:
+    grid;
+
+  gap:
+    13px;
+}
+
+.formSectionTitle {
+  padding-bottom:
+    11px;
+
+  border-bottom:
+    1px solid
+    #edf0ec;
+}
+
+.formSectionTitle
+strong,
+.formSectionTitle
+span {
+  display:
+    block;
+}
+
+.formSectionTitle
+strong {
+  color:
+    #232724;
+
+  font-size:
+    12px;
+
+  font-weight:
+    900;
+}
+
+.formSectionTitle
+span {
+  margin-top:
+    3px;
+
+  color:
+    #8b918c;
+
+  font-size:
+    9px;
+}
+
+.field {
+  display:
+    grid;
+
+  gap:
+    6px;
+}
+
+.field
+> span {
+  color:
+    #555b56;
+
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+
+  text-transform:
+    uppercase;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width:
+    100%;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  outline:
+    0;
+
+  background:
+    #fafbf9;
+
+  color:
+    #242825;
+
+  font:
+    inherit;
+
+  font-size:
+    11px;
+}
+
+.field input,
+.field select {
+  min-height:
+    42px;
+
+  padding:
+    0 11px;
+}
+
+.field textarea {
+  padding:
+    10px 11px;
+
+  resize:
+    vertical;
+}
+
+.field small {
+  color:
+    #929893;
+
+  font-size:
+    8px;
+}
+
+.slugField {
+  border:
+    1px solid
+    #dce0dc;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    32px
+    minmax(
+      0,
+      1fr
+    );
+
+  align-items:
+    center;
+
+  background:
+    #fafbf9;
+}
+
+.slugField b {
+  height:
+    40px;
+
+  border-right:
+    1px solid
+    #e3e6e2;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  color:
+    #a0a5a1;
+}
+
+.slugField input {
+  border: 0;
+
+  background:
+    transparent;
+}
+
+/* =========================================================
+   SWITCH ROWS
+   ========================================================= */
+
+.switchRow {
+  min-height:
+    58px;
+
+  padding:
+    9px 0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    18px;
+
+  border-bottom:
+    1px solid
+    #edf0ec;
+
+  cursor:
+    pointer;
+}
+
+.switchRow:last-child {
+  border-bottom:
+    0;
+}
+
+.switchRow
+strong,
+.switchRow
+span {
+  display:
+    block;
+}
+
+.switchRow
+strong {
+  color:
+    #282d29;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+}
+
+.switchRow
+span {
+  margin-top:
+    3px;
+
+  color:
+    #8c928d;
+
+  font-size:
+    8px;
+}
+
+.switchRow
+input {
+  width:
+    38px;
+
+  height:
+    20px;
+
+  accent-color:
+    var(--orange);
+
+  cursor:
+    pointer;
+}
+
+/* =========================================================
+   DRAWER FOOTER
+   ========================================================= */
+
+.drawerFooter {
+  padding-top:
+    14px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr
+    1.35fr;
+
+  gap:
+    8px;
+}
+
+.cancelButton,
+.saveButton {
+  min-height:
+    44px;
+
+  padding:
+    0 14px;
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+
+  cursor:
+    pointer;
+}
+
+.cancelButton {
+  border:
+    1px solid
+    #dce0dc;
+
+  background:
+    #fff;
+
+  color:
+    #555b56;
+}
+
+.saveButton {
+  border:
+    0;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    7px;
+
+  background:
+    #151816;
+
+  color:
+    #fff;
+}
+
+.saveButton:hover:not(
+  :disabled
+) {
+  background:
+    var(--orange);
+}
+
+.cancelButton:disabled,
+.saveButton:disabled {
+  opacity:
+    .5;
+
+  cursor:
+    not-allowed;
+}
+
+.spinner {
+  animation:
+    categorySpinner
+    700ms
+    linear
+    infinite;
+}
+
+@keyframes categorySpinner {
+  to {
+    transform:
+      rotate(
+        360deg
+      );
+  }
+}
+
+
 /* =========================================================
    EMPTY
    ========================================================= */
@@ -1209,6 +1978,21 @@
     justify-content:
       flex-end;
   }
+
+  .actionsCell {
+    grid-column:
+      1 / -1;
+
+    justify-content:
+      flex-start;
+
+    padding-top:
+      7px;
+
+    border-top:
+      1px solid
+      #edf0ec;
+  }
 }
 
 /* =========================================================
@@ -1223,9 +2007,29 @@
       block;
   }
 
-  .headerSummary {
+  .headerActions {
+    width:
+      100%;
+
     margin-top:
       14px;
+
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr
+      auto;
+  }
+
+  .headerSummary {
+    margin-top:
+      0;
+  }
+
+  .addButton {
+    min-width:
+      140px;
   }
 
   .statsGrid {
@@ -1349,5 +2153,37 @@
 
     font-size:
       7px;
+  }
+
+    .actionButton
+  span {
+    display:
+      none;
+  }
+
+  .actionButton {
+    width:
+      32px;
+
+    padding:
+      0;
+
+    justify-content:
+      center;
+  }
+
+  .drawerHeader {
+    padding:
+      17px;
+  }
+
+  .drawerForm {
+    padding:
+      14px;
+  }
+
+  .formSection {
+    padding:
+      13px;
   }
 }

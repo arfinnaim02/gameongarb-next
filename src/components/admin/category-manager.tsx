@@ -1,16 +1,23 @@
 "use client";
 
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   FolderTree,
   Home,
   ImageIcon,
   Layers3,
+  Loader2,
   Navigation,
   Package,
+  Pencil,
+  Plus,
+  Power,
   Search,
   SlidersHorizontal,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import {
@@ -18,6 +25,10 @@ import {
   useMemo,
   useState,
 } from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
 
 import styles from "./category-manager.module.css";
 
@@ -85,6 +96,23 @@ type VisibilityFilter =
   | "YES"
   | "NO";
 
+type DrawerMode =
+  | {
+      type:
+        "CREATE";
+
+      parentId:
+        string |
+        null;
+    }
+  | {
+      type:
+        "EDIT";
+
+      category:
+        CategoryManagerItem;
+    };
+
 /* =========================================================
    COMPONENT
    ========================================================= */
@@ -95,6 +123,9 @@ export function CategoryManager({
   initialCategories:
     CategoryManagerItem[];
 }) {
+  const router =
+    useRouter();
+
   const [
     categories,
     setCategories,
@@ -134,6 +165,37 @@ export function CategoryManager({
     useState<VisibilityFilter>(
       "ALL",
     );
+
+  const [
+    drawer,
+    setDrawer,
+  ] =
+    useState<
+      DrawerMode |
+      null
+    >(
+      null,
+    );
+
+  const [
+    busy,
+    setBusy,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    message,
+    setMessage,
+  ] =
+    useState("");
+
+  const [
+    error,
+    setError,
+  ] =
+    useState("");
 
   const [
     expanded,
@@ -459,6 +521,310 @@ export function CategoryManager({
   /* =======================================================
      HELPERS
      ======================================================= */
+
+  function getDepth(
+    categoryId:
+      string,
+  ) {
+    let depth =
+      0;
+
+    let current =
+      categoryById.get(
+        categoryId,
+      );
+
+    while (
+      current?.parentId
+    ) {
+      depth +=
+        1;
+
+      current =
+        categoryById.get(
+          current.parentId,
+        );
+
+      if (
+        depth >
+        10
+      ) {
+        break;
+      }
+    }
+
+    return depth;
+  }
+
+  function isDescendant(
+    candidateId:
+      string,
+
+    categoryId:
+      string,
+  ) {
+    let current =
+      categoryById.get(
+        candidateId,
+      );
+
+    while (
+      current?.parentId
+    ) {
+      if (
+        current.parentId ===
+        categoryId
+      ) {
+        return true;
+      }
+
+      current =
+        categoryById.get(
+          current.parentId,
+        );
+    }
+
+    return false;
+  }
+
+  function validParentsFor(
+    editingId?:
+      string,
+  ) {
+    return categories
+      .filter(
+        (
+          category,
+        ) => {
+          if (
+            editingId &&
+            category.id ===
+              editingId
+          ) {
+            return false;
+          }
+
+          if (
+            getDepth(
+              category.id,
+            ) >=
+            2
+          ) {
+            return false;
+          }
+
+          if (
+            editingId &&
+            isDescendant(
+              category.id,
+              editingId,
+            )
+          ) {
+            return false;
+          }
+
+          return true;
+        },
+      )
+      .sort(
+        (
+          first,
+          second,
+        ) =>
+          getDepth(
+            first.id,
+          ) -
+            getDepth(
+              second.id,
+            ) ||
+          first.sortOrder -
+            second.sortOrder ||
+          first.name.localeCompare(
+            second.name,
+          ),
+      );
+  }
+
+  function openCreate(
+    parentId:
+      string |
+      null =
+        null,
+  ) {
+    setError("");
+    setMessage("");
+
+    setDrawer({
+      type:
+        "CREATE",
+
+      parentId,
+    });
+  }
+
+  function openEdit(
+    category:
+      CategoryManagerItem,
+  ) {
+    setError("");
+    setMessage("");
+
+    setDrawer({
+      type:
+        "EDIT",
+
+      category,
+    });
+  }
+
+  async function mutateCategory(
+    method:
+      "POST" |
+      "PATCH" |
+      "DELETE",
+
+    body:
+      Record<
+        string,
+        unknown
+      >,
+  ) {
+    setBusy(
+      true,
+    );
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/categories",
+          {
+            method,
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify(
+                body,
+              ),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Request failed.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to update category.",
+        );
+      }
+
+      setMessage(
+        result.message ??
+          "Category updated successfully.",
+      );
+
+      setDrawer(
+        null,
+      );
+
+      router.refresh();
+
+      return true;
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Something went wrong.",
+      );
+
+      return false;
+    } finally {
+      setBusy(
+        false,
+      );
+    }
+  }
+
+  async function toggleCategoryStatus(
+    category:
+      CategoryManagerItem,
+  ) {
+    await mutateCategory(
+      "PATCH",
+      {
+        id:
+          category.id,
+
+        active:
+          !category.active,
+      },
+    );
+  }
+
+  async function deleteCategory(
+    category:
+      CategoryManagerItem,
+  ) {
+    if (
+      category.childCount >
+      0
+    ) {
+      window.alert(
+        `${category.name} has child categories. Move or remove them first.`,
+      );
+
+      return;
+    }
+
+    if (
+      category.productCount >
+      0
+    ) {
+      window.alert(
+        `${category.name} still has assigned products. Reassign them first.`,
+      );
+
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Delete "${category.name}" permanently?`,
+      );
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+    await mutateCategory(
+      "DELETE",
+      {
+        id:
+          category.id,
+      },
+    );
+  }
 
   function toggleExpanded(
     categoryId:
@@ -875,6 +1241,111 @@ export function CategoryManager({
                 : "Inactive"}
             </span>
           </div>
+
+          <div
+            className={
+              styles.actionsCell
+            }
+          >
+            <button
+              type="button"
+              className={
+                styles.actionButton
+              }
+              onClick={() =>
+                openEdit(
+                  category,
+                )
+              }
+            >
+              <Pencil
+                size={
+                  14
+                }
+              />
+
+              <span>
+                Edit
+              </span>
+            </button>
+
+            {level <
+            2 ? (
+              <button
+                type="button"
+                className={
+                  styles.actionButton
+                }
+                onClick={() =>
+                  openCreate(
+                    category.id,
+                  )
+                }
+              >
+                <Plus
+                  size={
+                    14
+                  }
+                />
+
+                <span>
+                  Subcategory
+                </span>
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              className={
+                styles.actionIcon
+              }
+              aria-label={
+                category.active
+                  ? `Deactivate ${category.name}`
+                  : `Activate ${category.name}`
+              }
+              title={
+                category.active
+                  ? "Deactivate"
+                  : "Activate"
+              }
+              disabled={
+                busy
+              }
+              onClick={() =>
+                void toggleCategoryStatus(
+                  category,
+                )
+              }
+            >
+              <Power
+                size={
+                  14
+                }
+              />
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.actionIcon} ${styles.deleteAction}`}
+              aria-label={`Delete ${category.name}`}
+              title="Delete"
+              disabled={
+                busy
+              }
+              onClick={() =>
+                void deleteCategory(
+                  category,
+                )
+              }
+            >
+              <Trash2
+                size={
+                  14
+                }
+              />
+            </button>
+          </div>
         </article>
 
         {hasChildren &&
@@ -946,23 +1417,79 @@ export function CategoryManager({
 
         <div
           className={
-            styles.headerSummary
+            styles.headerActions
           }
         >
-          <FolderTree
+          <div
+            className={
+              styles.headerSummary
+            }
+          >
+            <FolderTree
+              size={
+                19
+              }
+            />
+
+            <span>
+              {
+                stats.total
+              }{" "}
+              total categories
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className={
+              styles.addButton
+            }
+            onClick={() =>
+              openCreate(
+                null,
+              )
+            }
+          >
+            <Plus
+              size={
+                16
+              }
+            />
+
+            Add Category
+          </button>
+        </div>
+      </header>
+
+      {message ? (
+        <div
+          className={
+            styles.successMessage
+          }
+        >
+          {
+            message
+          }
+        </div>
+      ) : null}
+
+      {error ? (
+        <div
+          className={
+            styles.errorMessage
+          }
+        >
+          <AlertTriangle
             size={
-              19
+              16
             }
           />
 
-          <span>
-            {
-              stats.total
-            }{" "}
-            total categories
-          </span>
+          {
+            error
+          }
         </div>
-      </header>
+      ) : null}
 
       {/* ===================================================
           KPI CARDS
@@ -1300,6 +1827,10 @@ export function CategoryManager({
           <span>
             Status
           </span>
+
+          <span>
+            Actions
+          </span>
         </div>
 
         {visibleRoots.length >
@@ -1355,6 +1886,762 @@ export function CategoryManager({
           </div>
         )}
       </section>
+
+      {drawer ? (
+        <CategoryDrawer
+          mode={
+            drawer
+          }
+          categories={
+            categories
+          }
+          validParents={
+            validParentsFor(
+              drawer.type ===
+                "EDIT"
+                ? drawer.category
+                    .id
+                : undefined,
+            )
+          }
+          busy={
+            busy
+          }
+          close={() =>
+            setDrawer(
+              null,
+            )
+          }
+          save={
+            mutateCategory
+          }
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function CategoryDrawer({
+  mode,
+  categories,
+  validParents,
+  busy,
+  close,
+  save,
+}: {
+  mode:
+    DrawerMode;
+
+  categories:
+    CategoryManagerItem[];
+
+  validParents:
+    CategoryManagerItem[];
+
+  busy:
+    boolean;
+
+  close:
+    () => void;
+
+  save:
+    (
+      method:
+        "POST" |
+        "PATCH" |
+        "DELETE",
+
+      body:
+        Record<
+          string,
+          unknown
+        >,
+    ) =>
+      Promise<boolean>;
+}) {
+  const editing =
+    mode.type ===
+    "EDIT"
+      ? mode.category
+      : null;
+
+  const defaultParentId =
+    mode.type ===
+    "CREATE"
+      ? mode.parentId ??
+        ""
+      : editing?.parentId ??
+        "";
+
+  const [
+    name,
+    setName,
+  ] =
+    useState(
+      editing?.name ??
+        "",
+    );
+
+  const [
+    slug,
+    setSlug,
+  ] =
+    useState(
+      editing?.slug ??
+        "",
+    );
+
+  const [
+    slugTouched,
+    setSlugTouched,
+  ] =
+    useState(
+      Boolean(
+        editing,
+      ),
+    );
+
+  const [
+    parentId,
+    setParentId,
+  ] =
+    useState(
+      defaultParentId,
+    );
+
+  const [
+    description,
+    setDescription,
+  ] =
+    useState(
+      editing?.description ??
+        "",
+    );
+
+  const [
+    sortOrder,
+    setSortOrder,
+  ] =
+    useState(
+      editing?.sortOrder ??
+        0,
+    );
+
+  const [
+    active,
+    setActive,
+  ] =
+    useState(
+      editing?.active ??
+        true,
+    );
+
+  const [
+    showInNavigation,
+    setShowInNavigation,
+  ] =
+    useState(
+      editing?.showInNavigation ??
+        false,
+    );
+
+  const [
+    showOnHomepage,
+    setShowOnHomepage,
+  ] =
+    useState(
+      editing?.showOnHomepage ??
+        false,
+    );
+
+  const parent =
+    parentId
+      ? categories.find(
+          (
+            category,
+          ) =>
+            category.id ===
+            parentId,
+        ) ??
+        null
+      : null;
+
+  function makeSlug(
+    value:
+      string,
+  ) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(
+        /[^a-z0-9]+/g,
+        "-",
+      )
+      .replace(
+        /^-+|-+$/g,
+        "",
+      );
+  }
+
+  function handleNameChange(
+    value:
+      string,
+  ) {
+    setName(
+      value,
+    );
+
+    if (
+      !slugTouched
+    ) {
+      setSlug(
+        makeSlug(
+          value,
+        ),
+      );
+    }
+  }
+
+  async function submit(
+    event:
+      React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    const payload = {
+      name:
+        name.trim(),
+
+      slug:
+        slug.trim(),
+
+      description:
+        description.trim(),
+
+      parentId,
+
+      sortOrder:
+        Number(
+          sortOrder,
+        ),
+
+      active,
+
+      showInNavigation,
+
+      showOnHomepage,
+    };
+
+    if (
+      mode.type ===
+      "EDIT"
+    ) {
+      await save(
+        "PATCH",
+        {
+          id:
+            mode.category.id,
+
+          ...payload,
+        },
+      );
+
+      return;
+    }
+
+    await save(
+      "POST",
+      payload,
+    );
+  }
+
+  return (
+    <div
+      className={
+        styles.drawerBackdrop
+      }
+      onMouseDown={(
+        event,
+      ) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          close();
+        }
+      }}
+    >
+      <aside
+        className={
+          styles.drawer
+        }
+      >
+        <div
+          className={
+            styles.drawerHeader
+          }
+        >
+          <div>
+            <span
+              className={
+                styles.eyebrow
+              }
+            >
+              {mode.type ===
+              "EDIT"
+                ? "Edit category"
+                : parent
+                  ? "New subcategory"
+                  : "New category"}
+            </span>
+
+            <h2>
+              {mode.type ===
+              "EDIT"
+                ? editing?.name
+                : parent
+                  ? `Under ${parent.name}`
+                  : "Add Category"}
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            className={
+              styles.drawerClose
+            }
+            aria-label="Close"
+            disabled={
+              busy
+            }
+            onClick={
+              close
+            }
+          >
+            <X
+              size={
+                19
+              }
+            />
+          </button>
+        </div>
+
+        <form
+          className={
+            styles.drawerForm
+          }
+          onSubmit={
+            submit
+          }
+        >
+          <div
+            className={
+              styles.formSection
+            }
+          >
+            <div
+              className={
+                styles.formSectionTitle
+              }
+            >
+              <strong>
+                Basic Information
+              </strong>
+
+              <span>
+                Category name and
+                storefront URL.
+              </span>
+            </div>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Category Name
+              </span>
+
+              <input
+                value={
+                  name
+                }
+                required
+                minLength={
+                  2
+                }
+                placeholder="Example: Football"
+                onChange={(
+                  event,
+                ) =>
+                  handleNameChange(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+            </label>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Slug
+              </span>
+
+              <div
+                className={
+                  styles.slugField
+                }
+              >
+                <b>
+                  /
+                </b>
+
+                <input
+                  value={
+                    slug
+                  }
+                  required
+                  pattern="[a-z0-9-]+"
+                  placeholder="football"
+                  onChange={(
+                    event,
+                  ) => {
+                    setSlugTouched(
+                      true,
+                    );
+
+                    setSlug(
+                      makeSlug(
+                        event.target
+                          .value,
+                      ),
+                    );
+                  }}
+                />
+              </div>
+
+              <small>
+                Lowercase letters,
+                numbers and hyphens.
+              </small>
+            </label>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Description
+              </span>
+
+              <textarea
+                rows={
+                  4
+                }
+                value={
+                  description
+                }
+                placeholder="Optional description..."
+                onChange={(
+                  event,
+                ) =>
+                  setDescription(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+            </label>
+          </div>
+
+          <div
+            className={
+              styles.formSection
+            }
+          >
+            <div
+              className={
+                styles.formSectionTitle
+              }
+            >
+              <strong>
+                Hierarchy
+              </strong>
+
+              <span>
+                Maximum three
+                levels.
+              </span>
+            </div>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Parent Category
+              </span>
+
+              <select
+                value={
+                  parentId
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setParentId(
+                    event.target
+                      .value,
+                  )
+                }
+              >
+                <option value="">
+                  Root category
+                </option>
+
+                {validParents.map(
+                  (
+                    category,
+                  ) => (
+                    <option
+                      key={
+                        category.id
+                      }
+                      value={
+                        category.id
+                      }
+                    >
+                      {category.parentId
+                        ? `↳ ${category.name}`
+                        : category.name}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Shop Display Order
+              </span>
+
+              <input
+                type="number"
+                min={
+                  0
+                }
+                value={
+                  sortOrder
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setSortOrder(
+                    Number(
+                      event.target
+                        .value,
+                    ),
+                  )
+                }
+              />
+            </label>
+          </div>
+
+          <div
+            className={
+              styles.formSection
+            }
+          >
+            <div
+              className={
+                styles.formSectionTitle
+              }
+            >
+              <strong>
+                Visibility
+              </strong>
+
+              <span>
+                Control where this
+                category appears.
+              </span>
+            </div>
+
+            <label
+              className={
+                styles.switchRow
+              }
+            >
+              <div>
+                <strong>
+                  Active
+                </strong>
+
+                <span>
+                  Allow this category
+                  on the storefront.
+                </span>
+              </div>
+
+              <input
+                type="checkbox"
+                checked={
+                  active
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setActive(
+                    event.target
+                      .checked,
+                  )
+                }
+              />
+            </label>
+
+            <label
+              className={
+                styles.switchRow
+              }
+            >
+              <div>
+                <strong>
+                  Show in Navigation
+                </strong>
+
+                <span>
+                  Display in store
+                  navigation.
+                </span>
+              </div>
+
+              <input
+                type="checkbox"
+                checked={
+                  showInNavigation
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setShowInNavigation(
+                    event.target
+                      .checked,
+                  )
+                }
+              />
+            </label>
+
+            <label
+              className={
+                styles.switchRow
+              }
+            >
+              <div>
+                <strong>
+                  Show on Homepage
+                </strong>
+
+                <span>
+                  Display in homepage
+                  category cards.
+                </span>
+              </div>
+
+              <input
+                type="checkbox"
+                checked={
+                  showOnHomepage
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setShowOnHomepage(
+                    event.target
+                      .checked,
+                  )
+                }
+              />
+            </label>
+          </div>
+
+          <div
+            className={
+              styles.drawerFooter
+            }
+          >
+            <button
+              type="button"
+              className={
+                styles.cancelButton
+              }
+              disabled={
+                busy
+              }
+              onClick={
+                close
+              }
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className={
+                styles.saveButton
+              }
+              disabled={
+                busy ||
+                name.trim().length <
+                  2 ||
+                slug.trim().length <
+                  2
+              }
+            >
+              {busy ? (
+                <Loader2
+                  size={
+                    16
+                  }
+                  className={
+                    styles.spinner
+                  }
+                />
+              ) : mode.type ===
+                "EDIT" ? (
+                <Pencil
+                  size={
+                    15
+                  }
+                />
+              ) : (
+                <Plus
+                  size={
+                    15
+                  }
+                />
+              )}
+
+              {busy
+                ? "Saving..."
+                : mode.type ===
+                    "EDIT"
+                  ? "Save Changes"
+                  : "Create Category"}
+            </button>
+          </div>
+        </form>
+      </aside>
     </div>
   );
 }
