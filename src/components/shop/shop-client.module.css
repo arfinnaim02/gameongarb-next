@@ -1690,6 +1690,7 @@ p strong {
 
 /* =========================================================
    PRODUCT GRID
+   EXACT HOMEPAGE CARD SCALE
    ========================================================= */
 
 .productGrid {
@@ -1698,7 +1699,7 @@ p strong {
 
   grid-template-columns:
     repeat(
-      4,
+      3,
       minmax(
         0,
         1fr
@@ -1706,57 +1707,275 @@ p strong {
     );
 
   gap:
-    13px;
+    12px;
 }
+
+/*
+ * Shop uses the same shared ProductCard
+ * component as the homepage.
+ *
+ * These values mirror the homepage card
+ * proportions so both pages look identical.
+ */
 
 .productGrid
 :global(.product-card) {
   min-width:
     0;
 
+  height:
+    100%;
+
   border:
     1px solid
-    #eceeeb;
+    transparent;
 
   background:
     #fff;
 
   transition:
-    border-color
-      180ms ease,
     transform
-      220ms
+      260ms
       var(--ease-premium),
+    border-color
+      220ms ease,
     box-shadow
-      220ms ease;
+      260ms ease;
 }
+
+/* =========================================================
+   IMAGE — SAME AS HOMEPAGE
+   ========================================================= */
 
 .productGrid
 :global(.product-card-media) {
+  position:
+    relative;
+
   aspect-ratio:
-    1.12 / 1;
+    1 / 1.08;
+
+  overflow:
+    hidden;
 
   background:
-    #f5f6f4;
+    #f4f5f2;
 }
 
 .productGrid
 :global(.product-card-image) {
   padding:
-    12px;
+    clamp(
+      6px,
+      .7vw,
+      10px
+    );
+
+  object-fit:
+    contain;
 }
+
+/* =========================================================
+   CONTENT — SAME AS HOMEPAGE
+   ========================================================= */
 
 .productGrid
 :global(.product-card-content) {
   padding:
+    12px 4px
     10px;
 }
 
 .productGrid
-:global(.product-card-title) {
+:global(.product-card-category) {
+  display:
+    block;
+
+  margin-bottom:
+    5px;
+
+  overflow:
+    hidden;
+
+  color:
+    #858b86;
+
   font-size:
-    13px;
+    15px;
+
+  line-height:
+    1.1;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    .065em;
+
+  text-overflow:
+    ellipsis;
+
+  text-transform:
+    uppercase;
+
+  white-space:
+    nowrap;
 }
+
+.productGrid
+:global(.product-card-title) {
+  min-height:
+    2.35em;
+
+  margin:
+    0 0
+    6px;
+
+  color:
+    #1f2420;
+
+  font-size:
+    18px;
+
+  line-height:
+    1.22;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    -.015em;
+}
+
+/* =========================================================
+   PRICE — SAME AS HOMEPAGE
+   ========================================================= */
+
+.productGrid
+:global(.product-card-price-row) {
+  min-height:
+    19px;
+
+  display:
+    flex;
+
+  align-items:
+    baseline;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    5px;
+}
+
+.productGrid
+:global(.product-card .price) {
+  color:
+    var(--price);
+
+  font-size:
+    18px;
+
+  line-height:
+    1;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.035em;
+}
+
+.productGrid
+:global(.product-card-from) {
+  color:
+    #7d837e;
+
+  font-size:
+    16px;
+
+  font-weight:
+    750;
+}
+
+.productGrid
+:global(.product-card-old-price) {
+  color:
+    #8f948f;
+
+  font-size:
+    15px;
+
+  font-weight:
+    700;
+}
+
+/* =========================================================
+   COLOURS — SAME AS HOMEPAGE
+   ========================================================= */
+
+.productGrid
+:global(.product-card-colors) {
+  min-height:
+    15px;
+
+  margin-top:
+    7px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    5px;
+}
+
+.productGrid
+:global(.product-card-color) {
+  width:
+    9px;
+
+  height:
+    9px;
+}
+
+/* =========================================================
+   QUICK ADD — SAME AS HOMEPAGE
+   ========================================================= */
+
+.productGrid
+:global(.product-card-quick-add) {
+  width:
+    calc(
+      100% - 6px
+    );
+
+  min-height:
+    38px;
+
+  margin:
+    0 3px
+    3px;
+
+  padding:
+    0 11px;
+
+  font-size:
+    14px;
+
+  line-height:
+    1;
+
+  font-weight:
+    850;
+}
+
+/* =========================================================
+   HOVER — SAME AS HOMEPAGE
+   ========================================================= */
 
 @media (
   hover: hover
@@ -1766,30 +1985,39 @@ p strong {
   .productGrid
   :global(.product-card:hover) {
     border-color:
-      #d6dad6;
+      #e8ebe7;
+
+    box-shadow:
+      0 12px 28px
+      rgb(
+        10 14 11 /
+        5%
+      );
 
     transform:
       translateY(
         -3px
       );
+  }
 
-    box-shadow:
-      0 14px 32px
-      rgb(
-        0 0 0 /
-        5%
+  .productGrid
+  :global(.product-card:hover .product-card-image) {
+    transform:
+      scale(
+        1.04
       );
   }
 }
 
 /* =========================================================
    COMPACT GRID
+   KEEP SAME SIZE AS HOMEPAGE
    ========================================================= */
 
 .productGridCompact {
   grid-template-columns:
     repeat(
-      5,
+      3,
       minmax(
         0,
         1fr
@@ -1797,7 +2025,7 @@ p strong {
     );
 
   gap:
-    9px;
+    12px;
 }
 
 /* =========================================================
@@ -3000,102 +3228,20 @@ input {
 @media (
   max-width: 1050px
 ) {
-.productGrid,
-.productGridCompact {
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(
-        0,
-        1fr
-      )
-    );
+  .productGrid,
+  .productGridCompact {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
 
-  gap:
-    8px;
-}
-
-.productGrid
-:global(.product-card-media) {
-  aspect-ratio:
-    1 / 1.08;
-}
-
-.productGrid
-:global(.product-card-image) {
-  padding:
-    6px 7px;
-}
-
-.productGrid
-:global(.product-card-content) {
-  padding:
-    8px 2px
-    7px;
-}
-
-.productGrid
-:global(.product-card-category) {
-  margin-bottom:
-    4px;
-
-  font-size:
-    14px;
-}
-
-.productGrid
-:global(.product-card-title) {
-  min-height:
-    2.35em;
-
-  margin:
-    0 0
-    5px;
-
-  font-size:
-    15px;
-
-  line-height:
-    1.2;
-
-  font-weight:
-    900;
-}
-
-.productGrid
-:global(.product-card .price) {
-  font-size:
-    18px;
-}
-
-.productGrid
-:global(.product-card-old-price) {
-  font-size:
-    15px;
-}
-
-.productGrid
-:global(.product-card-quick-add) {
-  width:
-    calc(
-      100% - 2px
-    );
-
-  min-height:
-    28px !important;
-
-  margin:
-    0 1px
-    1px;
-
-  padding:
-    4px 6px;
-
-  font-size:
-    15px;
-}
-
-/* Close TABLET media query */
+    gap:
+      8px;
+  }
 }
 
 /* =========================================================

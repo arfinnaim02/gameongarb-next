@@ -26,6 +26,17 @@ import {
   StoreHeader,
 } from "@/components/layout/store-header";
 
+import {
+  ShoppingBag,
+} from "lucide-react";
+
+import {
+  useStore,
+} from "@/components/shared/store-provider";
+
+import {
+  formatBDT,
+} from "@/lib/money";
 /* =========================================================
    TYPES
    ========================================================= */
@@ -57,6 +68,24 @@ export function StoreShell({
 }: StoreShellProps) {
   const pathname =
     usePathname();
+
+      const {
+    cart,
+    cartCount,
+  } =
+    useStore();
+
+  const cartSubtotal =
+    cart.reduce(
+      (
+        total,
+        line,
+      ) =>
+        total +
+        line.product.price *
+          line.quantity,
+      0,
+    );
 
   const [
     cartOpen,
@@ -128,6 +157,56 @@ export function StoreShell({
           handleCartClose
         }
       />
+
+            {/* =====================================================
+          FLOATING CART TRIGGER
+          ===================================================== */}
+
+      {!cartOpen ? (
+        <button
+          type="button"
+          className="floating-cart-trigger"
+          onClick={
+            handleCartOpen
+          }
+          aria-label={`Open cart with ${cartCount} ${
+            cartCount ===
+            1
+              ? "item"
+              : "items"
+          }`}
+          aria-controls="gog-cart-drawer"
+        >
+          <span className="floating-cart-icon">
+            <ShoppingBag
+              size={
+                25
+              }
+              strokeWidth={
+                1.8
+              }
+            />
+          </span>
+
+          <span className="floating-cart-count">
+            {
+              cartCount
+            }{" "}
+            {cartCount ===
+            1
+              ? "ITEM"
+              : "ITEMS"}
+          </span>
+
+          <span className="floating-cart-divider" />
+
+          <strong className="floating-cart-total">
+            {formatBDT(
+              cartSubtotal,
+            )}
+          </strong>
+        </button>
+      ) : null}
 
       {/* =====================================================
           CURRENT STORE PAGE
