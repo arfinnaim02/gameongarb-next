@@ -436,7 +436,7 @@
     4px;
 
   color:
-    #3e433f;
+    #252a26;
 
   font-size:
     13px;
@@ -445,7 +445,7 @@
     1;
 
   font-weight:
-    850;
+    900;
 }
 
 .label b {
@@ -488,14 +488,14 @@
     100%;
 
   min-height:
-    48px;
+    50px;
 
   padding:
     0 14px;
 
   border:
-    1px solid
-    #d8dcd8;
+    2px solid
+    #c9ceca;
 
   border-radius:
     0;
@@ -504,7 +504,7 @@
     0;
 
   background:
-    #fff;
+    #f0f2ef;
 
   color:
     #232724;
@@ -526,27 +526,33 @@
 
 .control::placeholder {
   color:
-    #a8ada9;
+    #929893;
+
+  opacity:
+    1;
 }
 
 .control:hover {
   border-color:
-    #bfc4bf;
+    #aeb4af;
+
+  background:
+    #eceeeb;
 }
 
 .control:focus {
   border-color:
-    #555c56;
+    #3e433f;
+
+  background:
+    #f5f6f4;
 
   box-shadow:
     0 0 0 3px
     rgb(
       17 20 18 /
-      4%
+      5%
     );
-
-  background:
-    #fff;
 }
 
 .textarea {
@@ -561,6 +567,9 @@
 
   resize:
     vertical;
+
+  background:
+    #f0f2ef;
 }
 
 /* =========================================================
@@ -572,7 +581,7 @@
     #cf4a41 !important;
 
   background:
-    #fffafa;
+    #fff3f2;
 }
 
 .invalid:focus {
