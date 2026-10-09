@@ -170,6 +170,17 @@ export async function POST(
               .string()
               .optional(),
 
+          image:
+            z
+              .union([
+                z
+                  .string()
+                  .url(),
+
+                z.null(),
+              ])
+              .optional(),
+
           sortOrder:
             z
               .coerce
@@ -219,6 +230,10 @@ export async function POST(
           parentId: input.parentId || null,
           description:
             input.description ||
+            null,
+
+          image:
+            input.image ||
             null,
 
           sortOrder:
@@ -589,6 +604,17 @@ export async function PATCH(
               .string()
               .optional(),
 
+          image:
+            z
+              .union([
+                z
+                  .string()
+                  .url(),
+
+                z.null(),
+              ])
+              .optional(),
+
           sortOrder:
             z
               .coerce
@@ -625,6 +651,15 @@ export async function PATCH(
             undefined && {
             description:
               input.description ||
+              null,
+          }),
+
+          ...(Object.hasOwn(
+            body,
+            "image",
+          ) && {
+            image:
+              input.image ||
               null,
           }),
 

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import {
   AlertTriangle,
   ChevronDown,
@@ -17,6 +19,7 @@ import {
   Search,
   SlidersHorizontal,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 
@@ -2054,6 +2057,35 @@ function CategoryDrawer({
         false,
     );
 
+  const [
+    image,
+    setImage,
+  ] =
+    useState(
+      editing?.image ??
+        "",
+    );
+
+  const [
+    uploadingImage,
+    setUploadingImage,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    imageMessage,
+    setImageMessage,
+  ] =
+    useState("");
+
+  const [
+    imageError,
+    setImageError,
+  ] =
+    useState("");
+
   const parent =
     parentId
       ? categories.find(
@@ -2102,6 +2134,104 @@ function CategoryDrawer({
     }
   }
 
+    async function handleImageFile(
+    event:
+      React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    event.target.value =
+      "";
+
+    if (
+      !file
+    ) {
+      return;
+    }
+
+    setUploadingImage(
+      true,
+    );
+
+    setImageError("");
+    setImageMessage("");
+
+    try {
+      const formData =
+        new FormData();
+
+      formData.append(
+        "file",
+        file,
+      );
+
+      const response =
+        await fetch(
+          "/api/admin/homepage/category-images/upload",
+          {
+            method:
+              "POST",
+
+            body:
+              formData,
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Upload failed.",
+            }),
+          );
+
+      if (
+        !response.ok ||
+        !result.image?.url
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to upload image.",
+        );
+      }
+
+      setImage(
+        result.image.url,
+      );
+
+      setImageMessage(
+        "Image uploaded. Save the category to publish this change.",
+      );
+    } catch (
+      caught
+    ) {
+      setImageError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to upload category image.",
+      );
+    } finally {
+      setUploadingImage(
+        false,
+      );
+    }
+  }
+
+  function removeImage() {
+    setImage("");
+
+    setImageError("");
+
+    setImageMessage(
+      "Image removed. Save the category to publish this change.",
+    );
+  }
+
+
   async function submit(
     event:
       React.FormEvent<HTMLFormElement>,
@@ -2117,6 +2247,10 @@ function CategoryDrawer({
 
       description:
         description.trim(),
+
+      image:
+        image ||
+        null,
 
       parentId,
 
@@ -2212,7 +2346,8 @@ function CategoryDrawer({
             }
             aria-label="Close"
             disabled={
-              busy
+              busy ||
+              uploadingImage
             }
             onClick={
               close
@@ -2358,6 +2493,217 @@ function CategoryDrawer({
                 }
               />
             </label>
+          </div>
+
+          <div
+            className={
+              styles.formSection
+            }
+          >
+            <div
+              className={
+                styles.formSectionTitle
+              }
+            >
+              <strong>
+                Category Image
+              </strong>
+
+              <span>
+                Used on homepage
+                and category
+                discovery cards.
+              </span>
+            </div>
+
+            {image ? (
+              <div
+                className={
+                  styles.categoryImageEditor
+                }
+              >
+                <div
+                  className={
+                    styles.categoryImagePreview
+                  }
+                >
+                  <Image
+                    src={
+                      image
+                    }
+                    alt={
+                      name ||
+                      "Category image"
+                    }
+                    fill
+                    sizes="420px"
+                  />
+                </div>
+
+                <div
+                  className={
+                    styles.imageActions
+                  }
+                >
+                  <label
+                    className={
+                      styles.imageUploadButton
+                    }
+                  >
+                    {uploadingImage ? (
+                      <Loader2
+                        size={
+                          15
+                        }
+                        className={
+                          styles.spinner
+                        }
+                      />
+                    ) : (
+                      <Upload
+                        size={
+                          15
+                        }
+                      />
+                    )}
+
+                    {uploadingImage
+                      ? "Uploading..."
+                      : "Replace Image"}
+
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      disabled={
+                        busy ||
+                        uploadingImage
+                      }
+                      onChange={
+                        handleImageFile
+                      }
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className={
+                      styles.imageRemoveButton
+                    }
+                    disabled={
+                      busy ||
+                      uploadingImage
+                    }
+                    onClick={
+                      removeImage
+                    }
+                  >
+                    <Trash2
+                      size={
+                        15
+                      }
+                    />
+
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                className={
+                  styles.categoryImageUpload
+                }
+              >
+                {uploadingImage ? (
+                  <Loader2
+                    size={
+                      28
+                    }
+                    className={
+                      styles.spinner
+                    }
+                  />
+                ) : (
+                  <Upload
+                    size={
+                      28
+                    }
+                  />
+                )}
+
+                <strong>
+                  {uploadingImage
+                    ? "Uploading image..."
+                    : "Upload category image"}
+                </strong>
+
+                <span>
+                  JPG, PNG, WebP or
+                  AVIF · maximum 8 MB
+                </span>
+
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  disabled={
+                    busy ||
+                    uploadingImage
+                  }
+                  onChange={
+                    handleImageFile
+                  }
+                />
+              </label>
+            )}
+
+            {imageMessage ? (
+              <div
+                className={
+                  styles.imageNotice
+                }
+              >
+                {
+                  imageMessage
+                }
+              </div>
+            ) : null}
+
+            {imageError ? (
+              <div
+                className={
+                  styles.imageError
+                }
+              >
+                <AlertTriangle
+                  size={
+                    14
+                  }
+                />
+
+                {
+                  imageError
+                }
+              </div>
+            ) : null}
+
+            <div
+              className={
+                styles.imageRecommendation
+              }
+            >
+              <strong>
+                Recommended image
+              </strong>
+
+              <span>
+                Use a clean,
+                high-resolution
+                square or portrait
+                lifestyle image.
+                The storefront
+                automatically crops
+                it for each card.
+              </span>
+            </div>
           </div>
 
           <div
@@ -2602,6 +2948,7 @@ function CategoryDrawer({
               }
               disabled={
                 busy ||
+                uploadingImage ||
                 name.trim().length <
                   2 ||
                 slug.trim().length <
