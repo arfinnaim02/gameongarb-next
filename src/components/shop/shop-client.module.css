@@ -346,6 +346,17 @@ button:hover,
    SEARCH
    ========================================================= */
 
+.searchShell {
+  position:
+    relative;
+
+  min-width:
+    0;
+
+  z-index:
+    30;
+}
+
 .search {
   position:
     relative;
@@ -507,6 +518,587 @@ input::placeholder {
 .searchButton:hover {
   background:
     var(--orange);
+}
+
+
+/* =========================================================
+   SEARCH SUGGESTIONS
+   ========================================================= */
+
+.searchSuggestions {
+  position:
+    absolute;
+
+  z-index:
+    80;
+
+  top:
+    calc(
+      100% + 7px
+    );
+
+  left: 0;
+
+  width:
+    100%;
+
+  max-height:
+    470px;
+
+  overflow-y:
+    auto;
+
+  border:
+    1px solid
+    #dfe2de;
+
+  background:
+    #fff;
+
+  box-shadow:
+    0 22px 55px
+    rgb(
+      0 0 0 /
+      13%
+    );
+}
+
+.suggestionSection {
+  padding:
+    12px;
+}
+
+.suggestionSection
++ .suggestionSection {
+  border-top:
+    1px solid
+    #edf0ec;
+}
+
+.suggestionHeading {
+  min-height:
+    24px;
+
+  margin-bottom:
+    7px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+}
+
+.suggestionHeading
+span {
+  color:
+    #8a908b;
+
+  font-size:
+    9px;
+
+  line-height: 1;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .13em;
+
+  text-transform:
+    uppercase;
+}
+
+.suggestionHeading
+button {
+  padding: 0;
+
+  border: 0;
+
+  background:
+    transparent;
+
+  color:
+    var(--orange);
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    850;
+
+  cursor:
+    pointer;
+}
+
+/* =========================
+   PRODUCT RESULTS
+   ========================= */
+
+.productSuggestions {
+  display:
+    grid;
+
+  gap:
+    2px;
+}
+
+.productSuggestion {
+  min-width: 0;
+
+  min-height:
+    66px;
+
+  padding:
+    6px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    48px
+    minmax(
+      0,
+      1fr
+    )
+    auto;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+
+  color:
+    #202421;
+
+  transition:
+    background-color
+      160ms ease;
+}
+
+.productSuggestion:hover {
+  background:
+    #f6f7f4;
+}
+
+.suggestionImage {
+  position:
+    relative;
+
+  width:
+    48px;
+
+  height:
+    54px;
+
+  overflow:
+    hidden;
+
+  display:
+    block;
+
+  background:
+    #f1f2ef;
+}
+
+.suggestionImage
+img {
+  width:
+    100%;
+
+  height:
+    100%;
+
+  display:
+    block;
+
+  object-fit:
+    cover;
+}
+
+.suggestionProductCopy {
+  min-width:
+    0;
+}
+
+.suggestionProductCopy
+small,
+.suggestionProductCopy
+strong,
+.suggestionProductCopy
+span {
+  display:
+    block;
+}
+
+.suggestionProductCopy
+small {
+  margin-bottom:
+    2px;
+
+  color:
+    #969b97;
+
+  font-size:
+    8px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    .08em;
+
+  text-transform:
+    uppercase;
+}
+
+.suggestionProductCopy
+strong {
+  overflow:
+    hidden;
+
+  color:
+    #212522;
+
+  font-size:
+    12px;
+
+  line-height:
+    1.25;
+
+  font-weight:
+    850;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.suggestionProductCopy
+span {
+  margin-top:
+    4px;
+
+  color:
+    var(--price);
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+}
+
+.stockStatus {
+  padding:
+    4px 6px;
+
+  font-size:
+    8px;
+
+  line-height: 1;
+
+  font-weight:
+    850;
+
+  white-space:
+    nowrap;
+}
+
+.inStock {
+  background:
+    #edf8f1;
+
+  color:
+    #18713d;
+}
+
+.outOfStock {
+  background:
+    #fff0ee;
+
+  color:
+    #a93a31;
+}
+
+/* =========================
+   CATEGORY RESULTS
+   ========================= */
+
+.categorySuggestions {
+  display:
+    grid;
+
+  gap:
+    3px;
+}
+
+.categorySuggestions
+button {
+  width:
+    100%;
+
+  min-height:
+    38px;
+
+  padding:
+    0 9px;
+
+  border: 0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+
+  background:
+    transparent;
+
+  color:
+    #252a26;
+
+  font:
+    inherit;
+
+  cursor:
+    pointer;
+}
+
+.categorySuggestions
+button:hover {
+  background:
+    #f6f7f4;
+}
+
+.categorySuggestions
+button
+span {
+  font-size:
+    12px;
+
+  font-weight:
+    850;
+}
+
+.categorySuggestions
+button
+b {
+  color:
+    #969c97;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+}
+
+/* =========================
+   RECENT SEARCHES
+   ========================= */
+
+.recentSearches {
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    6px;
+}
+
+.recentSearches
+button {
+  min-height:
+    31px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid
+    #e2e5e1;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    6px;
+
+  background:
+    #f8f9f7;
+
+  color:
+    #555b56;
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+}
+
+.recentSearches
+button:hover {
+  border-color:
+    #c8cdc8;
+
+  color:
+    #202421;
+}
+
+/* =========================
+   NO MATCH
+   ========================= */
+
+.noSuggestions {
+  min-height:
+    64px;
+
+  padding:
+    13px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+
+  color:
+    #767c77;
+}
+
+.noSuggestions
+> svg {
+  flex:
+    0 0 auto;
+
+  color:
+    #a2a7a3;
+}
+
+.noSuggestions
+strong,
+.noSuggestions
+span {
+  display:
+    block;
+}
+
+.noSuggestions
+strong {
+  color:
+    #343935;
+
+  font-size:
+    11px;
+}
+
+.noSuggestions
+span {
+  margin-top:
+    3px;
+
+  font-size:
+    10px;
+}
+
+/* =========================
+   SEARCH ALL
+   ========================= */
+
+.searchAll {
+  width:
+    100%;
+
+  min-height:
+    43px;
+
+  padding:
+    0 13px;
+
+  border:
+    0;
+
+  border-top:
+    1px solid
+    #e8ebe7;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+
+  background:
+    #111412;
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    11px;
+
+  font-weight:
+    850;
+
+  cursor:
+    pointer;
+}
+
+.searchAll
+b {
+  color:
+    var(--orange);
+
+  font-size:
+    16px;
+}
+
+.searchAll:hover {
+  background:
+    #1a1e1b;
 }
 
 /* =========================================================
@@ -2491,6 +3083,24 @@ input {
       12px;
   }
 
+  .searchShell {
+    width:
+      100%;
+  }
+
+  .searchSuggestions {
+    top:
+      calc(
+        100% + 5px
+      );
+
+    max-height:
+      min(
+        62vh,
+        430px
+      );
+  }
+
   .search {
     height:
       46px;
@@ -2506,7 +3116,10 @@ input {
 
   .searchClear {
     display:
-      none;
+      grid;
+
+    width:
+      32px;
   }
 
   .searchButton {
@@ -2661,10 +3274,35 @@ input {
 ) {
   .searchButton {
     padding:
-      0 10px;
+      0 9px;
 
     font-size:
       10px;
+  }
+
+  .productSuggestion {
+    grid-template-columns:
+      42px
+      minmax(
+        0,
+        1fr
+      );
+
+    gap:
+      8px;
+  }
+
+  .suggestionImage {
+    width:
+      42px;
+
+    height:
+      48px;
+  }
+
+  .stockStatus {
+    display:
+      none;
   }
 
   .pricePresets {

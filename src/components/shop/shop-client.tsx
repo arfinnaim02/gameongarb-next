@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+
 import type {
   FormEvent,
   ReactNode,
@@ -33,6 +36,10 @@ import {
 import type {
   Product,
 } from "@/lib/data";
+
+import {
+  formatBDT,
+} from "@/lib/money";
 
 import styles from "./shop-client.module.css";
 
@@ -117,6 +124,18 @@ type CategoryOption = {
 
 const CATEGORY_PRODUCT_LIMIT =
   8;
+
+const RECENT_SEARCH_KEY =
+  "gog_recent_searches";
+
+const RECENT_SEARCH_LIMIT =
+  6;
+
+const SEARCH_PRODUCT_LIMIT =
+  5;
+
+const SEARCH_CATEGORY_LIMIT =
+  4;
 
 const PRICE_PRESETS = [
   {
@@ -404,6 +423,303 @@ function flattenCategoryTree(
   return result;
 }
 
+/* =========================================================
+   SEARCH ENGINE
+   ========================================================= */
+
+function normalizeSearchText(
+  value:
+    string,
+) {
+  return value
+    .normalize(
+      "NFD",
+    )
+    .replace(
+      /[\u0300-\u036f]/g,
+      "",
+    )
+    .toLowerCase()
+    .replace(
+      /[^a-z0-9]+/g,
+      " ",
+    )
+    .trim();
+}
+
+function editDistance(
+  first:
+    string,
+  second:
+    string,
+) {
+  if (
+    first ===
+    second
+  ) {
+    return 0;
+  }
+
+  if (!first) {
+    return second.length;
+  }
+
+  if (!second) {
+    return first.length;
+  }
+
+  const previous =
+    Array.from(
+      {
+        length:
+          second.length +
+          1,
+      },
+      (
+        _,
+        index,
+      ) =>
+        index,
+    );
+
+  for (
+    let firstIndex =
+      1;
+    firstIndex <=
+    first.length;
+    firstIndex += 1
+  ) {
+    let diagonal =
+      previous[0];
+
+    previous[0] =
+      firstIndex;
+
+    for (
+      let secondIndex =
+        1;
+      secondIndex <=
+      second.length;
+      secondIndex += 1
+    ) {
+      const oldValue =
+        previous[
+          secondIndex
+        ];
+
+      const cost =
+        first[
+          firstIndex -
+            1
+        ] ===
+        second[
+          secondIndex -
+            1
+        ]
+          ? 0
+          : 1;
+
+      previous[
+        secondIndex
+      ] =
+        Math.min(
+          previous[
+            secondIndex
+          ] +
+            1,
+
+          previous[
+            secondIndex -
+              1
+          ] +
+            1,
+
+          diagonal +
+            cost,
+        );
+
+      diagonal =
+        oldValue;
+    }
+  }
+
+  return previous[
+    second.length
+  ];
+}
+
+function searchScore(
+  query:
+    string,
+
+  candidates:
+    (
+      | string
+      | null
+      | undefined
+    )[],
+) {
+  const cleanQuery =
+    normalizeSearchText(
+      query,
+    );
+
+  if (
+    !cleanQuery
+  ) {
+    return 0;
+  }
+
+  let bestScore =
+    0;
+
+  candidates.forEach(
+    (
+      candidateValue,
+    ) => {
+      if (
+        !candidateValue
+      ) {
+        return;
+      }
+
+      const candidate =
+        normalizeSearchText(
+          candidateValue,
+        );
+
+      if (
+        !candidate
+      ) {
+        return;
+      }
+
+      const words =
+        candidate
+          .split(
+            " ",
+          )
+          .filter(
+            Boolean,
+          );
+
+      if (
+        candidate ===
+        cleanQuery
+      ) {
+        bestScore =
+          Math.max(
+            bestScore,
+            120,
+          );
+
+        return;
+      }
+
+      if (
+        words.includes(
+          cleanQuery,
+        )
+      ) {
+        bestScore =
+          Math.max(
+            bestScore,
+            110,
+          );
+      }
+
+      if (
+        candidate.startsWith(
+          cleanQuery,
+        )
+      ) {
+        bestScore =
+          Math.max(
+            bestScore,
+            100,
+          );
+      }
+
+      if (
+        words.some(
+          (
+            word,
+          ) =>
+            word.startsWith(
+              cleanQuery,
+            ),
+        )
+      ) {
+        bestScore =
+          Math.max(
+            bestScore,
+            90,
+          );
+      }
+
+      if (
+        candidate.includes(
+          cleanQuery,
+        )
+      ) {
+        bestScore =
+          Math.max(
+            bestScore,
+            75,
+          );
+      }
+
+      /*
+       * Lightweight typo tolerance.
+       *
+       * Example:
+       * "plo" can still match "polo".
+       */
+      if (
+        cleanQuery.length >=
+        3
+      ) {
+        const closest =
+          Math.min(
+            ...words.map(
+              (
+                word,
+              ) =>
+                editDistance(
+                  cleanQuery,
+                  word,
+                ),
+            ),
+          );
+
+        if (
+          closest ===
+          1
+        ) {
+          bestScore =
+            Math.max(
+              bestScore,
+              58,
+            );
+        } else if (
+          cleanQuery.length >=
+            5 &&
+          closest ===
+            2
+        ) {
+          bestScore =
+            Math.max(
+              bestScore,
+              42,
+            );
+        }
+      }
+    },
+  );
+
+  return bestScore;
+}
+
 function filterProducts(
   products:
     Product[],
@@ -412,6 +728,12 @@ function filterProducts(
     Record<
       string,
       string[]
+    >,
+
+  categoryNameById:
+    Map<
+      string,
+      string
     >,
 
   allowedCategoryIds:
@@ -438,11 +760,37 @@ function filterProducts(
          SEARCH
          =============================================== */
 
-      const searchable =
+      const assignedCategoryNames =
+        (
+          productCategoryMap[
+            product.id
+          ] ??
+          []
+        )
+          .map(
+            (
+              categoryId,
+            ) =>
+              categoryNameById.get(
+                categoryId,
+              ),
+          )
+          .filter(
+            (
+              value,
+            ): value is string =>
+              Boolean(
+                value,
+              ),
+          );
+
+      const searchCandidates =
         [
           product.name,
 
           product.category,
+
+          ...assignedCategoryNames,
 
           ...product.sizes,
 
@@ -460,17 +808,15 @@ function filterProducts(
               variant.color,
             ],
           ),
-        ]
-          .join(
-            " ",
-          )
-          .toLowerCase();
+        ];
 
       const matchesSearch =
         !cleanKeyword ||
-        searchable.includes(
+        searchScore(
           cleanKeyword,
-        );
+          searchCandidates,
+        ) >
+          0;
 
       /* ===============================================
          CATEGORY
@@ -804,6 +1150,24 @@ export function ShopClient({
     );
 
   const [
+    searchOpen,
+    setSearchOpen,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    recentSearches,
+    setRecentSearches,
+  ] =
+    useState<
+      string[]
+    >(
+      [],
+    );
+
+  const [
     draftFilters,
     setDraftFilters,
   ] =
@@ -844,6 +1208,59 @@ export function ShopClient({
     >(
       "grid",
     );
+
+      /* =======================================================
+     RECENT SEARCHES
+     ======================================================= */
+
+  useEffect(() => {
+    try {
+      const stored =
+        window.localStorage
+          .getItem(
+            RECENT_SEARCH_KEY,
+          );
+
+      if (
+        !stored
+      ) {
+        return;
+      }
+
+      const parsed =
+        JSON.parse(
+          stored,
+        );
+
+      if (
+        Array.isArray(
+          parsed,
+        )
+      ) {
+        setRecentSearches(
+          parsed
+            .filter(
+              (
+                value,
+              ): value is string =>
+                typeof value ===
+                "string",
+            )
+            .slice(
+              0,
+              RECENT_SEARCH_LIMIT,
+            ),
+        );
+      }
+    } catch {
+      /*
+       * Search history is optional.
+       * Ignore unavailable/corrupt
+       * browser storage.
+       */
+    }
+  }, []);
+
 
   /* =======================================================
      BODY LOCK
@@ -928,6 +1345,25 @@ export function ShopClient({
             ) => [
               category.slug,
               category,
+            ],
+          ),
+        ),
+
+      [
+        categories,
+      ],
+    );
+
+  const categoryNameById =
+    useMemo(
+      () =>
+        new Map(
+          categories.map(
+            (
+              category,
+            ) => [
+              category.id,
+              category.name,
             ],
           ),
         ),
@@ -1082,6 +1518,182 @@ export function ShopClient({
               option.category,
           )
       : [];
+
+  /* =======================================================
+     LIVE SEARCH SUGGESTIONS
+     ======================================================= */
+
+  const productSuggestions =
+    useMemo(
+      () => {
+        const query =
+          searchDraft.trim();
+
+        if (!query) {
+          return [];
+        }
+
+        return products
+          .map(
+            (
+              product,
+            ) => {
+              const assignedCategories =
+                (
+                  productCategoryMap[
+                    product.id
+                  ] ??
+                  []
+                )
+                  .map(
+                    (
+                      categoryId,
+                    ) =>
+                      categoryNameById.get(
+                        categoryId,
+                      ),
+                  )
+                  .filter(
+                    (
+                      value,
+                    ): value is string =>
+                      Boolean(
+                        value,
+                      ),
+                  );
+
+              const score =
+                searchScore(
+                  query,
+                  [
+                    product.name,
+
+                    product.category,
+
+                    ...assignedCategories,
+
+                    ...product.colors,
+
+                    ...product.sizes,
+
+                    ...(
+                      product.variants ??
+                      []
+                    ).flatMap(
+                      (
+                        variant,
+                      ) => [
+                        variant.sku,
+                        variant.size,
+                        variant.color,
+                      ],
+                    ),
+                  ],
+                );
+
+              return {
+                product,
+                score,
+              };
+            },
+          )
+          .filter(
+            (
+              suggestion,
+            ) =>
+              suggestion.score >
+              0,
+          )
+          .sort(
+            (
+              first,
+              second,
+            ) =>
+              second.score -
+                first.score ||
+              Number(
+                second.product
+                  .stock >
+                  0,
+              ) -
+                Number(
+                  first.product
+                    .stock >
+                    0,
+                ),
+          )
+          .slice(
+            0,
+            SEARCH_PRODUCT_LIMIT,
+          );
+      },
+
+      [
+        categoryNameById,
+        productCategoryMap,
+        products,
+        searchDraft,
+      ],
+    );
+
+  const categorySuggestions =
+    useMemo(
+      () => {
+        const query =
+          searchDraft.trim();
+
+        if (!query) {
+          return [];
+        }
+
+        return categories
+          .map(
+            (
+              category,
+            ) => ({
+              category,
+
+              score:
+                searchScore(
+                  query,
+                  [
+                    category.name,
+                    category.slug,
+                    category.description,
+                  ],
+                ),
+            }),
+          )
+          .filter(
+            (
+              suggestion,
+            ) =>
+              suggestion.score >
+              0,
+          )
+          .sort(
+            (
+              first,
+              second,
+            ) =>
+              second.score -
+                first.score ||
+              first.category
+                .sortOrder -
+                second.category
+                  .sortOrder,
+          )
+          .slice(
+            0,
+            SEARCH_CATEGORY_LIMIT,
+          );
+      },
+
+      [
+        categories,
+        searchDraft,
+      ],
+    );
 
   /* =======================================================
      FILTER VALUES
@@ -1253,6 +1865,7 @@ export function ShopClient({
       filterProducts(
         products,
         productCategoryMap,
+        categoryNameById,
         appliedAllowedCategories,
         appliedFilters,
         appliedQuery,
@@ -1277,6 +1890,7 @@ export function ShopClient({
     filterProducts(
       products,
       productCategoryMap,
+      categoryNameById,
       draftAllowedCategories,
       draftFilters,
       appliedQuery,
@@ -1507,19 +2121,91 @@ export function ShopClient({
      SEARCH
      ======================================================= */
 
+  function rememberSearch(
+    value:
+      string,
+  ) {
+    const clean =
+      value.trim();
+
+    if (!clean) {
+      return;
+    }
+
+    const next = [
+      clean,
+
+      ...recentSearches.filter(
+        (
+          item,
+        ) =>
+          item.toLowerCase() !==
+          clean.toLowerCase(),
+      ),
+    ].slice(
+      0,
+      RECENT_SEARCH_LIMIT,
+    );
+
+    setRecentSearches(
+      next,
+    );
+
+    try {
+      window.localStorage
+        .setItem(
+          RECENT_SEARCH_KEY,
+          JSON.stringify(
+            next,
+          ),
+        );
+    } catch {
+      /*
+       * Search still works if
+       * browser storage is blocked.
+       */
+    }
+  }
+
+  function clearRecentSearches() {
+    setRecentSearches(
+      [],
+    );
+
+    try {
+      window.localStorage
+        .removeItem(
+          RECENT_SEARCH_KEY,
+        );
+    } catch {
+      // Optional browser storage.
+    }
+  }
   function submitSearch(
     event:
       FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
+    const value =
+      searchDraft.trim();
+
+    if (
+      value
+    ) {
+      rememberSearch(
+        value,
+      );
+    }
+
+    setSearchOpen(
+      false,
+    );
+
     navigate(
       (
         params,
       ) => {
-        const value =
-          searchDraft.trim();
-
         if (
           value
         ) {
@@ -1535,7 +2221,6 @@ export function ShopClient({
       },
     );
   }
-
   /* =======================================================
      CATEGORY QUICK NAVIGATION
      ======================================================= */
@@ -1971,60 +2656,444 @@ export function ShopClient({
               =============================================== */}
 
           <div className={styles.toolsRow}>
-            <form
-              className={styles.search}
-              onSubmit={
-                submitSearch
+            <div
+              className={
+                styles.searchShell
               }
+              onBlur={(
+                event,
+              ) => {
+                if (
+                  !event.currentTarget
+                    .contains(
+                      event.relatedTarget as
+                        Node |
+                        null,
+                    )
+                ) {
+                  setSearchOpen(
+                    false,
+                  );
+                }
+              }}
             >
-              <Search
-                size={18}
-                strokeWidth={
-                  1.7
+              <form
+                className={
+                  styles.search
                 }
-              />
+                onSubmit={
+                  submitSearch
+                }
+              >
+                <Search
+                  size={
+                    18
+                  }
+                  strokeWidth={
+                    1.7
+                  }
+                />
 
-              <input
-                type="search"
-                value={
-                  searchDraft
-                }
-                placeholder="Search polo, jersey, trouser, SKU..."
-                aria-label="Search products"
-                onChange={(
-                  event,
-                ) =>
-                  setSearchDraft(
-                    event.target
-                      .value,
-                  )
-                }
-              />
-
-              {searchDraft ? (
-                <button
-                  type="button"
-                  className={styles.searchClear}
-                  aria-label="Clear search"
-                  onClick={() =>
-                    setSearchDraft(
-                      "",
+                <input
+                  type="search"
+                  value={
+                    searchDraft
+                  }
+                  placeholder="Search products, categories, SKU..."
+                  aria-label="Search products"
+                  aria-expanded={
+                    searchOpen
+                  }
+                  aria-controls="shop-search-suggestions"
+                  autoComplete="off"
+                  onFocus={() =>
+                    setSearchOpen(
+                      true,
                     )
                   }
-                >
-                  <X
-                    size={15}
-                  />
-                </button>
-              ) : null}
+                  onChange={(
+                    event,
+                  ) => {
+                    setSearchDraft(
+                      event.target
+                        .value,
+                    );
 
-              <button
-                type="submit"
-                className={styles.searchButton}
-              >
-                Search
-              </button>
-            </form>
+                    setSearchOpen(
+                      true,
+                    );
+                  }}
+                />
+
+                {searchDraft ? (
+                  <button
+                    type="button"
+                    className={
+                      styles.searchClear
+                    }
+                    aria-label="Clear search"
+                    onClick={() => {
+                      setSearchDraft(
+                        "",
+                      );
+
+                      setSearchOpen(
+                        true,
+                      );
+                    }}
+                  >
+                    <X
+                      size={
+                        15
+                      }
+                    />
+                  </button>
+                ) : null}
+
+                <button
+                  type="submit"
+                  className={
+                    styles.searchButton
+                  }
+                >
+                  Search
+                </button>
+              </form>
+
+              {searchOpen ? (
+                <div
+                  id="shop-search-suggestions"
+                  className={
+                    styles.searchSuggestions
+                  }
+                >
+                  {!searchDraft.trim() &&
+                  recentSearches.length >
+                    0 ? (
+                    <div
+                      className={
+                        styles.suggestionSection
+                      }
+                    >
+                      <div
+                        className={
+                          styles.suggestionHeading
+                        }
+                      >
+                        <span>
+                          Recent Searches
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={
+                            clearRecentSearches
+                          }
+                        >
+                          Clear
+                        </button>
+                      </div>
+
+                      <div
+                        className={
+                          styles.recentSearches
+                        }
+                      >
+                        {recentSearches.map(
+                          (
+                            item,
+                          ) => (
+                            <button
+                              key={
+                                item
+                              }
+                              type="button"
+                              onClick={() => {
+                                setSearchDraft(
+                                  item,
+                                );
+
+                                rememberSearch(
+                                  item,
+                                );
+
+                                setSearchOpen(
+                                  false,
+                                );
+
+                                navigate(
+                                  (
+                                    params,
+                                  ) => {
+                                    params.set(
+                                      "q",
+                                      item,
+                                    );
+                                  },
+                                );
+                              }}
+                            >
+                              <Search
+                                size={
+                                  12
+                                }
+                              />
+
+                              {
+                                item
+                              }
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {searchDraft.trim() &&
+                  productSuggestions.length >
+                    0 ? (
+                    <div
+                      className={
+                        styles.suggestionSection
+                      }
+                    >
+                      <div
+                        className={
+                          styles.suggestionHeading
+                        }
+                      >
+                        <span>
+                          Products
+                        </span>
+                      </div>
+
+                      <div
+                        className={
+                          styles.productSuggestions
+                        }
+                      >
+                        {productSuggestions.map(
+                          ({
+                            product,
+                          }) => (
+                            <Link
+                              key={
+                                product.id
+                              }
+                              href={`/product/${product.slug}`}
+                              className={
+                                styles.productSuggestion
+                              }
+                              onClick={() => {
+                                rememberSearch(
+                                  searchDraft,
+                                );
+
+                                setSearchOpen(
+                                  false,
+                                );
+                              }}
+                            >
+                              <span
+                                className={
+                                  styles.suggestionImage
+                                }
+                              >
+                                <Image
+                                  src={
+                                    product.image
+                                  }
+                                  alt=""
+                                  width={
+                                    48
+                                  }
+                                  height={
+                                    54
+                                  }
+                                />
+                              </span>
+
+                              <span
+                                className={
+                                  styles.suggestionProductCopy
+                                }
+                              >
+                                <small>
+                                  {
+                                    product.category
+                                  }
+                                </small>
+
+                                <strong>
+                                  {
+                                    product.name
+                                  }
+                                </strong>
+
+                                <span>
+                                  {formatBDT(
+                                    product.price,
+                                  )}
+                                </span>
+                              </span>
+
+                              <span
+                                className={`${styles.stockStatus} ${
+                                  product.stock >
+                                  0
+                                    ? styles.inStock
+                                    : styles.outOfStock
+                                }`}
+                              >
+                                {product.stock >
+                                0
+                                  ? "In stock"
+                                  : "Sold out"}
+                              </span>
+                            </Link>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {searchDraft.trim() &&
+                  categorySuggestions.length >
+                    0 ? (
+                    <div
+                      className={
+                        styles.suggestionSection
+                      }
+                    >
+                      <div
+                        className={
+                          styles.suggestionHeading
+                        }
+                      >
+                        <span>
+                          Categories
+                        </span>
+                      </div>
+
+                      <div
+                        className={
+                          styles.categorySuggestions
+                        }
+                      >
+                        {categorySuggestions.map(
+                          ({
+                            category,
+                          }) => (
+                            <button
+                              key={
+                                category.id
+                              }
+                              type="button"
+                              onClick={() => {
+                                rememberSearch(
+                                  category.name,
+                                );
+
+                                setSearchOpen(
+                                  false,
+                                );
+
+                                applyCategory(
+                                  category.slug,
+                                );
+                              }}
+                            >
+                              <span>
+                                {
+                                  category.name
+                                }
+                              </span>
+
+                              <b>
+                                View category →
+                              </b>
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {searchDraft.trim() &&
+                  productSuggestions.length ===
+                    0 &&
+                  categorySuggestions.length ===
+                    0 ? (
+                    <div
+                      className={
+                        styles.noSuggestions
+                      }
+                    >
+                      <Search
+                        size={
+                          18
+                        }
+                      />
+
+                      <div>
+                        <strong>
+                          No instant match
+                        </strong>
+
+                        <span>
+                          Search all products for “
+                          {
+                            searchDraft
+                          }
+                          ”
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {searchDraft.trim() ? (
+                    <button
+                      type="button"
+                      className={
+                        styles.searchAll
+                      }
+                      onClick={() => {
+                        rememberSearch(
+                          searchDraft,
+                        );
+
+                        setSearchOpen(
+                          false,
+                        );
+
+                        navigate(
+                          (
+                            params,
+                          ) => {
+                            params.set(
+                              "q",
+                              searchDraft.trim(),
+                            );
+                          },
+                        );
+                      }}
+                    >
+                      <span>
+                        Search all for “
+                        {
+                          searchDraft.trim()
+                        }
+                        ”
+                      </span>
+
+                      <b>
+                        →
+                      </b>
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
 
             <div className={styles.toolActions}>
               <label className={styles.sortWrap}>
