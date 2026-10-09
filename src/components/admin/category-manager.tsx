@@ -4,6 +4,8 @@ import Image from "next/image";
 
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   ChevronDown,
   ChevronRight,
   FolderTree,
@@ -766,6 +768,196 @@ export function CategoryManager({
       );
     }
   }
+  async function moveCategory(
+    category:
+      CategoryManagerItem,
+
+    delta:
+      -1 |
+      1,
+  ) {
+    const siblings =
+      (
+        category.parentId
+          ? childrenByParent.get(
+              category.parentId,
+            ) ??
+            []
+          : roots
+      ).slice();
+
+    const currentIndex =
+      siblings.findIndex(
+        (
+          item,
+        ) =>
+          item.id ===
+          category.id,
+      );
+
+    if (
+      currentIndex ===
+      -1
+    ) {
+      return;
+    }
+
+    const targetIndex =
+      currentIndex +
+      delta;
+
+    if (
+      targetIndex <
+        0 ||
+      targetIndex >=
+        siblings.length
+    ) {
+      return;
+    }
+
+    const next =
+      [
+        ...siblings,
+      ];
+
+    [
+      next[
+        currentIndex
+      ],
+      next[
+        targetIndex
+      ],
+    ] = [
+      next[
+        targetIndex
+      ],
+      next[
+        currentIndex
+      ],
+    ];
+
+    setBusy(
+      true,
+    );
+
+    setError("");
+    setMessage("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/categories",
+          {
+            method:
+              "PUT",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                order:
+                  next.map(
+                    (
+                      item,
+                      index,
+                    ) => ({
+                      id:
+                        item.id,
+
+                      sortOrder:
+                        index,
+                    }),
+                  ),
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Unable to reorder categories.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to reorder categories.",
+        );
+      }
+
+      const orderMap =
+        new Map(
+          next.map(
+            (
+              item,
+              index,
+            ) => [
+              item.id,
+              index,
+            ],
+          ),
+        );
+
+      setCategories(
+        (
+          current,
+        ) =>
+          current.map(
+            (
+              item,
+            ) => {
+              const nextOrder =
+                orderMap.get(
+                  item.id,
+                );
+
+              if (
+                nextOrder ===
+                undefined
+              ) {
+                return item;
+              }
+
+              return {
+                ...item,
+
+                sortOrder:
+                  nextOrder,
+              };
+            },
+          ),
+      );
+
+      setMessage(
+        "Category order updated.",
+      );
+
+      router.refresh();
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to reorder categories.",
+      );
+    } finally {
+      setBusy(
+        false,
+      );
+    }
+  }
+
 
   async function toggleCategoryStatus(
     category:
@@ -904,6 +1096,34 @@ export function CategoryManager({
         category.id,
       ) ??
       [];
+
+    const siblings =
+      category.parentId
+        ? childrenByParent.get(
+            category.parentId,
+          ) ??
+          []
+        : roots;
+
+    const siblingIndex =
+      siblings.findIndex(
+        (
+          item,
+        ) =>
+          item.id ===
+          category.id,
+      );
+
+    const canMoveUp =
+      siblingIndex >
+      0;
+
+    const canMoveDown =
+      siblingIndex >=
+        0 &&
+      siblingIndex <
+        siblings.length -
+          1;
 
     const hasChildren =
       children.length >
@@ -1170,11 +1390,72 @@ export function CategoryManager({
               styles.orderCell
             }
           >
-            <span>
-              {
-                category.sortOrder
+            <div
+              className={
+                styles.orderControls
               }
-            </span>
+            >
+              <button
+                type="button"
+                className={
+                  styles.orderButton
+                }
+                aria-label={`Move ${category.name} up`}
+                title="Move up"
+                disabled={
+                  busy ||
+                  !canMoveUp
+                }
+                onClick={() =>
+                  void moveCategory(
+                    category,
+                    -1,
+                  )
+                }
+              >
+                <ArrowUp
+                  size={
+                    13
+                  }
+                />
+              </button>
+
+              <span
+                className={
+                  styles.orderNumber
+                }
+              >
+                {
+                  category.sortOrder +
+                  1
+                }
+              </span>
+
+              <button
+                type="button"
+                className={
+                  styles.orderButton
+                }
+                aria-label={`Move ${category.name} down`}
+                title="Move down"
+                disabled={
+                  busy ||
+                  !canMoveDown
+                }
+                onClick={() =>
+                  void moveCategory(
+                    category,
+                    1,
+                  )
+                }
+              >
+                <ArrowDown
+                  size={
+                    13
+                  }
+                />
+              </button>
+            </div>
           </div>
 
           {/* =========================
@@ -2021,13 +2302,25 @@ function CategoryDrawer({
         "",
     );
 
+  const initialSortOrder =
+    editing
+      ? editing.sortOrder
+      : categories.filter(
+          (
+            category,
+          ) =>
+            category.parentId ===
+            (
+              defaultParentId ||
+              null
+            ),
+        ).length;
+
   const [
     sortOrder,
-    setSortOrder,
   ] =
     useState(
-      editing?.sortOrder ??
-        0,
+      initialSortOrder,
     );
 
   const [
@@ -2773,35 +3066,26 @@ function CategoryDrawer({
               </select>
             </label>
 
-            <label
-              className={
-                styles.field
-              }
-            >
-              <span>
-                Shop Display Order
-              </span>
+            {mode.type ===
+            "EDIT" ? (
+              <div
+                className={
+                  styles.orderHelp
+                }
+              >
+                <strong>
+                  Display order
+                </strong>
 
-              <input
-                type="number"
-                min={
-                  0
-                }
-                value={
-                  sortOrder
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setSortOrder(
-                    Number(
-                      event.target
-                        .value,
-                    ),
-                  )
-                }
-              />
-            </label>
+                <span>
+                  Use the Up and
+                  Down controls in
+                  the category list
+                  to change its
+                  position.
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div

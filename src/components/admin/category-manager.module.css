@@ -956,12 +956,94 @@
     700;
 }
 
-.orderCell span {
+.orderCell {
+  display:
+    flex;
+
+  align-items:
+    center;
+}
+
+.orderControls {
+  display:
+    inline-grid;
+
+  grid-template-columns:
+    26px
+    28px
+    26px;
+
+  align-items:
+    center;
+
+  gap:
+    3px;
+}
+
+.orderButton {
   width:
-    30px;
+    26px;
 
   height:
-    30px;
+    28px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #dfe3df;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  background:
+    #fff;
+
+  color:
+    #555b56;
+
+  cursor:
+    pointer;
+
+  transition:
+    border-color
+      140ms ease,
+    background-color
+      140ms ease,
+    color
+      140ms ease;
+}
+
+.orderButton:hover:not(
+  :disabled
+) {
+  border-color:
+    #babfbb;
+
+  background:
+    #f5f7f4;
+
+  color:
+    var(--orange);
+}
+
+.orderButton:disabled {
+  opacity:
+    .25;
+
+  cursor:
+    default;
+}
+
+.orderNumber {
+  width:
+    28px;
+
+  height:
+    28px;
 
   display:
     grid;
@@ -980,7 +1062,7 @@
     #4d534e;
 
   font-size:
-    10px;
+    9px;
 
   font-weight:
     900;
@@ -1964,6 +2046,51 @@ span {
   line-height:
     1.5;
 }
+.orderHelp {
+  padding:
+    10px 11px;
+
+  border:
+    1px solid
+    #e3e6e2;
+
+  background:
+    #f8f9f7;
+}
+
+.orderHelp strong,
+.orderHelp span {
+  display:
+    block;
+}
+
+.orderHelp strong {
+  color:
+    #363b37;
+
+  font-size:
+    9px;
+
+  font-weight:
+    900;
+
+  text-transform:
+    uppercase;
+}
+
+.orderHelp span {
+  margin-top:
+    4px;
+
+  color:
+    #8b918c;
+
+  font-size:
+    8px;
+
+  line-height:
+    1.5;
+}
 
 /* =========================================================
    SWITCH ROWS
@@ -2317,17 +2444,29 @@ input {
 
   .orderCell {
     display:
-      none;
+      flex;
+
+    grid-column:
+      1;
+
+    justify-content:
+      flex-start;
   }
 
   .visibilityCell {
     grid-column:
-      1;
+      1 / -1;
   }
 
   .statusCell {
     grid-column:
       2;
+
+    grid-row:
+      2;
+
+    justify-content:
+      flex-end;
 
     justify-content:
       flex-end;

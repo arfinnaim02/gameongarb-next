@@ -1289,6 +1289,123 @@ export async function PUT(
       revalidateStore();
       return ok("Settings saved");
     }
+
+    if (resource === "categories") {
+      const order = z
+        .array(
+          z.object({
+            id:
+              z.string(),
+
+            sortOrder:
+              z
+                .number()
+                .int()
+                .nonnegative(),
+          }),
+        )
+        .min(1)
+        .parse(
+          body.order,
+        );
+
+      const ids =
+        order.map(
+          (
+            item,
+          ) =>
+            item.id,
+        );
+
+      const categories =
+        await db.category.findMany({
+          where: {
+            id: {
+              in:
+                ids,
+            },
+          },
+
+          select: {
+            id:
+              true,
+
+            parentId:
+              true,
+          },
+        });
+
+      if (
+        categories.length !==
+        order.length
+      ) {
+        throw new Error(
+          "One or more categories were not found.",
+        );
+      }
+
+      const parentIds =
+        new Set(
+          categories.map(
+            (
+              category,
+            ) =>
+              category.parentId ??
+              "__ROOT__",
+          ),
+        );
+
+      if (
+        parentIds.size !==
+        1
+      ) {
+        throw new Error(
+          "Categories can only be reordered within the same parent.",
+        );
+      }
+
+      await db.$transaction(
+        order.map(
+          (
+            item,
+          ) =>
+            db.category.update({
+              where: {
+                id:
+                  item.id,
+              },
+
+              data: {
+                sortOrder:
+                  item.sortOrder,
+              },
+            }),
+        ),
+      );
+
+      await audit(
+        auth.id,
+        "CATEGORIES_REORDERED",
+        "Category",
+        null,
+        {
+          count:
+            order.length,
+
+          parentId:
+            categories[0]
+              ?.parentId ??
+            null,
+        },
+      );
+
+      revalidateStore();
+
+      return ok(
+        "Category order updated",
+      );
+    }
+
     if (resource === "homepage") {
       if (Array.isArray(body.slideOrder)) {
         const slideOrder = z
