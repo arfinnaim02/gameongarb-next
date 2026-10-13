@@ -679,6 +679,172 @@ export async function refreshTelegramOrderMessage(
 }
 
 /* =========================================================
+   READY TO SHIP LIST
+   ========================================================= */
+
+export async function sendReadyToShipList() {
+  const config =
+    getTelegramConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  const orders =
+    await db.order.findMany({
+      where: {
+        status:
+          "READY_TO_SHIP",
+
+        shipment: {
+          is:
+            null,
+        },
+      },
+
+      orderBy: {
+        createdAt:
+          "asc",
+      },
+
+      take:
+        25,
+
+      select: {
+        id:
+          true,
+
+        number:
+          true,
+
+        customerName:
+          true,
+
+        phone:
+          true,
+
+        district:
+          true,
+
+        total:
+          true,
+
+        paymentMethod:
+          true,
+
+        paymentStatus:
+          true,
+      },
+    });
+
+  if (
+    orders.length ===
+    0
+  ) {
+    return telegramRequest(
+      "sendMessage",
+      {
+        chat_id:
+          config.chatId,
+
+        text:
+          "✅ No orders are waiting for courier booking.",
+      },
+    );
+  }
+
+  const text =
+    [
+      "🚚 <b>READY TO SHIP</b>",
+      "",
+      `${orders.length} order${
+        orders.length ===
+        1
+          ? ""
+          : "s"
+      } waiting for courier`,
+      "",
+      ...orders.map(
+        (
+          order,
+          index,
+        ) =>
+          `${index + 1}. <b>${escapeHtml(
+            order.number,
+          )}</b>\n${escapeHtml(
+            order.customerName,
+          )} · ${escapeHtml(
+            order.district,
+          )}\n${formatBDT(
+            Number(
+              order.total,
+            ),
+          )} · ${order.paymentMethod}`,
+      ),
+    ].join(
+      "\n\n",
+    );
+
+  const buttons =
+    orders.map(
+      (
+        order,
+      ) => [
+        {
+          text:
+            `🚚 ${order.number} → Steadfast`,
+
+          callback_data:
+            `courier:${order.id}:steadfast`,
+        },
+      ],
+    );
+
+  return telegramRequest(
+    "sendMessage",
+    {
+      chat_id:
+        config.chatId,
+
+      text,
+
+      parse_mode:
+        "HTML",
+
+      reply_markup: {
+        inline_keyboard:
+          buttons,
+      },
+    },
+  );
+}
+
+export async function sendTelegramText({
+  chatId,
+  text,
+}: {
+  chatId:
+    string |
+    number;
+
+  text:
+    string;
+}) {
+  return telegramRequest(
+    "sendMessage",
+    {
+      chat_id:
+        chatId,
+
+      text,
+
+      parse_mode:
+        "HTML",
+    },
+  );
+}
+
+/* =========================================================
    CALLBACK ANSWER
    ========================================================= */
 

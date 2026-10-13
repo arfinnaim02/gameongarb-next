@@ -21,10 +21,40 @@ import {
 import {
   answerTelegramCallback,
   refreshTelegramOrderMessage,
+  sendReadyToShipList,
+  sendTelegramText,
   telegramTransitionAllowed,
 } from "@/lib/telegram";
 
+import {
+  bookOrderWithSteadfast,
+} from "@/lib/courier/steadfast-booking";
+
 type TelegramUpdate = {
+  message?: {
+    message_id:
+      number;
+
+    text?:
+      string;
+
+    from?: {
+      id:
+        number;
+
+      username?:
+        string;
+
+      first_name?:
+        string;
+    };
+
+    chat: {
+      id:
+        number;
+    };
+  };
+
   callback_query?: {
     id:
       string;
@@ -93,6 +123,125 @@ export async function POST(
     (
       await request.json()
     ) as TelegramUpdate;
+
+      /* =======================================================
+     TELEGRAM COMMANDS
+     ======================================================= */
+
+  if (
+    update.message?.text
+  ) {
+    const message =
+      update.message;
+
+    const expectedChatId =
+      process.env
+        .TELEGRAM_ORDER_CHAT_ID;
+
+    if (
+      !expectedChatId ||
+      String(
+        message.chat.id,
+      ) !==
+        String(
+          expectedChatId,
+        )
+    ) {
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    const allowedUsers =
+      (
+        process.env
+          .TELEGRAM_ALLOWED_USER_IDS ??
+        ""
+      )
+        .split(
+          ",",
+        )
+        .map(
+          (
+            value,
+          ) =>
+            value.trim(),
+        )
+        .filter(
+          Boolean,
+        );
+
+    const senderId =
+      message.from?.id
+        ? String(
+            message.from.id,
+          )
+        : "";
+
+    if (
+      allowedUsers.length >
+        0 &&
+      !allowedUsers.includes(
+        senderId,
+      )
+    ) {
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    const command =
+      message.text
+        .trim()
+        .split(
+          /\s+/,
+        )[0]
+        ?.split(
+          "@",
+        )[0]
+        ?.toLowerCase();
+
+    if (
+      command ===
+      "/ready"
+    ) {
+      await sendReadyToShipList();
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/help" ||
+      command ===
+      "/start"
+    ) {
+      await sendTelegramText({
+        chatId:
+          message.chat.id,
+
+        text:
+          [
+            "🛍 <b>Game On Garb Orders</b>",
+            "",
+            "/ready — Ready to Ship orders",
+            "/help — Bot commands",
+          ].join(
+            "\n",
+          ),
+      });
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+  }
 
   const callback =
     update.callback_query;
@@ -189,6 +338,111 @@ export async function POST(
     callback.data.split(
       ":",
     );
+
+      /* =======================================================
+     COURIER ACTION
+     courier:ORDER_ID:steadfast
+     ======================================================= */
+
+  if (
+    callback.data.startsWith(
+      "courier:",
+    )
+  ) {
+    const [
+      courierPrefix,
+      courierOrderId,
+      courierProvider,
+    ] =
+      callback.data.split(
+        ":",
+      );
+
+    if (
+      courierPrefix !==
+        "courier" ||
+      courierProvider !==
+        "steadfast" ||
+      !courierOrderId
+    ) {
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    try {
+      const result =
+        await bookOrderWithSteadfast({
+          orderId:
+            courierOrderId,
+
+          source:
+            "TELEGRAM",
+        });
+
+      await answerTelegramCallback(
+        callback.id,
+        "Order sent to Steadfast.",
+      );
+
+      await sendTelegramText({
+        chatId:
+          callback.message.chat.id,
+
+        text:
+          [
+            "✅ <b>Sent to Steadfast</b>",
+            "",
+            `Order: <b>${result.order.number}</b>`,
+            `Consignment: ${
+              result.shipment.consignmentId ??
+              "-"
+            }`,
+            `Tracking: ${
+              result.shipment.trackingId ??
+              "-"
+            }`,
+            `Status: ${
+              result.shipment.status
+            }`,
+          ].join(
+            "\n",
+          ),
+      });
+
+      await refreshTelegramOrderMessage(
+        courierOrderId,
+      ).catch(
+        () => {},
+      );
+
+      revalidatePath(
+        "/admin/orders",
+      );
+
+      revalidatePath(
+        `/admin/orders/${courierOrderId}`,
+      );
+    } catch (
+      error
+    ) {
+      await answerTelegramCallback(
+        callback.id,
+        error instanceof
+          Error
+          ? error.message
+          : "Courier booking failed.",
+      ).catch(
+        () => {},
+      );
+    }
+
+    return NextResponse.json({
+      ok:
+        true,
+    });
+  }
 
   if (
     prefix !==
