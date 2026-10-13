@@ -128,11 +128,12 @@ export async function POST(
      TELEGRAM COMMANDS
      ======================================================= */
 
+  const message =
+    update.message;
+
   if (
-    update.message?.text
+    message?.text
   ) {
-    const message =
-      update.message;
 
     const expectedChatId =
       process.env
