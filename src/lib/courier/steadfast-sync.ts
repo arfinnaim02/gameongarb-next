@@ -457,7 +457,7 @@ export async function syncSteadfastShipment({
                       "DELIVERED",
 
                     changedBy:
-                      actorId,
+                      null,
 
                     note:
                       "Automatically marked Delivered after Steadfast confirmed final delivery.",
@@ -500,6 +500,48 @@ export async function syncSteadfastShipment({
 
                 externalAt:
                   now,
+              },
+            });
+
+          await tx
+            .activityLog
+            .create({
+              data: {
+                actorId,
+
+                action:
+                  "STEADFAST_COURIER_STATUS_CHANGED",
+
+                entityType:
+                  "Order",
+
+                entityId:
+                  order.id,
+
+                metadata: {
+                  orderNumber:
+                    order.number,
+
+                  provider:
+                    STEADFAST_PROVIDER,
+
+                  previousCourierStatus:
+                    previousStatus,
+
+                  courierStatus:
+                    nextStatus,
+
+                  autoDelivered:
+                    shouldAutoDeliver,
+
+                  consignmentId:
+                    order.shipment
+                      ?.consignmentId,
+
+                  trackingId:
+                    order.shipment
+                      ?.trackingId,
+                },
               },
             });
         }

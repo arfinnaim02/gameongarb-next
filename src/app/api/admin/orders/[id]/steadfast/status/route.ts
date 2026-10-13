@@ -25,6 +25,9 @@ import {
 import {
   db,
 } from "@/lib/db";
+import {
+  refreshTelegramOrderMessage,
+} from "@/lib/telegram";
 
 export const dynamic =
   "force-dynamic";
@@ -146,6 +149,29 @@ export async function POST(
           },
         },
       });
+
+          if (
+      !result.skipped &&
+      (
+        result.changed ||
+        result.trackingEventsAdded >
+          0 ||
+        result.autoDelivered
+      )
+    ) {
+      await refreshTelegramOrderMessage(
+        result.orderId,
+      ).catch(
+        (
+          error,
+        ) => {
+          console.error(
+            "Telegram courier sync refresh failed:",
+            error,
+          );
+        },
+      );
+    }
 
     revalidatePath(
       "/admin/orders",

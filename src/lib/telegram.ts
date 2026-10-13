@@ -199,7 +199,21 @@ async function buildHistoryText(
         let actor =
           "System";
 
+        let source =
+          statusLabel(
+            entry.source,
+          );
+
         if (
+          entry.source ===
+          "STEADFAST"
+        ) {
+          actor =
+            "Steadfast";
+
+          source =
+            "Courier Sync";
+        } else if (
           entry.source ===
           "STOREFRONT"
         ) {
@@ -258,9 +272,7 @@ async function buildHistoryText(
           `   ${escapeHtml(
             actor,
           )} · ${escapeHtml(
-            statusLabel(
-              entry.source,
-            ),
+            source,
           )}`,
 
           `   ${escapeHtml(
@@ -285,7 +297,97 @@ async function buildHistoryText(
     );
 
   return [
-    "📜 <b>ACTIVITY</b>",
+    "📜 <b>ORDER ACTIVITY</b>",
+    "",
+    ...lines,
+  ].join(
+    "\n\n",
+  );
+}
+
+/* =========================================================
+   COURIER ACTIVITY
+   ========================================================= */
+
+function buildCourierActivityText(
+  order:
+    TelegramOrder,
+) {
+  if (
+    !order.shipment
+  ) {
+    return "";
+  }
+
+  /*
+   * Keep meaningful courier lifecycle
+   * entries in the Telegram order card.
+   *
+   * Raw Steadfast tracking events remain
+   * stored in the database, but showing
+   * every scan would eventually make the
+   * Telegram message too large.
+   */
+  const meaningfulEvents =
+    order.shipment.events
+      .filter(
+        (
+          event,
+        ) =>
+          event.message.startsWith(
+            "Steadfast status changed from ",
+          ) ||
+          event.message.startsWith(
+            "Parcel created in Steadfast",
+          ),
+      )
+      .slice(
+        -12,
+      );
+
+  if (
+    meaningfulEvents.length ===
+    0
+  ) {
+    return "";
+  }
+
+  const lines =
+    meaningfulEvents.map(
+      (
+        event,
+        index,
+      ) => {
+        const eventDate =
+          event.externalAt ??
+          event.createdAt;
+
+        return [
+          `${index + 1}. <b>${escapeHtml(
+            event.status
+              ? statusLabel(
+                  event.status,
+                )
+              : "Courier Update",
+          )}</b>`,
+
+          `   ${escapeHtml(
+            event.message,
+          )}`,
+
+          `   ${escapeHtml(
+            formatTelegramDate(
+              eventDate,
+            ),
+          )}`,
+        ].join(
+          "\n",
+        );
+      },
+    );
+
+  return [
+    "🚚 <b>COURIER ACTIVITY</b>",
     "",
     ...lines,
   ].join(
@@ -434,8 +536,19 @@ async function loadOrder(
       items:
         true,
 
-      shipment:
-        true,
+      shipment: {
+        include: {
+          events: {
+            orderBy: {
+              createdAt:
+                "asc",
+            },
+
+            take:
+              50,
+          },
+        },
+      },
 
       history: {
         orderBy: {
@@ -678,6 +791,11 @@ async function buildOrderMessage(
       order,
     );
 
+  const courierActivityText =
+    buildCourierActivityText(
+      order,
+    );
+
   return [
     "🛍 <b>GAME ON GARB — ORDER</b>",
     "",
@@ -760,9 +878,51 @@ async function buildOrderMessage(
     )}</b>`,
 
     order.shipment
-      ? `🚚 Courier: <b>${escapeHtml(
+      ? ""
+      : "",
+
+    order.shipment
+      ? "🚚 <b>Courier</b>"
+      : "",
+
+    order.shipment
+      ? `Provider: <b>${escapeHtml(
           order.shipment.provider,
         )}</b>`
+      : "",
+
+    order.shipment
+      ? `Courier Status: <b>${escapeHtml(
+          statusLabel(
+            order.shipment.status,
+          ),
+        )}</b>`
+      : "",
+
+    order.shipment
+        ?.consignmentId
+      ? `Consignment: <code>${escapeHtml(
+          order.shipment
+            .consignmentId,
+        )}</code>`
+      : "",
+
+    order.shipment
+        ?.trackingId
+      ? `Tracking: <code>${escapeHtml(
+          order.shipment
+            .trackingId,
+        )}</code>`
+      : "",
+
+    order.shipment
+        ?.lastSyncedAt
+      ? `Last Sync: ${escapeHtml(
+          formatTelegramDate(
+            order.shipment
+              .lastSyncedAt,
+          ),
+        )}`
       : "",
 
     historyText
@@ -770,6 +930,12 @@ async function buildOrderMessage(
       : "",
 
     historyText,
+
+    courierActivityText
+      ? "\n"
+      : "",
+
+    courierActivityText,
   ]
     .filter(
       Boolean,

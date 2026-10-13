@@ -30,6 +30,10 @@ import {
   db,
 } from "@/lib/db";
 
+import {
+  refreshTelegramOrderMessage,
+} from "@/lib/telegram";
+
 export const dynamic =
   "force-dynamic";
 
@@ -366,6 +370,40 @@ export async function POST(
           },
         },
       });
+
+          /*
+     * Keep Telegram order cards in sync
+     * with courier updates.
+     */
+    for (
+      const item
+      of successful
+    ) {
+      if (
+        item.skipped ||
+        (
+          !item.changed &&
+          item.trackingEventsAdded ===
+            0 &&
+          !item.autoDelivered
+        )
+      ) {
+        continue;
+      }
+
+      await refreshTelegramOrderMessage(
+        item.orderId,
+      ).catch(
+        (
+          error,
+        ) => {
+          console.error(
+            `Telegram courier sync refresh failed for ${item.orderNumber}:`,
+            error,
+          );
+        },
+      );
+    }
 
     revalidatePath(
       "/admin/orders",
