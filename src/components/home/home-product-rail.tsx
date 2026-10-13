@@ -395,6 +395,33 @@ export function HomeProductRail({
 
       suppressClickRef.current =
         true;
+
+      /*
+       * Only capture the pointer once
+       * this interaction has genuinely
+       * become a drag.
+       *
+       * Normal clicks therefore continue
+       * to reach ProductCard links and
+       * buttons correctly.
+       */
+      const viewport =
+        viewportRef.current;
+
+      if (
+        viewport &&
+        !viewport.hasPointerCapture(
+          event.pointerId,
+        )
+      ) {
+        viewport.setPointerCapture(
+          event.pointerId,
+        );
+      }
+
+      setDragging(
+        true,
+      );
     }
 
     if (

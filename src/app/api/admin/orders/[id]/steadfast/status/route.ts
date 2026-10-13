@@ -155,6 +155,14 @@ export async function POST(
       `/admin/orders/${result.orderId}`,
     );
 
+    if (
+      result.autoDelivered
+    ) {
+      revalidatePath(
+        "/account/orders",
+      );
+    }
+
     return NextResponse.json({
       message:
         result.skipped

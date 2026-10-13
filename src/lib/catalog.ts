@@ -612,21 +612,28 @@ export async function getCategoryTree(
       active:
         true,
 
-      parentId:
-        null,
-
       ...(options?.homepageOnly
         ? {
             showOnHomepage:
               true,
           }
-        : {}),
+        : {
+            parentId:
+              null,
+          }),
     },
 
-    orderBy: {
-      sortOrder:
-        "asc",
-    },
+    orderBy: [
+      {
+        sortOrder:
+          "asc",
+      },
+
+      {
+        name:
+          "asc",
+      },
+    ],
 
     include: {
       children: {
@@ -635,10 +642,17 @@ export async function getCategoryTree(
             true,
         },
 
-        orderBy: {
-          sortOrder:
-            "asc",
-        },
+        orderBy: [
+          {
+            sortOrder:
+              "asc",
+          },
+
+          {
+            name:
+              "asc",
+          },
+        ],
 
         include: {
           children: {
@@ -647,10 +661,17 @@ export async function getCategoryTree(
                 true,
             },
 
-            orderBy: {
-              sortOrder:
-                "asc",
-            },
+            orderBy: [
+              {
+                sortOrder:
+                  "asc",
+              },
+
+              {
+                name:
+                  "asc",
+              },
+            ],
           },
         },
       },

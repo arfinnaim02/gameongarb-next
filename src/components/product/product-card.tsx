@@ -270,12 +270,6 @@ export function ProductCard({
           </div>
 
           <div className="product-card-content">
-            <span className="product-card-category">
-              {
-                product.category
-              }
-            </span>
-
             <h3 className="product-card-title">
               {
                 product.name

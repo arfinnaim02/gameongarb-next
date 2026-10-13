@@ -468,8 +468,7 @@ function configIds(
   section: HomeSection,
 
   key:
-    | "productIds"
-    | "categoryIds",
+    "productIds",
 ) {
   if (
     !section.config ||

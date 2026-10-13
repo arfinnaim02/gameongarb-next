@@ -372,34 +372,36 @@ model CartItem {
 }
 
 model Order {
-  id              String               @id @default(cuid())
-  number          String               @unique
-  customerId      String?
-  customer        Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerName    String
-  phone           String
-  email           String?
-  division        String
-  district        String
-  thana           String
-  shippingAddress String
-  subtotal        Decimal              @db.Decimal(12, 2)
-  discount        Decimal              @default(0) @db.Decimal(12, 2)
-  deliveryCharge  Decimal              @db.Decimal(12, 2)
-  total           Decimal              @db.Decimal(12, 2)
-  paymentMethod   PaymentMethod
-  paymentStatus   PaymentStatus        @default(PENDING)
-  status          OrderStatus          @default(NEW)
-  couponCode      String?
-  internalNotes   String?
-  items           OrderItem[]
-  history         OrderStatusHistory[]
-  payments        Payment[]
-  couponUsage     CouponUsage?
-  shipment        CourierShipment?
-  returns         Return[]
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id                String               @id @default(cuid())
+  number            String               @unique
+  customerId        String?
+  customer          Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName      String
+  phone             String
+  email             String?
+  division          String
+  district          String
+  thana             String
+  shippingAddress   String
+  subtotal          Decimal              @db.Decimal(12, 2)
+  discount          Decimal              @default(0) @db.Decimal(12, 2)
+  deliveryCharge    Decimal              @db.Decimal(12, 2)
+  total             Decimal              @db.Decimal(12, 2)
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus        @default(PENDING)
+  status            OrderStatus          @default(NEW)
+  couponCode        String?
+  internalNotes     String?
+  telegramChatId    String?
+  telegramMessageId Int?
+  items             OrderItem[]
+  history           OrderStatusHistory[]
+  payments          Payment[]
+  couponUsage       CouponUsage?
+  shipment          CourierShipment?
+  returns           Return[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   @@index([phone, createdAt])
   @@index([status, createdAt])
@@ -671,15 +673,15 @@ model IntegrationLog {
 }
 
 model CourierShipment {
-  id            String   @id @default(cuid())
-  orderId       String   @unique
+  id            String    @id @default(cuid())
+  orderId       String    @unique
   provider      String
-  consignmentId String?  @unique
-  trackingId    String?  @unique
+  consignmentId String?   @unique
+  trackingId    String?   @unique
   status        String
   labelUrl      String?
   trackingUrl   String?
-  codAmount     Decimal? @db.Decimal(12, 2)
+  codAmount     Decimal?  @db.Decimal(12, 2)
   lastSyncedAt  DateTime?
 
   order  Order                  @relation(fields: [orderId], references: [id], onDelete: Restrict)
@@ -693,11 +695,11 @@ model CourierShipment {
 }
 
 model CourierTrackingEvent {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   shipmentId String
   status     String?
   message    String
-  source     String   @default("API")
+  source     String    @default("API")
   externalAt DateTime?
 
   shipment CourierShipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)

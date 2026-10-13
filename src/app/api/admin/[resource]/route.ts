@@ -1,15 +1,25 @@
-import { NextResponse } from "next/server";
+import {
+  after,
+  NextResponse,
+} from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getApiAdmin } from "@/lib/session";
 import {
-  canTransition,
   categoryMoveIsValid,
   hasPermission,
   stockAfterAdjustment,
 } from "@/lib/business";
+
+import {
+  changeOrderStatus,
+} from "@/lib/order-status";
+
+import {
+  refreshTelegramOrderMessage,
+} from "@/lib/telegram";
 
 const permissionsByResource: Record<string, string> = {
   products: "products",
@@ -1026,329 +1036,43 @@ export async function PATCH(
       );
     }
 
-if (resource === "orders") {
-  const nextStatus = z
-    .enum([
-      "NEW",
-      "CONFIRMED",
-      "PACKING",
-      "READY_TO_SHIP",
-      "SHIPPED",
-      "DELIVERED",
-      "CANCELLED",
-      "RETURN_REQUESTED",
-      "RETURNED",
-      "FAILED_DELIVERY",
-    ])
-    .parse(body.status);
-
-  await db.$transaction(
-    async (tx) => {
-      const order =
-        await tx.order.findUniqueOrThrow({
-          where: {
-            id,
-          },
-
-          include: {
-            items: true,
-          },
-        });
-
-      if (
-        !canTransition(
-          order.status,
-          nextStatus,
-        )
-      ) {
-        throw new Error(
-          `Cannot move order from ${order.status} to ${nextStatus}.`,
-        );
-      }
-
-      /* ===================================================
-         RESTORE INVENTORY ON CANCELLATION
-         =================================================== */
-
-        if (
-          nextStatus ===
-            "CANCELLED" &&
-          order.status !==
-            "CANCELLED"
-        ) {
-        /*
-         * Combine quantities by variant.
-         *
-         * This also protects us if the same
-         * variant somehow appears more than
-         * once in an historical order.
-         */
-        const quantityByVariant =
-          new Map<
-            string,
-            number
-          >();
-
-        for (
-          const item
-          of order.items
-        ) {
-          if (
-            !item.variantId
-          ) {
-            continue;
-          }
-
-          quantityByVariant.set(
-            item.variantId,
-            (
-              quantityByVariant.get(
-                item.variantId,
-              ) ??
-              0
-            ) +
-              item.quantity,
-          );
-        }
-
-        for (
-          const [
-            variantId,
-            quantity,
-          ]
-          of quantityByVariant
-        ) {
-          const variant =
-            await tx.productVariant.findUniqueOrThrow(
-              {
-                where: {
-                  id:
-                    variantId,
-                },
-
-                select: {
-                  id:
-                    true,
-
-                  stock:
-                    true,
-                },
-              },
-            );
-
-          const afterQuantity =
-            variant.stock +
-            quantity;
-
-          await tx.productVariant.update({
-            where: {
-              id:
-                variant.id,
-            },
-
-            data: {
-              stock: {
-                increment:
-                  quantity,
-              },
-            },
-          });
-
-          await tx.inventoryTransaction.create({
-            data: {
-              variantId:
-                variant.id,
-
-              quantityChange:
-                quantity,
-
-              beforeQuantity:
-                variant.stock,
-
-              afterQuantity,
-
-              type:
-                "CANCELLATION_RESTORE",
-
-              reference:
-                order.number,
-
-              reason:
-                "Order cancelled",
-
-              createdById:
-                auth.id,
-            },
-          });
-        }
-      }
-
-
-      /* ===================================================
-   RE-DEDUCT INVENTORY WHEN REOPENING CANCELLED ORDER
-   =================================================== */
-
 if (
-  order.status ===
-    "CANCELLED" &&
-  nextStatus !==
-    "CANCELLED"
+  resource ===
+  "orders"
 ) {
-  const quantityByVariant =
-    new Map<
-      string,
-      number
-    >();
-
-  for (
-    const item
-    of order.items
-  ) {
-    if (
-      !item.variantId
-    ) {
-      continue;
-    }
-
-    quantityByVariant.set(
-      item.variantId,
-      (
-        quantityByVariant.get(
-          item.variantId,
-        ) ??
-        0
-      ) +
-        item.quantity,
-    );
-  }
-
-  for (
-    const [
-      variantId,
-      quantity,
-    ]
-    of quantityByVariant
-  ) {
-    const variant =
-      await tx.productVariant.findUniqueOrThrow(
-        {
-          where: {
-            id:
-              variantId,
-          },
-
-          select: {
-            id:
-              true,
-
-            stock:
-              true,
-          },
-        },
+  const nextStatus =
+    z
+      .enum([
+        "NEW",
+        "CONFIRMED",
+        "PACKING",
+        "READY_TO_SHIP",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+        "RETURN_REQUESTED",
+        "RETURNED",
+        "FAILED_DELIVERY",
+      ])
+      .parse(
+        body.status,
       );
 
-    if (
-      variant.stock <
-      quantity
-    ) {
-      throw new Error(
-        `Cannot reopen ${order.number}. Not enough stock is available.`,
-      );
-    }
+  await changeOrderStatus({
+    orderId:
+      id,
 
-    const afterQuantity =
-      variant.stock -
-      quantity;
+    nextStatus,
 
-    await tx.productVariant.update({
-      where: {
-        id:
-          variant.id,
-      },
+    changedBy:
+      auth.id,
 
-      data: {
-        stock: {
-          decrement:
-            quantity,
-        },
-      },
-    });
+    inventoryActorId:
+      auth.id,
 
-    await tx.inventoryTransaction.create({
-      data: {
-        variantId:
-          variant.id,
-
-        quantityChange:
-          -quantity,
-
-        beforeQuantity:
-          variant.stock,
-
-        afterQuantity,
-
-        type:
-          "CORRECTION",
-
-        reference:
-          order.number,
-
-        reason:
-          `Order reopened from CANCELLED to ${nextStatus}`,
-
-        createdById:
-          auth.id,
-      },
-    });
-  }
-}
-
-
-      /* ===================================================
-         UPDATE ORDER + HISTORY
-         =================================================== */
-
-      await tx.order.update({
-        where: {
-          id,
-        },
-
-        data: {
-          status:
-            nextStatus,
-
-          history: {
-            create: {
-              oldStatus:
-                order.status,
-
-              newStatus:
-                nextStatus,
-
-              changedBy:
-                auth.id,
-
-              source:
-                "ADMIN",
-            },
-          },
-        },
-      });
-    },
-
-    {
-      /*
-       * Neon/database latency can make
-       * cancellation transactions take
-       * longer than Prisma's default 5s.
-       */
-      maxWait:
-        10_000,
-
-      timeout:
-        20_000,
-    },
-  );
+    source:
+      "ADMIN",
+  });
 
   await audit(
     auth.id,
@@ -1358,6 +1082,28 @@ if (
     {
       status:
         nextStatus,
+    },
+  );
+
+  /*
+   * Keep the Telegram order card
+   * synchronized when an admin
+   * changes the order from dashboard.
+   */
+  after(
+    async () => {
+      try {
+        await refreshTelegramOrderMessage(
+          id,
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "Telegram order sync failed:",
+          error,
+        );
+      }
     },
   );
 
@@ -1373,9 +1119,9 @@ if (
     "/account/orders",
   );
 
-return ok(
-  "Order status updated",
-);
+  return ok(
+    "Order status updated",
+  );
 }
 
 return NextResponse.json(

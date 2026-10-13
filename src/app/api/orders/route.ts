@@ -1,9 +1,10 @@
 import {
 
+  after,
+
   NextResponse,
 
 } from "next/server";
-
 
 
 import {
@@ -67,6 +68,9 @@ import {
 
 } from "@/lib/session";
 
+import {
+  sendOrderToTelegram,
+} from "@/lib/telegram";
 
 
 /* =========================================================
@@ -2036,7 +2040,32 @@ export async function POST(
 
       );
 
+    /* =====================================================
 
+       TELEGRAM ORDER NOTIFICATION
+
+       ===================================================== */
+
+    after(
+      async () => {
+        try {
+          await sendOrderToTelegram(
+            order.id,
+          );
+        } catch (
+          error
+        ) {
+          /*
+           * Telegram must never
+           * make checkout fail.
+           */
+          console.error(
+            "Telegram order notification failed:",
+            error,
+          );
+        }
+      },
+    );
 
     /* =====================================================
 
