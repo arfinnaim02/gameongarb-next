@@ -83,6 +83,216 @@ function statusLabel(
     );
 }
 
+function formatTelegramDate(
+  date:
+    Date,
+) {
+  return new Intl.DateTimeFormat(
+    "en-BD",
+    {
+      timeZone:
+        "Asia/Dhaka",
+
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit",
+
+      hour12:
+        true,
+    },
+  ).format(
+    date,
+  );
+}
+
+async function buildHistoryText(
+  order:
+    TelegramOrder,
+) {
+  if (
+    order.history.length ===
+    0
+  ) {
+    return "";
+  }
+
+  /*
+   * Admin-origin history currently
+   * stores the User ID in changedBy.
+   * Resolve those IDs so Telegram shows
+   * a human-readable admin name.
+   */
+  const possibleUserIds =
+    order.history
+      .map(
+        (
+          entry,
+        ) =>
+          entry.changedBy,
+      )
+      .filter(
+        (
+          value,
+        ):
+          value is string =>
+          Boolean(
+            value,
+          ) &&
+          !value!.startsWith(
+            "telegram:",
+          ),
+      );
+
+  const users =
+    possibleUserIds.length >
+    0
+      ? await db.user.findMany({
+          where: {
+            id: {
+              in: [
+                ...new Set(
+                  possibleUserIds,
+                ),
+              ],
+            },
+          },
+
+          select: {
+            id:
+              true,
+
+            name:
+              true,
+
+            email:
+              true,
+          },
+        })
+      : [];
+
+  const userMap =
+    new Map(
+      users.map(
+        (
+          user,
+        ) => [
+          user.id,
+          user,
+        ],
+      ),
+    );
+
+  const lines =
+    order.history.map(
+      (
+        entry,
+        index,
+      ) => {
+        let actor =
+          "System";
+
+        if (
+          entry.source ===
+          "STOREFRONT"
+        ) {
+          actor =
+            "Storefront";
+        } else if (
+          entry.changedBy?.startsWith(
+            "telegram:@",
+          )
+        ) {
+          actor =
+            entry.changedBy.replace(
+              "telegram:",
+              "",
+            );
+        } else if (
+          entry.changedBy?.startsWith(
+            "telegram:",
+          )
+        ) {
+          actor =
+            `Telegram User ${entry.changedBy.replace(
+              "telegram:",
+              "",
+            )}`;
+        } else if (
+          entry.changedBy
+        ) {
+          const user =
+            userMap.get(
+              entry.changedBy,
+            );
+
+          actor =
+            user?.name ||
+            user?.email ||
+            "Admin";
+        }
+
+        const transition =
+          entry.oldStatus
+            ? `${statusLabel(
+                entry.oldStatus,
+              )} → ${statusLabel(
+                entry.newStatus,
+              )}`
+            : `Order Placed → ${statusLabel(
+                entry.newStatus,
+              )}`;
+
+        return [
+          `${index + 1}. <b>${escapeHtml(
+            transition,
+          )}</b>`,
+
+          `   ${escapeHtml(
+            actor,
+          )} · ${escapeHtml(
+            statusLabel(
+              entry.source,
+            ),
+          )}`,
+
+          `   ${escapeHtml(
+            formatTelegramDate(
+              entry.createdAt,
+            ),
+          )}`,
+
+          entry.note
+            ? `   📝 ${escapeHtml(
+                entry.note,
+              )}`
+            : "",
+        ]
+          .filter(
+            Boolean,
+          )
+          .join(
+            "\n",
+          );
+      },
+    );
+
+  return [
+    "📜 <b>ACTIVITY</b>",
+    "",
+    ...lines,
+  ].join(
+    "\n\n",
+  );
+}
+
 export function telegramTransitionAllowed(
   current:
     OrderStatus,
@@ -226,10 +436,16 @@ async function loadOrder(
 
       shipment:
         true,
+
+      history: {
+        orderBy: {
+          createdAt:
+            "asc",
+        },
+      },
     },
   });
 }
-
 type TelegramOrder =
   Awaited<
     ReturnType<
@@ -386,7 +602,7 @@ function orderButtons(
    MESSAGE
    ========================================================= */
 
-function buildOrderMessage(
+async function buildOrderMessage(
   order:
     TelegramOrder,
 ) {
@@ -457,8 +673,13 @@ function buildOrderMessage(
         } more item(s)`
       : "";
 
+  const historyText =
+    await buildHistoryText(
+      order,
+    );
+
   return [
-    "🛍 <b>GAME ON GARB — NEW ORDER</b>",
+    "🛍 <b>GAME ON GARB — ORDER</b>",
     "",
     `🧾 <b>${escapeHtml(
       order.number,
@@ -543,6 +764,12 @@ function buildOrderMessage(
           order.shipment.provider,
         )}</b>`
       : "",
+
+    historyText
+      ? "\n"
+      : "",
+
+    historyText,
   ]
     .filter(
       Boolean,
@@ -580,7 +807,7 @@ export async function sendOrderToTelegram(
           config.chatId,
 
         text:
-          buildOrderMessage(
+          await buildOrderMessage(
             order,
           ),
 
@@ -658,7 +885,7 @@ export async function refreshTelegramOrderMessage(
         order.telegramMessageId,
 
       text:
-        buildOrderMessage(
+        await buildOrderMessage(
           order,
         ),
 
@@ -673,6 +900,310 @@ export async function refreshTelegramOrderMessage(
           orderButtons(
             order,
           ),
+      },
+    },
+  );
+}
+
+/* =========================================================
+   ORDER STATUS LISTS
+   ========================================================= */
+
+export async function sendOrdersByStatus(
+  status:
+    OrderStatus,
+) {
+  const config =
+    getTelegramConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  const orders =
+    await db.order.findMany({
+      where: {
+        status,
+      },
+
+      orderBy: {
+        createdAt:
+          "asc",
+      },
+
+      take:
+        25,
+
+      select: {
+        id:
+          true,
+
+        number:
+          true,
+
+        customerName:
+          true,
+
+        phone:
+          true,
+
+        district:
+          true,
+
+        total:
+          true,
+
+        paymentMethod:
+          true,
+
+        paymentStatus:
+          true,
+
+        createdAt:
+          true,
+
+        shipment: {
+          select: {
+            provider:
+              true,
+
+            status:
+              true,
+
+            consignmentId:
+              true,
+
+            trackingId:
+              true,
+          },
+        },
+      },
+    });
+
+  if (
+    orders.length ===
+    0
+  ) {
+    return telegramRequest(
+      "sendMessage",
+      {
+        chat_id:
+          config.chatId,
+
+        text:
+          `✅ No ${statusLabel(
+            status,
+          )} orders found.`,
+      },
+    );
+  }
+
+  const text =
+    [
+      `📦 <b>${escapeHtml(
+        statusLabel(
+          status,
+        ).toUpperCase(),
+      )} ORDERS</b>`,
+
+      "",
+
+      `${orders.length} order${
+        orders.length ===
+        1
+          ? ""
+          : "s"
+      }`,
+
+      "",
+
+      ...orders.map(
+        (
+          order,
+          index,
+        ) => {
+          const courier =
+            order.shipment
+              ? `\n🚚 ${escapeHtml(
+                  order.shipment.provider,
+                )} · ${escapeHtml(
+                  statusLabel(
+                    order.shipment.status,
+                  ),
+                )}`
+              : "";
+
+          return `${index + 1}. <b>${escapeHtml(
+            order.number,
+          )}</b>
+${escapeHtml(
+  order.customerName,
+)} · ${escapeHtml(
+            order.district,
+          )}
+📞 ${escapeHtml(
+            order.phone,
+          )}
+💰 ${formatBDT(
+            Number(
+              order.total,
+            ),
+          )} · ${order.paymentMethod}${courier}`;
+        },
+      ),
+    ].join(
+      "\n\n",
+    );
+
+  const buttons =
+    orders.flatMap(
+      (
+        order,
+      ) => {
+        const rows: {
+          text:
+            string;
+
+          callback_data:
+            string;
+        }[][] = [];
+
+        /*
+         * Status management buttons.
+         */
+        if (
+          status ===
+          "NEW"
+        ) {
+          rows.push([
+            {
+              text:
+                `✅ ${order.number} → Confirm`,
+
+              callback_data:
+                `gog:${order.id}:CONFIRMED`,
+            },
+
+            {
+              text:
+                "❌ Cancel",
+
+              callback_data:
+                `gog:${order.id}:CANCELLED`,
+            },
+          ]);
+        }
+
+        if (
+          status ===
+          "CONFIRMED"
+        ) {
+          rows.push([
+            {
+              text:
+                `📦 ${order.number} → Packing`,
+
+              callback_data:
+                `gog:${order.id}:PACKING`,
+            },
+
+            {
+              text:
+                "❌ Cancel",
+
+              callback_data:
+                `gog:${order.id}:CANCELLED`,
+            },
+          ]);
+        }
+
+        if (
+          status ===
+          "PACKING"
+        ) {
+          rows.push([
+            {
+              text:
+                `✅ ${order.number} → Ready`,
+
+              callback_data:
+                `gog:${order.id}:READY_TO_SHIP`,
+            },
+
+            {
+              text:
+                "❌ Cancel",
+
+              callback_data:
+                `gog:${order.id}:CANCELLED`,
+            },
+          ]);
+        }
+
+        if (
+          status ===
+          "READY_TO_SHIP"
+        ) {
+          rows.push([
+            {
+              text:
+                `🚚 ${order.number} → Shipped`,
+
+              callback_data:
+                `gog:${order.id}:SHIPPED`,
+            },
+
+            {
+              text:
+                "❌ Cancel",
+
+              callback_data:
+                `gog:${order.id}:CANCELLED`,
+            },
+          ]);
+        }
+
+        if (
+          status ===
+          "SHIPPED"
+        ) {
+          rows.push([
+            {
+              text:
+                `✅ ${order.number} → Delivered`,
+
+              callback_data:
+                `gog:${order.id}:DELIVERED`,
+            },
+
+            {
+              text:
+                "⚠️ Failed",
+
+              callback_data:
+                `gog:${order.id}:FAILED_DELIVERY`,
+            },
+          ]);
+        }
+
+        return rows;
+      },
+    );
+
+  return telegramRequest(
+    "sendMessage",
+    {
+      chat_id:
+        config.chatId,
+
+      text,
+
+      parse_mode:
+        "HTML",
+
+      reply_markup: {
+        inline_keyboard:
+          buttons,
       },
     },
   );

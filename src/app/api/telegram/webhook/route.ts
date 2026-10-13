@@ -21,6 +21,7 @@ import {
 import {
   answerTelegramCallback,
   refreshTelegramOrderMessage,
+  sendOrdersByStatus,
   sendReadyToShipList,
   sendTelegramText,
   telegramTransitionAllowed,
@@ -206,9 +207,121 @@ export async function POST(
 
     if (
       command ===
+      "/new"
+    ) {
+      await sendOrdersByStatus(
+        "NEW",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/confirmed"
+    ) {
+      await sendOrdersByStatus(
+        "CONFIRMED",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/packing"
+    ) {
+      await sendOrdersByStatus(
+        "PACKING",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
       "/ready"
     ) {
       await sendReadyToShipList();
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/shipped"
+    ) {
+      await sendOrdersByStatus(
+        "SHIPPED",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/delivered"
+    ) {
+      await sendOrdersByStatus(
+        "DELIVERED",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/cancelled"
+    ) {
+      await sendOrdersByStatus(
+        "CANCELLED",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/failed"
+    ) {
+      await sendOrdersByStatus(
+        "FAILED_DELIVERY",
+      );
+
+      return NextResponse.json({
+        ok:
+          true,
+      });
+    }
+
+    if (
+      command ===
+      "/returns"
+    ) {
+      await sendOrdersByStatus(
+        "RETURN_REQUESTED",
+      );
 
       return NextResponse.json({
         ok:
@@ -228,10 +341,27 @@ export async function POST(
 
         text:
           [
-            "🛍 <b>Game On Garb Orders</b>",
+            "🛍 <b>GAME ON GARB — ORDER CONTROL</b>",
             "",
-            "/ready — Ready to Ship orders",
-            "/help — Bot commands",
+            "📋 <b>ORDER LISTS</b>",
+            "",
+            "/new — New orders",
+            "/confirmed — Confirmed orders",
+            "/packing — Packing orders",
+            "/ready — Ready to Ship + courier actions",
+            "/shipped — Shipped orders",
+            "/delivered — Delivered orders",
+            "/cancelled — Cancelled orders",
+            "/failed — Failed delivery orders",
+            "/returns — Return requested orders",
+            "",
+            "⚙️ <b>MANAGEMENT</b>",
+            "",
+            "Use the buttons below each list to update order status.",
+            "",
+            "🚚 Ready to Ship orders can also be sent directly to Steadfast.",
+            "",
+            "📜 Every order card includes its complete status activity history.",
           ].join(
             "\n",
           ),
