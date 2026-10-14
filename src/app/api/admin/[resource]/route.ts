@@ -1165,8 +1165,118 @@ export async function PUT(
             ),
           general: z.record(z.string(), z.unknown()),
           contact: z.record(z.string(), z.unknown()).optional(),
-          social: z.record(z.string(), z.unknown()).optional(),
-          other: z.record(z.string(), z.unknown()).optional(),
+          social:
+            z
+              .record(
+                z.string(),
+                z.unknown(),
+              )
+              .optional(),
+
+          tracking:
+            z
+              .object({
+                gtm:
+                  z
+                    .object({
+                      enabled:
+                        z.boolean(),
+
+                      containerId:
+                        z
+                          .string()
+                          .max(
+                            40,
+                          )
+                          .transform(
+                            (
+                              value,
+                            ) =>
+                              value
+                                .trim()
+                                .toUpperCase(),
+                          ),
+                    })
+                    .refine(
+                      (
+                        value,
+                      ) =>
+                        !value.enabled ||
+                        /^GTM-[A-Z0-9]+$/.test(
+                          value.containerId,
+                        ),
+                      {
+                        message:
+                          "Enter a valid Google Tag Manager container ID such as GTM-XXXXXXX.",
+                        path: [
+                          "containerId",
+                        ],
+                      },
+                    ),
+
+                metaPixel:
+                  z
+                    .object({
+                      enabled:
+                        z.boolean(),
+
+                      pixelId:
+                        z
+                          .string()
+                          .max(
+                            40,
+                          )
+                          .transform(
+                            (
+                              value,
+                            ) =>
+                              value.trim(),
+                          ),
+                    })
+                    .refine(
+                      (
+                        value,
+                      ) =>
+                        !value.enabled ||
+                        /^\d+$/.test(
+                          value.pixelId,
+                        ),
+                      {
+                        message:
+                          "Enter a valid numeric Meta Pixel ID.",
+                        path: [
+                          "pixelId",
+                        ],
+                      },
+                    ),
+
+                events:
+                  z.object({
+                    pageView:
+                      z.boolean(),
+
+                    viewContent:
+                      z.boolean(),
+
+                    addToCart:
+                      z.boolean(),
+
+                    initiateCheckout:
+                      z.boolean(),
+
+                    purchase:
+                      z.boolean(),
+                  }),
+              })
+              .optional(),
+
+          other:
+            z
+              .record(
+                z.string(),
+                z.unknown(),
+              )
+              .optional(),
         })
         .parse(body);
       await db.$transaction(

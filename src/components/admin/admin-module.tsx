@@ -1237,9 +1237,68 @@ function Settings({
   const shipping = (data.shipping ?? {}) as Record<string, unknown>;
   const payments = (data.payments ?? {}) as Record<string, unknown>;
   const general = (data.general ?? {}) as Record<string, unknown>;
-  const contact = (data.contact ?? {}) as Record<string, unknown>;
-  const social = (data.social ?? {}) as Record<string, unknown>;
-  const other = (data.other ?? {}) as Record<string, unknown>;
+  const contact =
+    (
+      data.contact ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const social =
+    (
+      data.social ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const tracking =
+    (
+      data.tracking ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const gtm =
+    (
+      tracking.gtm ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const metaPixel =
+    (
+      tracking.metaPixel ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const trackingEvents =
+    (
+      tracking.events ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
+
+  const other =
+    (
+      data.other ??
+      {}
+    ) as Record<
+      string,
+      unknown
+    >;
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -1269,14 +1328,109 @@ function Settings({
         supportHours: f.get("supportHours"),
       },
       social: {
-        facebook: f.get("facebook"),
-        instagram: f.get("instagram"),
-        youtube: f.get("youtube"),
-        tiktok: f.get("tiktok"),
+        facebook:
+          f.get(
+            "facebook",
+          ),
+
+        instagram:
+          f.get(
+            "instagram",
+          ),
+
+        youtube:
+          f.get(
+            "youtube",
+          ),
+
+        tiktok:
+          f.get(
+            "tiktok",
+          ),
       },
+
+      tracking: {
+        gtm: {
+          enabled:
+            f.get(
+              "gtmEnabled",
+            ) ===
+            "on",
+
+          containerId:
+            String(
+              f.get(
+                "gtmContainerId",
+              ) ??
+                "",
+            )
+              .trim()
+              .toUpperCase(),
+        },
+
+        metaPixel: {
+          enabled:
+            f.get(
+              "metaPixelEnabled",
+            ) ===
+            "on",
+
+          pixelId:
+            String(
+              f.get(
+                "metaPixelId",
+              ) ??
+                "",
+            ).trim(),
+        },
+
+        events: {
+          pageView:
+            f.get(
+              "trackPageView",
+            ) ===
+            "on",
+
+          viewContent:
+            f.get(
+              "trackViewContent",
+            ) ===
+            "on",
+
+          addToCart:
+            f.get(
+              "trackAddToCart",
+            ) ===
+            "on",
+
+          initiateCheckout:
+            f.get(
+              "trackInitiateCheckout",
+            ) ===
+            "on",
+
+          purchase:
+            f.get(
+              "trackPurchase",
+            ) ===
+            "on",
+        },
+      },
+
       other: {
-        itemsPerPage: Number(f.get("itemsPerPage")),
-        cancellationHours: Number(f.get("cancellationHours")),
+        itemsPerPage:
+          Number(
+            f.get(
+              "itemsPerPage",
+            ),
+          ),
+
+        cancellationHours:
+          Number(
+            f.get(
+              "cancellationHours",
+            ),
+          ),
       },
     });
   }
@@ -1409,6 +1563,432 @@ function Settings({
             value={String(social.tiktok ?? "")}
           />
         </div>
+        <div
+          style={{
+            marginTop:
+              28,
+            paddingTop:
+              24,
+            borderTop:
+              "1px solid var(--line)",
+          }}
+        >
+          <div
+            style={{
+              marginBottom:
+                18,
+            }}
+          >
+            <h3
+              style={{
+                margin:
+                  "0 0 6px",
+              }}
+            >
+              Tracking & Marketing
+            </h3>
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  0,
+                maxWidth:
+                  760,
+              }}
+            >
+              Manage Google Tag Manager,
+              Meta Pixel and ecommerce
+              tracking without changing
+              website code.
+            </p>
+          </div>
+
+          {/* ===============================
+              GOOGLE TAG MANAGER
+              =============================== */}
+
+          <div
+            className="card"
+            style={{
+              padding:
+                18,
+              marginBottom:
+                14,
+            }}
+          >
+            <div
+              style={{
+                display:
+                  "flex",
+                justifyContent:
+                  "space-between",
+                alignItems:
+                  "flex-start",
+                gap:
+                  16,
+                marginBottom:
+                  14,
+              }}
+            >
+              <div>
+                <strong
+                  style={{
+                    display:
+                      "block",
+                    fontSize:
+                      16,
+                  }}
+                >
+                  Google Tag Manager
+                </strong>
+
+                <span
+                  className="muted"
+                  style={{
+                    display:
+                      "block",
+                    marginTop:
+                      4,
+                  }}
+                >
+                  Add or replace the GTM
+                  container used by the
+                  storefront.
+                </span>
+              </div>
+
+              <label
+                style={{
+                  display:
+                    "flex",
+                  alignItems:
+                    "center",
+                  gap:
+                    8,
+                  whiteSpace:
+                    "nowrap",
+                }}
+              >
+                <input
+                  name="gtmEnabled"
+                  type="checkbox"
+                  defaultChecked={
+                    gtm.enabled ===
+                    true
+                  }
+                />
+
+                Enable GTM
+              </label>
+            </div>
+
+            <Field
+              name="gtmContainerId"
+              label="GTM Container ID"
+              value={String(
+                gtm.containerId ??
+                  "",
+              )}
+            />
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  "6px 0 0",
+                fontSize:
+                  12,
+              }}
+            >
+              Example:
+              {" "}
+              <code>
+                GTM-XXXXXXX
+              </code>
+            </p>
+          </div>
+
+          {/* ===============================
+              META PIXEL
+              =============================== */}
+
+          <div
+            className="card"
+            style={{
+              padding:
+                18,
+              marginBottom:
+                14,
+            }}
+          >
+            <div
+              style={{
+                display:
+                  "flex",
+                justifyContent:
+                  "space-between",
+                alignItems:
+                  "flex-start",
+                gap:
+                  16,
+                marginBottom:
+                  14,
+              }}
+            >
+              <div>
+                <strong
+                  style={{
+                    display:
+                      "block",
+                    fontSize:
+                      16,
+                  }}
+                >
+                  Meta Pixel
+                </strong>
+
+                <span
+                  className="muted"
+                  style={{
+                    display:
+                      "block",
+                    marginTop:
+                      4,
+                  }}
+                >
+                  Manage the Facebook /
+                  Meta Pixel used for
+                  ecommerce advertising.
+                </span>
+              </div>
+
+              <label
+                style={{
+                  display:
+                    "flex",
+                  alignItems:
+                    "center",
+                  gap:
+                    8,
+                  whiteSpace:
+                    "nowrap",
+                }}
+              >
+                <input
+                  name="metaPixelEnabled"
+                  type="checkbox"
+                  defaultChecked={
+                    metaPixel.enabled ===
+                    true
+                  }
+                />
+
+                Enable Pixel
+              </label>
+            </div>
+
+            <Field
+              name="metaPixelId"
+              label="Meta Pixel ID"
+              value={String(
+                metaPixel.pixelId ??
+                  "",
+              )}
+            />
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  "6px 0 0",
+                fontSize:
+                  12,
+              }}
+            >
+              Enter only the numeric
+              Pixel ID. Do not paste the
+              complete Meta script.
+            </p>
+          </div>
+
+          {/* ===============================
+              EVENT TRACKING
+              =============================== */}
+
+          <div
+            className="card"
+            style={{
+              padding:
+                18,
+              marginBottom:
+                18,
+            }}
+          >
+            <strong
+              style={{
+                display:
+                  "block",
+                fontSize:
+                  16,
+                marginBottom:
+                  5,
+              }}
+            >
+              Ecommerce Event Tracking
+            </strong>
+
+            <p
+              className="muted"
+              style={{
+                margin:
+                  "0 0 16px",
+              }}
+            >
+              Choose which storefront
+              events will be available to
+              the tracking layer.
+            </p>
+
+            <div
+              style={{
+                display:
+                  "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(210px, 1fr))",
+                gap:
+                  10,
+              }}
+            >
+              <label
+                className="card"
+                style={{
+                  padding:
+                    13,
+                }}
+              >
+                <input
+                  name="trackPageView"
+                  type="checkbox"
+                  defaultChecked={
+                    trackingEvents.pageView !==
+                    false
+                  }
+                />{" "}
+                Page View
+              </label>
+
+              <label
+                className="card"
+                style={{
+                  padding:
+                    13,
+                }}
+              >
+                <input
+                  name="trackViewContent"
+                  type="checkbox"
+                  defaultChecked={
+                    trackingEvents.viewContent !==
+                    false
+                  }
+                />{" "}
+                View Content
+              </label>
+
+              <label
+                className="card"
+                style={{
+                  padding:
+                    13,
+                }}
+              >
+                <input
+                  name="trackAddToCart"
+                  type="checkbox"
+                  defaultChecked={
+                    trackingEvents.addToCart !==
+                    false
+                  }
+                />{" "}
+                Add To Cart
+              </label>
+
+              <label
+                className="card"
+                style={{
+                  padding:
+                    13,
+                }}
+              >
+                <input
+                  name="trackInitiateCheckout"
+                  type="checkbox"
+                  defaultChecked={
+                    trackingEvents.initiateCheckout !==
+                    false
+                  }
+                />{" "}
+                Initiate Checkout
+              </label>
+
+              <label
+                className="card"
+                style={{
+                  padding:
+                    13,
+                }}
+              >
+                <input
+                  name="trackPurchase"
+                  type="checkbox"
+                  defaultChecked={
+                    trackingEvents.purchase !==
+                    false
+                  }
+                />{" "}
+                Purchase
+              </label>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding:
+                14,
+              border:
+                "1px solid var(--line)",
+              background:
+                "#fff8f2",
+              marginBottom:
+                22,
+              fontSize:
+                13,
+              lineHeight:
+                1.55,
+            }}
+          >
+            <strong>
+              Avoid duplicate tracking
+            </strong>
+
+            <div
+              className="muted"
+              style={{
+                marginTop:
+                  4,
+              }}
+            >
+              If Meta Pixel is installed
+              through Google Tag Manager,
+              keep the direct Meta Pixel
+              option disabled. Otherwise
+              the same conversion can be
+              recorded twice.
+            </div>
+          </div>
+        </div>
+
         <h3>Other Settings</h3>
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
