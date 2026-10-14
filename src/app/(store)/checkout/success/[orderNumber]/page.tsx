@@ -300,6 +300,54 @@ export default async function OrderSuccessPage({
             order.paymentStatus,
           )}`;
 
+  /* =======================================================
+     PURCHASE TRACKING
+     ======================================================= */
+
+  const purchaseEligible =
+    order.paymentMethod ===
+      "COD" ||
+    order.paymentStatus ===
+      "PAID";
+
+  const purchaseItems =
+    order.items.map(
+      (
+        item,
+      ) => ({
+        id:
+          item.productId ??
+          item.sku ??
+          item.id,
+
+        name:
+          item.name,
+
+        price:
+          Number(
+            item.unitPrice,
+          ),
+
+        quantity:
+          item.quantity,
+
+        variant: [
+          item.color,
+          item.size,
+        ]
+          .filter(
+            Boolean,
+          )
+          .join(
+            " / ",
+          ),
+
+        sku:
+          item.sku ??
+          undefined,
+      }),
+    );
+
   return (
     <>
       <PurchaseTracker
@@ -507,53 +555,6 @@ export default async function OrderSuccessPage({
             )}
           </div>
         </section>
-          /* =======================================================
-     PURCHASE TRACKING
-     ======================================================= */
-
-  const purchaseEligible =
-    order.paymentMethod ===
-      "COD" ||
-    order.paymentStatus ===
-      "PAID";
-
-  const purchaseItems =
-    order.items.map(
-      (
-        item,
-      ) => ({
-        id:
-          item.productId ??
-          item.sku ??
-          item.id,
-
-        name:
-          item.name,
-
-        price:
-          Number(
-            item.unitPrice,
-          ),
-
-        quantity:
-          item.quantity,
-
-        variant: [
-          item.color,
-          item.size,
-        ]
-          .filter(
-            Boolean,
-          )
-          .join(
-            " / ",
-          ),
-
-        sku:
-          item.sku ??
-          undefined,
-      }),
-    );
 
         {/* =================================================
             ORDER INFORMATION
