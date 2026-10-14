@@ -4,6 +4,10 @@ import type {
   TrackingConfig,
 } from "@/lib/tracking-config";
 
+import {
+  PageViewTracker,
+} from "@/components/tracking/page-view-tracker";
+
 /* =========================================================
    TYPES
    ========================================================= */
@@ -20,6 +24,23 @@ type TrackingScriptsProps = {
 export function TrackingScripts({
   config,
 }: TrackingScriptsProps) {
+  const runtimeConfig =
+    JSON.stringify(
+      config,
+    )
+      .replaceAll(
+        "<",
+        "\\u003c",
+      )
+      .replaceAll(
+        "\u2028",
+        "\\u2028",
+      )
+      .replaceAll(
+        "\u2029",
+        "\\u2029",
+      );
+
   const gtmEnabled =
     config.gtm.enabled &&
     Boolean(
@@ -32,15 +53,15 @@ export function TrackingScripts({
       config.metaPixel.pixelId,
     );
 
-  if (
-    !gtmEnabled &&
-    !metaEnabled
-  ) {
-    return null;
-  }
-
   return (
     <>
+      <script
+        id="gog-tracking-runtime-config"
+        dangerouslySetInnerHTML={{
+          __html:
+            `window.__GOG_TRACKING_CONFIG__=${runtimeConfig};`,
+        }}
+      />
       {/* =====================================================
           GOOGLE TAG MANAGER
           ===================================================== */}
@@ -169,6 +190,7 @@ export function TrackingScripts({
           </noscript>
         </>
       ) : null}
+            <PageViewTracker />
     </>
   );
 }

@@ -21,8 +21,13 @@ import {
   FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+
+import {
+  trackInitiateCheckout,
+} from "@/lib/tracking";
 
 import {
   useRouter,
@@ -123,6 +128,11 @@ export function CheckoutClient() {
 
   const router =
     useRouter();
+
+      const checkoutTracked =
+    useRef(
+      false,
+    );
 
   const [
     settings,
@@ -382,6 +392,89 @@ export function CheckoutClient() {
         settings.bkashEnabled
       ),
     );
+
+  /* =======================================================
+     INITIATE CHECKOUT TRACKING
+     ======================================================= */
+
+  useEffect(
+    () => {
+      if (
+        checkoutTracked
+          .current ||
+        !cart.length
+      ) {
+        return;
+      }
+
+      trackInitiateCheckout({
+        value:
+          subtotal,
+
+        items:
+          cart.map(
+            (
+              line,
+            ) => {
+              const variant =
+                line.product
+                  .variants?.find(
+                    (
+                      candidate,
+                    ) =>
+                      candidate.size ===
+                        line.size &&
+                      candidate.color ===
+                        line.color,
+                  );
+
+              return {
+                id:
+                  line.product
+                    .id,
+
+                name:
+                  line.product
+                    .name,
+
+                category:
+                  line.product
+                    .category,
+
+                price:
+                  line.product
+                    .price,
+
+                quantity:
+                  line.quantity,
+
+                variant: [
+                  line.color,
+                  line.size,
+                ]
+                  .filter(
+                    Boolean,
+                  )
+                  .join(
+                    " / ",
+                  ),
+
+                sku:
+                  variant?.sku,
+              };
+            },
+          ),
+      });
+
+      checkoutTracked.current =
+        true;
+    },
+
+    [
+      cart,
+      subtotal,
+    ],
+  );
 
   /* =======================================================
      CART SIGNATURE

@@ -18,6 +18,7 @@ import {
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -46,6 +47,10 @@ import {
 import type {
   PublicSizeChart,
 } from "@/lib/size-chart-types";
+
+import {
+  trackViewContent,
+} from "@/lib/tracking";
 
 /* =========================================================
    CONSTANTS
@@ -507,6 +512,64 @@ export function ProductDetail({
     0;
 
   const liked =
+
+    /* =======================================================
+     VIEW CONTENT TRACKING
+     ======================================================= */
+
+  const trackedProductId =
+    useRef<
+      string |
+      null
+    >(
+      null,
+    );
+
+  useEffect(
+    () => {
+      if (
+        trackedProductId
+          .current ===
+        product.id
+      ) {
+        return;
+      }
+
+      trackViewContent({
+        id:
+          product.id,
+
+        name:
+          product.name,
+
+        category:
+          product.category,
+
+        price:
+          product.price,
+
+        quantity:
+          1,
+
+        sku:
+          product.variants?.[0]
+            ?.sku,
+      });
+
+      trackedProductId.current =
+        product.id;
+    },
+
+    [
+      product.category,
+      product.id,
+      product.name,
+      product.price,
+      product.variants,
+    ],
+  );
+
+  const liked =
     wishlist.includes(
       product.id,
     );
@@ -673,24 +736,20 @@ export function ProductDetail({
       return;
     }
 
-    for (
-      let index = 0;
-      index < quantity;
-      index += 1
-    ) {
-      add(
-        {
-          ...product,
+    add(
+      {
+        ...product,
 
-          price:
-            selectedPrice,
-        },
+        price:
+          selectedPrice,
+      },
 
-        size,
+      size,
 
-        color,
-      );
-    }
+      color,
+
+      quantity,
+    );
   }
 
   /* =======================================================

@@ -3,6 +3,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/data";
 
+import {
+  trackAddToCart,
+} from "@/lib/tracking";
+
 export type CartLine = {
   product: Product;
   size: string;
@@ -14,7 +18,19 @@ type StoreContextValue = {
   wishlist: string[];
 
   ready: boolean;
-  add: (p: Product, size?: string, color?: string) => void;
+  add: (
+    p:
+      Product,
+
+    size?:
+      string,
+
+    color?:
+      string,
+
+    quantity?:
+      number,
+  ) => void;
   remove: (key: string) => void;
   setQuantity: (key: string, q: number) => void;
   toggleWishlist: (id: string) => void;
@@ -51,28 +67,162 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       wishlist,
       ready,
       add: (
-        product: Product,
-        size = product.sizes[0],
-        color = product.colors[0],
-      ) =>
-        setCart((v) => {
-          const key = cartKey(product.id, size, color);
-          const variantStock =
-            product.variants?.find(
-              (variant) => variant.size === size && variant.color === color,
-            )?.stock ?? product.stock;
-          if (variantStock < 1) return v;
-          const i = v.findIndex(
-            (x) => cartKey(x.product.id, x.size, x.color) === key,
+        product:
+          Product,
+
+        size =
+          product.sizes[0],
+
+        color =
+          product.colors[0],
+
+        quantity =
+          1,
+      ) => {
+        const requestedQuantity =
+          Math.max(
+            1,
+            Math.floor(
+              quantity,
+            ),
           );
-          return i < 0
-            ? [...v, { product, size, color, quantity: 1 }]
-            : v.map((x, n) =>
-                n === i
-                  ? { ...x, quantity: Math.min(x.quantity + 1, variantStock) }
-                  : x,
-              );
-        }),
+
+        const selectedVariant =
+          product.variants?.find(
+            (
+              variant,
+            ) =>
+              variant.size ===
+                size &&
+              variant.color ===
+                color,
+          );
+
+        const variantStock =
+          selectedVariant
+            ?.stock ??
+          product.stock;
+
+        if (
+          variantStock <
+          1
+        ) {
+          return;
+        }
+
+        const key =
+          cartKey(
+            product.id,
+            size,
+            color,
+          );
+
+        const existingIndex =
+          cart.findIndex(
+            (
+              line,
+            ) =>
+              cartKey(
+                line.product
+                  .id,
+
+                line.size,
+
+                line.color,
+              ) ===
+              key,
+          );
+
+        const currentQuantity =
+          existingIndex >=
+          0
+            ? cart[
+                existingIndex
+              ].quantity
+            : 0;
+
+        const nextQuantity =
+          Math.min(
+            currentQuantity +
+              requestedQuantity,
+
+            variantStock,
+          );
+
+        const addedQuantity =
+          nextQuantity -
+          currentQuantity;
+
+        if (
+          addedQuantity <=
+          0
+        ) {
+          return;
+        }
+
+        setCart(
+          existingIndex <
+            0
+            ? [
+                ...cart,
+
+                {
+                  product,
+                  size,
+                  color,
+                  quantity:
+                    addedQuantity,
+                },
+              ]
+            : cart.map(
+                (
+                  line,
+                  index,
+                ) =>
+                  index ===
+                  existingIndex
+                    ? {
+                        ...line,
+
+                        quantity:
+                          nextQuantity,
+                      }
+                    : line,
+              ),
+        );
+
+        trackAddToCart({
+          id:
+            product.id,
+
+          name:
+            product.name,
+
+          category:
+            product.category,
+
+          price:
+            product.price,
+
+          quantity:
+            addedQuantity,
+
+          variant: [
+            color,
+            size,
+          ]
+            .filter(
+              Boolean,
+            )
+            .join(
+              " / ",
+            ),
+
+          sku:
+            selectedVariant
+              ?.sku,
+        });
+      },
       remove: (key: string) =>
         setCart((v) =>
           v.filter((x) => cartKey(x.product.id, x.size, x.color) !== key),

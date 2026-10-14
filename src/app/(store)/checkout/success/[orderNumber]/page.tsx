@@ -35,6 +35,10 @@ import {
 
 import styles from "./order-success.module.css";
 
+import {
+  PurchaseTracker,
+} from "@/components/tracking/purchase-tracker";
+
 export const dynamic =
   "force-dynamic";
 
@@ -201,6 +205,9 @@ export default async function OrderSuccessPage({
             id:
               true,
 
+            productId:
+              true,
+
             name:
               true,
 
@@ -294,7 +301,25 @@ export default async function OrderSuccessPage({
           )}`;
 
   return (
-    <main className={styles.page}>
+    <>
+      <PurchaseTracker
+        orderNumber={
+          order.number
+        }
+        total={
+          Number(
+            order.total,
+          )
+        }
+        eligible={
+          purchaseEligible
+        }
+        items={
+          purchaseItems
+        }
+      />
+
+      <main className={styles.page}>
       <div className={styles.container}>
         {/* =================================================
             SUCCESS HERO
@@ -482,6 +507,53 @@ export default async function OrderSuccessPage({
             )}
           </div>
         </section>
+          /* =======================================================
+     PURCHASE TRACKING
+     ======================================================= */
+
+  const purchaseEligible =
+    order.paymentMethod ===
+      "COD" ||
+    order.paymentStatus ===
+      "PAID";
+
+  const purchaseItems =
+    order.items.map(
+      (
+        item,
+      ) => ({
+        id:
+          item.productId ??
+          item.sku ??
+          item.id,
+
+        name:
+          item.name,
+
+        price:
+          Number(
+            item.unitPrice,
+          ),
+
+        quantity:
+          item.quantity,
+
+        variant: [
+          item.color,
+          item.size,
+        ]
+          .filter(
+            Boolean,
+          )
+          .join(
+            " / ",
+          ),
+
+        sku:
+          item.sku ??
+          undefined,
+      }),
+    );
 
         {/* =================================================
             ORDER INFORMATION
@@ -794,7 +866,8 @@ export default async function OrderSuccessPage({
           </div>
         </section>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 
