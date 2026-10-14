@@ -1,6 +1,18 @@
-import { StoreShell } from "@/components/layout/store-shell";
+import {
+  StoreShell,
+} from "@/components/layout/store-shell";
 
-import { getNavigationCategories } from "@/lib/catalog";
+import {
+  TrackingScripts,
+} from "@/components/tracking/tracking-scripts";
+
+import {
+  getNavigationCategories,
+} from "@/lib/catalog";
+
+import {
+  normalizeTrackingConfig,
+} from "@/lib/tracking-config";
 import {
   db,
   withDatabaseRetry,
@@ -29,6 +41,7 @@ export default async function StoreLayout({
                 "general",
                 "contact",
                 "social",
+                "tracking",
               ],
             },
           },
@@ -54,24 +67,43 @@ export default async function StoreLayout({
     );
 
   const general =
-    (settings.general ??
-      {}) as {
-      storeLive?: boolean;
-      maintenanceMode?: boolean;
+    (
+      settings.general ??
+      {}
+    ) as {
+      storeLive?:
+        boolean;
+
+      maintenanceMode?:
+        boolean;
     };
+
+  const tracking =
+    normalizeTrackingConfig(
+      settings.tracking,
+    );
 
   const unavailable =
     general.storeLive === false ||
     general.maintenanceMode === true;
 
   return (
-    <StoreShell
-      navCategories={
-        navCategories
-      }
-      settings={settings}
-    >
-      {unavailable ? (
+    <>
+      <TrackingScripts
+        config={
+          tracking
+        }
+      />
+
+      <StoreShell
+        navCategories={
+          navCategories
+        }
+        settings={
+          settings
+        }
+      >
+        {unavailable ? (
         <section className="store-maintenance">
           <div className="container store-maintenance-inner">
             <div className="eyebrow">
@@ -89,9 +121,10 @@ export default async function StoreLayout({
             </p>
           </div>
         </section>
-      ) : (
-        children
-      )}
-    </StoreShell>
+        ) : (
+          children
+        )}
+      </StoreShell>
+    </>
   );
 }
