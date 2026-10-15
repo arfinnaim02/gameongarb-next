@@ -37,6 +37,7 @@ export default async function InventoryPage() {
   const [
     variants,
     history,
+    categories,
   ] =
     await Promise.all([
       db.productVariant.findMany({
@@ -78,18 +79,30 @@ export default async function InventoryPage() {
               },
 
               categories: {
-                where: {
+                orderBy: {
                   primary:
-                    true,
+                    "desc",
                 },
 
-                take:
-                  1,
-
                 select: {
+                  categoryId:
+                    true,
+
+                  primary:
+                    true,
+
                   category: {
                     select: {
+                      id:
+                        true,
+
                       name:
+                        true,
+
+                      parentId:
+                        true,
+
+                      sortOrder:
                         true,
                     },
                   },
@@ -155,6 +168,37 @@ export default async function InventoryPage() {
         take:
           500,
       }),
+
+      db.category.findMany({
+        orderBy: [
+          {
+            sortOrder:
+              "asc",
+          },
+
+          {
+            name:
+              "asc",
+          },
+        ],
+
+        select: {
+          id:
+            true,
+
+          name:
+            true,
+
+          parentId:
+            true,
+
+          sortOrder:
+            true,
+
+          active:
+            true,
+        },
+      }),
     ]);
 
   return (
@@ -163,59 +207,84 @@ export default async function InventoryPage() {
         variants.map(
           (
             variant,
-          ) => ({
-            id:
-              variant.id,
-
-            productId:
-              variant.productId,
-
-            product:
-              variant.product.name,
-
-            productStatus:
-              variant.product.status,
-
-            category:
+          ) => {
+            const primary =
               variant.product
-                .categories[0]
-                ?.category
-                .name ??
-              "Uncategorized",
-
-            image:
+                .categories.find(
+                  (
+                    assignment,
+                  ) =>
+                    assignment.primary,
+                ) ??
               variant.product
-                .images[0]
-                ?.url ??
-              null,
+                .categories[0];
 
-            imageAlt:
-              variant.product
-                .images[0]
-                ?.alt ??
-              variant.product.name,
+            return {
+              id:
+                variant.id,
 
-            sku:
-              variant.sku,
+              productId:
+                variant.productId,
 
-            size:
-              variant.size,
+              product:
+                variant.product.name,
 
-            color:
-              variant.color,
+              productStatus:
+                variant.product.status,
 
-            colorHex:
-              variant.colorHex,
+              category:
+                primary?.category
+                  .name ??
+                "Uncategorized",
 
-            stock:
-              variant.stock,
+              primaryCategoryId:
+                primary
+                  ?.categoryId ??
+                null,
 
-            lowStockThreshold:
-              variant.lowStockThreshold,
+              categoryIds:
+                variant.product
+                  .categories.map(
+                    (
+                      assignment,
+                    ) =>
+                      assignment.categoryId,
+                  ),
 
-            active:
-              variant.active,
-          }),
+              image:
+                variant.product
+                  .images[0]
+                  ?.url ??
+                null,
+
+              imageAlt:
+                variant.product
+                  .images[0]
+                  ?.alt ??
+                variant.product.name,
+
+              sku:
+                variant.sku,
+
+              size:
+                variant.size,
+
+              color:
+                variant.color,
+
+              colorHex:
+                variant.colorHex,
+
+              stock:
+                variant.stock,
+
+              lowStockThreshold:
+                variant.lowStockThreshold,
+
+              active:
+                variant.active,
+            };
+          },
         )
       }
       initialHistory={
@@ -275,6 +344,28 @@ export default async function InventoryPage() {
 
             createdAt:
               transaction.createdAt.toISOString(),
+          }),
+        )
+      }
+      categories={
+        categories.map(
+          (
+            category,
+          ) => ({
+            id:
+              category.id,
+
+            name:
+              category.name,
+
+            parentId:
+              category.parentId,
+
+            sortOrder:
+              category.sortOrder,
+
+            active:
+              category.active,
           }),
         )
       }

@@ -54,6 +54,13 @@ export type InventoryVariant = {
   category:
     string;
 
+  primaryCategoryId:
+   string |
+    null;
+
+  categoryIds:
+    string[];
+
   image:
     string |
     null;
@@ -80,6 +87,24 @@ export type InventoryVariant = {
     number;
 
   lowStockThreshold:
+    number;
+
+  active:
+    boolean;
+};
+
+export type InventoryCategory = {
+  id:
+    string;
+
+  name:
+    string;
+
+  parentId:
+    string |
+    null;
+
+  sortOrder:
     number;
 
   active:
@@ -366,12 +391,16 @@ function downloadCsv(
 export function InventoryManager({
   initialVariants,
   initialHistory,
+  categories,
 }: {
   initialVariants:
     InventoryVariant[];
 
   initialHistory:
     InventoryHistoryItem[];
+
+  categories:
+    InventoryCategory[];
 }) {
   const router =
     useRouter();
@@ -405,6 +434,22 @@ export function InventoryManager({
     setQuery,
   ] =
     useState("");
+
+      const [
+    categoryFilter,
+    setCategoryFilter,
+  ] =
+    useState(
+      "ALL",
+    );
+
+  const [
+    subcategoryFilter,
+    setSubcategoryFilter,
+  ] =
+    useState(
+      "ALL",
+    );
 
   const [
     stockFilter,
@@ -547,6 +592,198 @@ export function InventoryManager({
       ],
     );
 
+      /* =======================================================
+     CATEGORY HIERARCHY
+     ======================================================= */
+
+  const categoryMap =
+    useMemo(
+      () =>
+        new Map(
+          categories.map(
+            (
+              category,
+            ) => [
+              category.id,
+              category,
+            ],
+          ),
+        ),
+
+      [
+        categories,
+      ],
+    );
+
+  const rootCategories =
+    useMemo(
+      () =>
+        categories.filter(
+          (
+            category,
+          ) =>
+            !category.parentId,
+        ),
+
+      [
+        categories,
+      ],
+    );
+
+  function categoryLineage(
+    categoryId:
+      string |
+      null,
+  ) {
+    const lineage:
+      InventoryCategory[] =
+      [];
+
+    let currentId =
+      categoryId;
+
+    const visited =
+      new Set<
+        string
+      >();
+
+    while (
+      currentId &&
+      !visited.has(
+        currentId,
+      )
+    ) {
+      visited.add(
+        currentId,
+      );
+
+      const category =
+        categoryMap.get(
+          currentId,
+        );
+
+      if (
+        !category
+      ) {
+        break;
+      }
+
+      lineage.unshift(
+        category,
+      );
+
+      currentId =
+        category.parentId;
+    }
+
+    return lineage;
+  }
+
+  function rootCategoryIdFor(
+    categoryId:
+      string |
+      null,
+  ) {
+    const lineage =
+      categoryLineage(
+        categoryId,
+      );
+
+    return (
+      lineage[0]
+        ?.id ??
+      null
+    );
+  }
+
+  function directSubcategoryIdFor(
+    categoryId:
+      string |
+      null,
+  ) {
+    const lineage =
+      categoryLineage(
+        categoryId,
+      );
+
+    return (
+      lineage[1]
+        ?.id ??
+      null
+    );
+  }
+
+  function categoryDescendantIds(
+    categoryId:
+      string,
+  ) {
+    const result =
+      new Set<
+        string
+      >([
+        categoryId,
+      ]);
+
+    let changed =
+      true;
+
+    while (
+      changed
+    ) {
+      changed =
+        false;
+
+      for (
+        const category
+        of categories
+      ) {
+        if (
+          category.parentId &&
+          result.has(
+            category.parentId,
+          ) &&
+          !result.has(
+            category.id,
+          )
+        ) {
+          result.add(
+            category.id,
+          );
+
+          changed =
+            true;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  const availableSubcategories =
+    useMemo(
+      () => {
+        if (
+          categoryFilter ===
+          "ALL"
+        ) {
+          return [];
+        }
+
+        return categories.filter(
+          (
+            category,
+          ) =>
+            category.parentId ===
+            categoryFilter,
+        );
+      },
+
+      [
+        categories,
+        categoryFilter,
+      ],
+    );
+
   /* =======================================================
      FILTERED STOCK
      ======================================================= */
@@ -558,6 +795,22 @@ export function InventoryManager({
           query
             .trim()
             .toLowerCase();
+
+        const selectedCategoryIds =
+          categoryFilter ===
+          "ALL"
+            ? null
+            : categoryDescendantIds(
+                categoryFilter,
+              );
+
+        const selectedSubcategoryIds =
+          subcategoryFilter ===
+          "ALL"
+            ? null
+            : categoryDescendantIds(
+                subcategoryFilter,
+              );
 
         const result =
           variants.filter(
@@ -596,9 +849,33 @@ export function InventoryManager({
                 state ===
                   stockFilter;
 
+              const matchesCategory =
+                !selectedCategoryIds ||
+                variant.categoryIds.some(
+                  (
+                    id,
+                  ) =>
+                    selectedCategoryIds.has(
+                      id,
+                    ),
+                );
+
+              const matchesSubcategory =
+                !selectedSubcategoryIds ||
+                variant.categoryIds.some(
+                  (
+                    id,
+                  ) =>
+                    selectedSubcategoryIds.has(
+                      id,
+                    ),
+                );
+
               return (
                 matchesQuery &&
-                matchesStock
+                matchesStock &&
+                matchesCategory &&
+                matchesSubcategory
               );
             },
           );
@@ -645,11 +922,15 @@ export function InventoryManager({
           },
         );
       },
+
       [
         variants,
         query,
         stockFilter,
         sort,
+        categoryFilter,
+        subcategoryFilter,
+        categories,
       ],
     );
 
@@ -789,6 +1070,112 @@ export function InventoryManager({
     }
   }
 
+
+    /* =======================================================
+     CATEGORY GROUPS
+     ======================================================= */
+
+  const categoryGroups =
+    useMemo(
+      () => {
+        type Group = {
+          id:
+            string;
+
+          name:
+            string;
+
+          sortOrder:
+            number;
+
+          variants:
+            InventoryVariant[];
+        };
+
+        const groups =
+          new Map<
+            string,
+            Group
+          >();
+
+        for (
+          const variant
+          of filteredVariants
+        ) {
+          const rootId =
+            rootCategoryIdFor(
+              variant.primaryCategoryId,
+            );
+
+          const root =
+            rootId
+              ? categoryMap.get(
+                  rootId,
+                )
+              : null;
+
+          const groupId =
+            root?.id ??
+            "__UNCATEGORIZED__";
+
+          const existing =
+            groups.get(
+              groupId,
+            );
+
+          if (
+            existing
+          ) {
+            existing.variants.push(
+              variant,
+            );
+
+            continue;
+          }
+
+          groups.set(
+            groupId,
+            {
+              id:
+                groupId,
+
+              name:
+                root?.name ??
+                "Uncategorized",
+
+              sortOrder:
+                root?.sortOrder ??
+                999999,
+
+              variants: [
+                variant,
+              ],
+            },
+          );
+        }
+
+        return Array.from(
+          groups.values(),
+        ).sort(
+          (
+            first,
+            second,
+          ) =>
+            first.sortOrder -
+              second.sortOrder ||
+            first.name.localeCompare(
+              second.name,
+            ),
+        );
+      },
+
+      [
+        filteredVariants,
+        categoryMap,
+      ],
+    );
+
+
   async function updateVariant(
     variant:
       InventoryVariant,
@@ -876,6 +1263,88 @@ export function InventoryManager({
       );
     }
   }
+
+    function productsFromVariants(
+    rows:
+      InventoryVariant[],
+  ) {
+    const groups =
+      new Map<
+        string,
+        {
+          productId:
+            string;
+
+          product:
+            string;
+
+          image:
+            string |
+            null;
+
+          imageAlt:
+            string;
+
+          variants:
+            InventoryVariant[];
+        }
+      >();
+
+    for (
+      const variant
+      of rows
+    ) {
+      const existing =
+        groups.get(
+          variant.productId,
+        );
+
+      if (
+        existing
+      ) {
+        existing.variants.push(
+          variant,
+        );
+
+        continue;
+      }
+
+      groups.set(
+        variant.productId,
+        {
+          productId:
+            variant.productId,
+
+          product:
+            variant.product,
+
+          image:
+            variant.image,
+
+          imageAlt:
+            variant.imageAlt,
+
+          variants: [
+            variant,
+          ],
+        },
+      );
+    }
+
+    return Array.from(
+      groups.values(),
+    ).sort(
+      (
+        first,
+        second,
+      ) =>
+        first.product.localeCompare(
+          second.product,
+        ),
+    );
+  }
+
+
 
   /* =======================================================
      EXPORTS
@@ -988,9 +1457,19 @@ export function InventoryManager({
 
   function resetFilters() {
     setQuery("");
+
+    setCategoryFilter(
+      "ALL",
+    );
+
+    setSubcategoryFilter(
+      "ALL",
+    );
+
     setStockFilter(
       "ALL",
     );
+
     setSort(
       "PRODUCT",
     );
@@ -1000,6 +1479,10 @@ export function InventoryManager({
     Boolean(
       query,
     ) ||
+    categoryFilter !==
+      "ALL" ||
+    subcategoryFilter !==
+      "ALL" ||
     stockFilter !==
       "ALL" ||
     sort !==
@@ -1386,6 +1869,96 @@ export function InventoryManager({
             <>
               <select
                 value={
+                  categoryFilter
+                }
+                onChange={(
+                  event,
+                ) => {
+                  setCategoryFilter(
+                    event.target
+                      .value,
+                  );
+
+                  setSubcategoryFilter(
+                    "ALL",
+                  );
+                }}
+              >
+                <option value="ALL">
+                  All categories
+                </option>
+
+                {rootCategories.map(
+                  (
+                    category,
+                  ) => (
+                    <option
+                      key={
+                        category.id
+                      }
+                      value={
+                        category.id
+                      }
+                    >
+                      {
+                        category.name
+                      }
+                    </option>
+                  ),
+                )}
+              </select>
+
+              <select
+                value={
+                  subcategoryFilter
+                }
+                disabled={
+                  categoryFilter ===
+                    "ALL" ||
+                  availableSubcategories.length ===
+                    0
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setSubcategoryFilter(
+                    event.target
+                      .value,
+                  )
+                }
+              >
+                <option value="ALL">
+                  {categoryFilter ===
+                  "ALL"
+                    ? "Select category first"
+                    : availableSubcategories.length ===
+                        0
+                      ? "No subcategories"
+                      : "All subcategories"}
+                </option>
+
+                {availableSubcategories.map(
+                  (
+                    category,
+                  ) => (
+                    <option
+                      key={
+                        category.id
+                      }
+                      value={
+                        category.id
+                      }
+                    >
+                      {
+                        category.name
+                      }
+                    </option>
+                  ),
+                )}
+              </select>
+
+              <select
+                value={
                   stockFilter
                 }
                 onChange={(
@@ -1479,14 +2052,14 @@ export function InventoryManager({
       </section>
 
       {/* ===================================================
-          CURRENT STOCK
+          CATEGORY INVENTORY
           =================================================== */}
 
       {view ===
       "STOCK" ? (
         <section
           className={
-            styles.tableCard
+            styles.categoryInventory
           }
         >
           <div
@@ -1496,14 +2069,18 @@ export function InventoryManager({
           >
             <div>
               <strong>
-                Variant Inventory
+                Inventory by Category
               </strong>
 
               <span>
                 {
                   filteredVariants.length
                 }{" "}
-                variants shown
+                variants across{" "}
+                {
+                  categoryGroups.length
+                }{" "}
+                categories
               </span>
             </div>
 
@@ -1523,237 +2100,447 @@ export function InventoryManager({
             </button>
           </div>
 
-          {filteredVariants.length >
+          {categoryGroups.length >
           0 ? (
             <div
               className={
-                styles.tableWrap
+                styles.categoryList
               }
             >
-              <table
-                className={
-                  styles.table
-                }
-              >
-                <thead>
-                  <tr>
-                    <th>
-                      Product
-                    </th>
+              {categoryGroups.map(
+                (
+                  category,
+                ) => {
+                  const totalUnits =
+                    category.variants.reduce(
+                      (
+                        total,
+                        variant,
+                      ) =>
+                        total +
+                        variant.stock,
 
-                    <th>
-                      SKU
-                    </th>
+                      0,
+                    );
 
-                    <th>
-                      Variant
-                    </th>
-
-                    <th>
-                      Stock
-                    </th>
-
-                    <th>
-                      Threshold
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredVariants.map(
-                    (
-                      variant,
-                    ) => {
-                      const state =
+                  const lowCount =
+                    category.variants.filter(
+                      (
+                        variant,
+                      ) =>
                         stockState(
                           variant,
-                        );
+                        ) ===
+                        "LOW",
+                    ).length;
 
-                      return (
-                        <tr
-                          key={
-                            variant.id
+                  const outCount =
+                    category.variants.filter(
+                      (
+                        variant,
+                      ) =>
+                        stockState(
+                          variant,
+                        ) ===
+                        "OUT",
+                    ).length;
+
+                  const products =
+                    productsFromVariants(
+                      category.variants,
+                    );
+
+                  return (
+                    <details
+                      key={
+                        category.id
+                      }
+                      className={
+                        styles.categoryGroup
+                      }
+                      open={
+                        Boolean(
+                          query,
+                        ) ||
+                        categoryFilter !==
+                          "ALL" ||
+                        stockFilter !==
+                          "ALL"
+                      }
+                    >
+                      <summary
+                        className={
+                          styles.categorySummary
+                        }
+                      >
+                        <div
+                          className={
+                            styles.categorySummaryMain
                           }
                         >
-                          <td>
-                            <div
-                              className={
-                                styles.productCell
-                              }
-                            >
-                              <div
-                                className={
-                                  styles.productImage
-                                }
-                              >
-                                {variant.image ? (
-                                  <Image
-                                    src={
-                                      variant.image
-                                    }
-                                    alt={
-                                      variant.imageAlt
-                                    }
-                                    fill
-                                    sizes="46px"
-                                  />
-                                ) : (
-                                  <Package
-                                    size={
-                                      18
-                                    }
-                                  />
-                                )}
-                              </div>
+                          <ChevronRight
+                            size={
+                              18
+                            }
+                          />
 
-                              <div>
-                                <Link
-                                  href={`/admin/products/${variant.productId}`}
-                                >
-                                  {
-                                    variant.product
-                                  }
-                                </Link>
-
-                                <span>
-                                  {
-                                    variant.category
-                                  }
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-
-                          <td>
-                            <code
-                              className={
-                                styles.sku
-                              }
-                            >
+                          <div>
+                            <strong>
                               {
-                                variant.sku
-                              }
-                            </code>
-                          </td>
-
-                          <td>
-                            <div
-                              className={
-                                styles.variantCell
-                              }
-                            >
-                              {variant.color ? (
-                                <span>
-                                  {variant.colorHex ? (
-                                    <i
-                                      style={{
-                                        background:
-                                          variant.colorHex,
-                                      }}
-                                    />
-                                  ) : null}
-
-                                  {
-                                    variant.color
-                                  }
-                                </span>
-                              ) : null}
-
-                              <small>
-                                {
-                                  variant.size ??
-                                  "No size"
-                                }
-                              </small>
-                            </div>
-                          </td>
-
-                          <td>
-                            <strong
-                              className={`${styles.stockNumber} ${
-                                state ===
-                                "OUT"
-                                  ? styles.stockDanger
-                                  : state ===
-                                      "LOW"
-                                    ? styles.stockWarning
-                                    : ""
-                              }`}
-                            >
-                              {
-                                variant.stock
+                                category.name
                               }
                             </strong>
-                          </td>
 
-                          <td>
+                            <span>
+                              {
+                                products.length
+                              }{" "}
+                              product
+                              {products.length ===
+                              1
+                                ? ""
+                                : "s"}{" "}
+                              ·{" "}
+                              {
+                                category.variants
+                                  .length
+                              }{" "}
+                              variants ·{" "}
+                              {
+                                totalUnits
+                              }{" "}
+                              units
+                            </span>
+                          </div>
+                        </div>
+
+                        <div
+                          className={
+                            styles.categoryBadges
+                          }
+                        >
+                          {lowCount >
+                          0 ? (
                             <span
-                              className={
-                                styles.threshold
-                              }
+                              className={`${styles.statusBadge} ${styles.statusLow}`}
                             >
                               {
-                                variant.lowStockThreshold
-                              }
+                                lowCount
+                              }{" "}
+                              Low
                             </span>
-                          </td>
+                          ) : null}
 
-                          <td>
+                          {outCount >
+                          0 ? (
                             <span
-                              className={`${styles.statusBadge} ${
-                                state ===
-                                "IN_STOCK"
-                                  ? styles.statusGood
-                                  : state ===
-                                      "LOW"
-                                    ? styles.statusLow
-                                    : state ===
-                                        "OUT"
-                                      ? styles.statusOut
-                                      : styles.statusInactive
-                              }`}
+                              className={`${styles.statusBadge} ${styles.statusOut}`}
                             >
-                              {stockLabel(
-                                state,
-                              )}
+                              {
+                                outCount
+                              }{" "}
+                              Out
                             </span>
-                          </td>
+                          ) : null}
 
-                          <td>
-                            <button
-                              type="button"
-                              className={
-                                styles.adjustButton
-                              }
-                              onClick={() =>
-                                setSelected(
-                                  variant,
-                                )
-                              }
+                          {lowCount ===
+                            0 &&
+                          outCount ===
+                            0 ? (
+                            <span
+                              className={`${styles.statusBadge} ${styles.statusGood}`}
                             >
-                              <SlidersHorizontal
-                                size={
-                                  14
-                                }
-                              />
+                              Healthy
+                            </span>
+                          ) : null}
+                        </div>
+                      </summary>
 
-                              Adjust
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-              </table>
+                      <div
+                        className={
+                          styles.productGroupList
+                        }
+                      >
+                        {products.map(
+                          (
+                            product,
+                          ) => {
+                            const productUnits =
+                              product.variants.reduce(
+                                (
+                                  total,
+                                  variant,
+                                ) =>
+                                  total +
+                                  variant.stock,
+
+                                0,
+                              );
+
+                            return (
+                              <details
+                                key={
+                                  product.productId
+                                }
+                                className={
+                                  styles.productGroup
+                                }
+                              >
+                                <summary
+                                  className={
+                                    styles.productSummary
+                                  }
+                                >
+                                  <div
+                                    className={
+                                      styles.productCell
+                                    }
+                                  >
+                                    <div
+                                      className={
+                                        styles.productImage
+                                      }
+                                    >
+                                      {product.image ? (
+                                        <Image
+                                          src={
+                                            product.image
+                                          }
+                                          alt={
+                                            product.imageAlt
+                                          }
+                                          fill
+                                          sizes="46px"
+                                        />
+                                      ) : (
+                                        <Package
+                                          size={
+                                            18
+                                          }
+                                        />
+                                      )}
+                                    </div>
+
+                                    <div>
+                                      <strong>
+                                        {
+                                          product.product
+                                        }
+                                      </strong>
+
+                                      <span>
+                                        {
+                                          product.variants
+                                            .length
+                                        }{" "}
+                                        variants ·{" "}
+                                        {
+                                          productUnits
+                                        }{" "}
+                                        units
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <ChevronRight
+                                    size={
+                                      17
+                                    }
+                                  />
+                                </summary>
+
+                                <div
+                                  className={
+                                    styles.tableWrap
+                                  }
+                                >
+                                  <table
+                                    className={
+                                      styles.table
+                                    }
+                                  >
+                                    <thead>
+                                      <tr>
+                                        <th>
+                                          SKU
+                                        </th>
+
+                                        <th>
+                                          Color
+                                        </th>
+
+                                        <th>
+                                          Size
+                                        </th>
+
+                                        <th>
+                                          Stock
+                                        </th>
+
+                                        <th>
+                                          Threshold
+                                        </th>
+
+                                        <th>
+                                          Status
+                                        </th>
+
+                                        <th>
+                                          Action
+                                        </th>
+                                      </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      {product.variants.map(
+                                        (
+                                          variant,
+                                        ) => {
+                                          const state =
+                                            stockState(
+                                              variant,
+                                            );
+
+                                          return (
+                                            <tr
+                                              key={
+                                                variant.id
+                                              }
+                                            >
+                                              <td>
+                                                <code
+                                                  className={
+                                                    styles.sku
+                                                  }
+                                                >
+                                                  {
+                                                    variant.sku
+                                                  }
+                                                </code>
+                                              </td>
+
+                                              <td>
+                                                <div
+                                                  className={
+                                                    styles.variantCell
+                                                  }
+                                                >
+                                                  {variant.color ? (
+                                                    <span>
+                                                      {variant.colorHex ? (
+                                                        <i
+                                                          style={{
+                                                            background:
+                                                              variant.colorHex,
+                                                          }}
+                                                        />
+                                                      ) : null}
+
+                                                      {
+                                                        variant.color
+                                                      }
+                                                    </span>
+                                                  ) : (
+                                                    "—"
+                                                  )}
+                                                </div>
+                                              </td>
+
+                                              <td>
+                                                {
+                                                  variant.size ??
+                                                  "—"
+                                                }
+                                              </td>
+
+                                              <td>
+                                                <strong
+                                                  className={`${styles.stockNumber} ${
+                                                    state ===
+                                                    "OUT"
+                                                      ? styles.stockDanger
+                                                      : state ===
+                                                          "LOW"
+                                                        ? styles.stockWarning
+                                                        : ""
+                                                  }`}
+                                                >
+                                                  {
+                                                    variant.stock
+                                                  }
+                                                </strong>
+                                              </td>
+
+                                              <td>
+                                                <span
+                                                  className={
+                                                    styles.threshold
+                                                  }
+                                                >
+                                                  {
+                                                    variant.lowStockThreshold
+                                                  }
+                                                </span>
+                                              </td>
+
+                                              <td>
+                                                <span
+                                                  className={`${styles.statusBadge} ${
+                                                    state ===
+                                                    "IN_STOCK"
+                                                      ? styles.statusGood
+                                                      : state ===
+                                                          "LOW"
+                                                        ? styles.statusLow
+                                                        : state ===
+                                                            "OUT"
+                                                          ? styles.statusOut
+                                                          : styles.statusInactive
+                                                  }`}
+                                                >
+                                                  {stockLabel(
+                                                    state,
+                                                  )}
+                                                </span>
+                                              </td>
+
+                                              <td>
+                                                <button
+                                                  type="button"
+                                                  className={
+                                                    styles.adjustButton
+                                                  }
+                                                  onClick={() =>
+                                                    setSelected(
+                                                      variant,
+                                                    )
+                                                  }
+                                                >
+                                                  <SlidersHorizontal
+                                                    size={
+                                                      14
+                                                    }
+                                                  />
+
+                                                  Adjust
+                                                </button>
+                                              </td>
+                                            </tr>
+                                          );
+                                        },
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </details>
+                            );
+                          },
+                        )}
+                      </div>
+                    </details>
+                  );
+                },
+              )}
             </div>
           ) : (
             <EmptyState

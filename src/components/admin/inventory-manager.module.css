@@ -1841,3 +1841,170 @@ tr:hover {
     width: 100%;
   }
 }
+
+.categoryInventory {
+  display: grid;
+  gap: 14px;
+}
+
+.categoryList {
+  display: grid;
+  gap: 12px;
+}
+
+.categoryGroup {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.categoryGroup > summary {
+  list-style: none;
+}
+
+.categoryGroup > summary::-webkit-details-marker {
+  display: none;
+}
+
+.categorySummary {
+  min-height: 78px;
+  padding: 16px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff,
+      #fcfcfc
+    );
+}
+
+.categorySummary:hover {
+  background: #fafafa;
+}
+
+.categorySummaryMain {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.categorySummaryMain > svg {
+  flex: 0 0 auto;
+
+  transition:
+    transform 160ms ease;
+}
+
+.categoryGroup[open]
+  .categorySummaryMain
+  > svg {
+  transform:
+    rotate(90deg);
+}
+
+.categorySummaryMain strong {
+  display: block;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.categorySummaryMain span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.categoryBadges {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.productGroupList {
+  padding: 12px;
+
+  display: grid;
+  gap: 9px;
+
+  border-top:
+    1px solid var(--line);
+
+  background: #fafafa;
+}
+
+.productGroup {
+  overflow: hidden;
+
+  border:
+    1px solid var(--line);
+
+  background: #fff;
+}
+
+.productGroup > summary {
+  list-style: none;
+}
+
+.productGroup > summary::-webkit-details-marker {
+  display: none;
+}
+
+.productSummary {
+  min-height: 68px;
+
+  padding: 10px 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  cursor: pointer;
+}
+
+.productSummary:hover {
+  background: #fcfcfc;
+}
+
+.productSummary > svg {
+  flex: 0 0 auto;
+
+  transition:
+    transform 160ms ease;
+}
+
+.productGroup[open]
+  .productSummary
+  > svg {
+  transform:
+    rotate(90deg);
+}
+
+.productSummary strong {
+  display: block;
+
+  font-size: 14px;
+}
+
+.productSummary span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: var(--muted);
+  font-size: 12px;
+}

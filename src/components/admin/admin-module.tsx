@@ -10,6 +10,10 @@ import {
   SteadfastSettings,
 } from "@/components/admin/steadfast-settings";
 
+import {
+  InventoryV2,
+} from "@/components/admin/inventory-v2";
+
 type Row = Record<string, unknown>;
 const meta: Record<string, { title: string; desc: string; action: string }> = {
   products: {
@@ -121,6 +125,31 @@ export function AdminModule({
     router.refresh();
     return true;
   }
+
+
+    if (
+    module ===
+    "inventory"
+  ) {
+    return (
+      <InventoryV2
+        rows={
+          rows
+        }
+        history={
+          Array.isArray(
+            payload.history,
+          )
+            ? (
+                payload.history as Row[]
+              )
+            : []
+        }
+      />
+    );
+  }
+
+  
   if (module === "settings")
     return (
       <Settings
