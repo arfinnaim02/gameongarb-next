@@ -327,6 +327,241 @@ export async function POST(
       return ok("Coupon created");
     }
     if (resource === "inventory") {
+      if (
+        Array.isArray(
+          body.adjustments,
+        )
+      ) {
+        const input = z
+          .object({
+            adjustments:
+              z
+                .array(
+                  z.object({
+                    variantId:
+                      z.string(),
+
+                    quantityChange:
+                      z.coerce
+                        .number()
+                        .int()
+                        .positive(),
+                  }),
+                )
+                .min(
+                  1,
+                )
+                .max(
+                  100,
+                ),
+
+            reference:
+              z
+                .string()
+                .trim()
+                .max(
+                  120,
+                )
+                .optional(),
+
+            reason:
+              z
+                .string()
+                .trim()
+                .min(
+                  3,
+                )
+                .max(
+                  500,
+                ),
+          })
+          .parse(
+            body,
+          );
+
+        const variantIds =
+          input.adjustments.map(
+            (
+              adjustment,
+            ) =>
+              adjustment.variantId,
+          );
+
+        if (
+          new Set(
+            variantIds,
+          ).size !==
+          variantIds.length
+        ) {
+          throw new Error(
+            "Duplicate inventory variants are not allowed.",
+          );
+        }
+
+        const result =
+          await db.$transaction(
+            async (
+              tx,
+            ) => {
+              const variants =
+                await tx.productVariant.findMany({
+                  where: {
+                    id: {
+                      in:
+                        variantIds,
+                    },
+                  },
+
+                  select: {
+                    id:
+                      true,
+
+                    sku:
+                      true,
+
+                    stock:
+                      true,
+                  },
+                });
+
+              if (
+                variants.length !==
+                input.adjustments.length
+              ) {
+                throw new Error(
+                  "One or more inventory variants were not found.",
+                );
+              }
+
+              const variantMap =
+                new Map(
+                  variants.map(
+                    (
+                      variant,
+                    ) => [
+                      variant.id,
+                      variant,
+                    ],
+                  ),
+                );
+
+              let totalUnits =
+                0;
+
+              for (
+                const adjustment
+                of input.adjustments
+              ) {
+                const variant =
+                  variantMap.get(
+                    adjustment.variantId,
+                  );
+
+                if (
+                  !variant
+                ) {
+                  throw new Error(
+                    "Inventory variant not found.",
+                  );
+                }
+
+                const before =
+                  variant.stock;
+
+                const after =
+                  stockAfterAdjustment(
+                    before,
+                    adjustment.quantityChange,
+                  );
+
+                await tx.productVariant.update({
+                  where: {
+                    id:
+                      variant.id,
+                  },
+
+                  data: {
+                    stock:
+                      after,
+                  },
+                });
+
+                await tx.inventoryTransaction.create({
+                  data: {
+                    variantId:
+                      variant.id,
+
+                    quantityChange:
+                      adjustment.quantityChange,
+
+                    beforeQuantity:
+                      before,
+
+                    afterQuantity:
+                      after,
+
+                    type:
+                      "PURCHASE",
+
+                    reference:
+                      input.reference ||
+                      null,
+
+                    reason:
+                      input.reason,
+
+                    createdById:
+                      auth.id,
+                  },
+                });
+
+                totalUnits +=
+                  adjustment.quantityChange;
+              }
+
+              return {
+                totalUnits,
+
+                variantCount:
+                  input.adjustments.length,
+              };
+            },
+
+            {
+              isolationLevel:
+                Prisma.TransactionIsolationLevel
+                  .Serializable,
+            },
+          );
+
+        await audit(
+          auth.id,
+          "INVENTORY_BULK_RESTOCKED",
+          "ProductVariant",
+          null,
+          {
+            variantCount:
+              result.variantCount,
+
+            totalUnits:
+              result.totalUnits,
+
+            reference:
+              input.reference ||
+              null,
+
+            reason:
+              input.reason,
+          },
+        );
+
+        revalidateStore();
+
+        return ok(
+          `${result.variantCount} SKUs restocked with ${result.totalUnits} units.`,
+        );
+      }
+
       const input = z
         .object({
           variantId:
@@ -1178,10 +1413,10 @@ export async function PATCH(
       );
     }
 
-    if (
-      resource ===
-      "orders"
-    ) {
+if (
+  resource ===
+  "orders"
+) {
   const nextStatus =
     z
       .enum([
