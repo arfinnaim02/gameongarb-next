@@ -14,7 +14,6 @@ import {
   Images,
   LayoutDashboard,
   Package,
-  BarChart3,
   Ruler,
   Settings,
   ShoppingBag,
