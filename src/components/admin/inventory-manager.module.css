@@ -2446,3 +2446,200 @@ tr:hover {
   color: var(--muted);
   font-size: 12px;
 }
+
+.csvTools {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap: 8px;
+}
+
+.csvTemplateButton,
+.csvUploadButton {
+  min-height: 42px;
+
+  padding:
+    0 12px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  background: #fff;
+
+  color:
+    #555b56;
+
+  font: inherit;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.csvTemplateButton:hover,
+.csvUploadButton:hover {
+  border-color:
+    var(--orange);
+
+  color:
+    var(--orange);
+}
+
+.csvUploadButton input {
+  display: none;
+}
+
+.csvPreview {
+  border:
+    1px solid
+    #dfe3df;
+
+  background:
+    #fafbf9;
+}
+
+.csvPreviewHeader {
+  min-height: 54px;
+
+  padding:
+    10px 12px;
+
+  border-bottom:
+    1px solid
+    #e6e9e5;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.csvPreviewHeader strong,
+.csvPreviewHeader span {
+  display: block;
+}
+
+.csvPreviewHeader strong {
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.csvPreviewHeader span {
+  margin-top: 3px;
+
+  color:
+    var(--muted);
+
+  font-size: 8px;
+}
+
+.csvPreviewHeader button {
+  min-height: 32px;
+
+  padding:
+    0 9px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  background: #fff;
+
+  font: inherit;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.csvErrorList {
+  max-height: 180px;
+
+  overflow-y: auto;
+}
+
+.csvErrorList > div {
+  padding:
+    9px 12px;
+
+  border-bottom:
+    1px solid
+    #f0d4cf;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  background:
+    #fff5f3;
+}
+
+.csvErrorList > div:last-child {
+  border-bottom: 0;
+}
+
+.csvErrorList strong {
+  font-size: 8px;
+}
+
+.csvErrorList span {
+  color:
+    #b43a30;
+
+  font-size: 8px;
+}
+
+.csvReady {
+  min-height: 44px;
+
+  padding:
+    10px 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color:
+    #17703d;
+
+  font-size: 8px;
+
+  font-weight: 900;
+}
+
+  .csvTools {
+    grid-template-columns:
+      1fr;
+  }
+
+  .csvPreviewHeader {
+    align-items: stretch;
+
+    flex-direction: column;
+  }

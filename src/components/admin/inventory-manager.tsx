@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Download,
   FileClock,
+  FileUp,
   Minus,
   Package,
   PackageCheck,
@@ -18,6 +19,7 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Upload,
   Warehouse,
   X,
 } from "lucide-react";
@@ -190,6 +192,28 @@ type HistoryMovementFilter =
   | "IN"
   | "OUT";
 
+
+  type RestockCsvRow = {
+  sku:
+    string;
+
+  quantity:
+    number;
+
+  variant:
+    InventoryVariant | null;
+
+  error:
+    string | null;
+};
+
+type CsvImportState = {
+  filename:
+    string;
+
+  rows:
+    RestockCsvRow[];
+};
 /* =========================================================
    HELPERS
    ========================================================= */
@@ -321,6 +345,81 @@ function csvCell(
     "\"",
     "\"\"",
   )}"`;
+}
+function parseCsvLine(
+  line:
+    string,
+) {
+  const cells:
+    string[] =
+    [];
+
+  let current =
+    "";
+
+  let quoted =
+    false;
+
+  for (
+    let index =
+      0;
+    index <
+    line.length;
+    index +=
+      1
+  ) {
+    const char =
+      line[index];
+
+    if (
+      char ===
+      "\""
+  ) {
+      if (
+        quoted &&
+        line[
+          index +
+            1
+        ] ===
+          "\""
+      ) {
+        current +=
+          "\"";
+
+        index +=
+          1;
+      } else {
+        quoted =
+          !quoted;
+      }
+
+      continue;
+    }
+
+    if (
+      char ===
+        "," &&
+      !quoted
+    ) {
+      cells.push(
+        current.trim(),
+      );
+
+      current =
+        "";
+
+      continue;
+    }
+
+    current +=
+      char;
+  }
+
+  cells.push(
+    current.trim(),
+  );
+
+  return cells;
 }
 
 function downloadCsv(
@@ -1700,6 +1799,45 @@ export function InventoryManager({
   /* =======================================================
      EXPORTS
      ======================================================= */
+
+  function downloadRestockTemplate() {
+    downloadCsv(
+      `game-on-garb-restock-template-${new Date()
+        .toISOString()
+        .slice(
+          0,
+          10,
+        )}.csv`,
+
+      [
+        [
+          "SKU",
+          "Product",
+          "Category",
+          "Size",
+          "Color",
+          "Current Stock",
+          "Add Quantity",
+        ],
+
+        ...filteredVariants.map(
+          (
+            variant,
+          ) => [
+            variant.sku,
+            variant.product,
+            variant.category,
+            variant.size ??
+              "",
+            variant.color ??
+              "",
+            variant.stock,
+            "",
+          ],
+        ),
+      ],
+    );
+  }
 
   function downloadInventory() {
     downloadCsv(
@@ -3447,6 +3585,10 @@ export function InventoryManager({
           variants={
             filteredVariants
           }
+
+          downloadTemplate={
+            downloadRestockTemplate
+          }
           busy={
             busy
           }
@@ -3491,12 +3633,16 @@ function BulkRestockDrawer({
   busy,
   close,
   submit,
+  downloadTemplate,
 }: {
   variants:
     InventoryVariant[];
 
   busy:
     boolean;
+
+      downloadTemplate:
+    () => void;
 
   close:
     () => void;
@@ -3538,6 +3684,14 @@ function BulkRestockDrawer({
   ] =
     useState("");
 
+      const [
+    csvImport,
+    setCsvImport,
+  ] =
+    useState<CsvImportState | null>(
+      null,
+    );
+
   const [
     quantities,
     setQuantities,
@@ -3548,6 +3702,27 @@ function BulkRestockDrawer({
         number
       >
     >({});
+
+      const variantBySku =
+    useMemo(
+      () =>
+        new Map(
+          variants.map(
+            (
+              variant,
+            ) => [
+              variant.sku
+                .trim()
+                .toLowerCase(),
+              variant,
+            ],
+          ),
+        ),
+
+      [
+        variants,
+      ],
+    );
 
   const visibleVariants =
     useMemo(
@@ -3629,6 +3804,286 @@ function BulkRestockDrawer({
 
       0,
     );
+
+      const csvErrors =
+    csvImport?.rows.filter(
+      (
+        row,
+      ) =>
+        Boolean(
+          row.error,
+        ),
+    ) ??
+    [];
+
+  const csvValidRows =
+    csvImport?.rows.filter(
+      (
+        row,
+      ) =>
+        !row.error &&
+        row.variant &&
+        row.quantity >
+          0,
+    ) ??
+    [];
+
+      async function handleCsvFile(
+    file:
+      File,
+  ) {
+    const text =
+      await file.text();
+
+    const lines =
+      text
+        .replace(
+          /^\uFEFF/,
+          "",
+        )
+        .split(
+          /\r?\n/,
+        )
+        .filter(
+          (
+            line,
+          ) =>
+            line.trim().length >
+            0,
+        );
+
+    if (
+      lines.length <
+      2
+    ) {
+      setCsvImport({
+        filename:
+          file.name,
+
+        rows: [
+          {
+            sku:
+              "",
+
+            quantity:
+              0,
+
+            variant:
+              null,
+
+            error:
+              "The CSV has no inventory rows.",
+          },
+        ],
+      });
+
+      return;
+    }
+
+    const headers =
+      parseCsvLine(
+        lines[0],
+      ).map(
+        (
+          value,
+        ) =>
+          value
+            .trim()
+            .toLowerCase(),
+      );
+
+    const skuIndex =
+      headers.indexOf(
+        "sku",
+      );
+
+    const quantityIndex =
+      headers.indexOf(
+        "add quantity",
+      );
+
+    if (
+      skuIndex ===
+        -1 ||
+      quantityIndex ===
+        -1
+    ) {
+      setCsvImport({
+        filename:
+          file.name,
+
+        rows: [
+          {
+            sku:
+              "",
+
+            quantity:
+              0,
+
+            variant:
+              null,
+
+            error:
+              "CSV must contain SKU and Add Quantity columns.",
+          },
+        ],
+      });
+
+      return;
+    }
+
+    const seen =
+      new Set<
+        string
+      >();
+
+    const parsedRows =
+      lines
+        .slice(
+          1,
+        )
+        .map(
+          (
+            line,
+          ) => {
+            const cells =
+              parseCsvLine(
+                line,
+              );
+
+            const sku =
+              (
+                cells[
+                  skuIndex
+                ] ??
+                ""
+              ).trim();
+
+            const rawQuantity =
+              (
+                cells[
+                  quantityIndex
+                ] ??
+                ""
+              ).trim();
+
+            const quantity =
+              Number(
+                rawQuantity,
+              );
+
+            const normalizedSku =
+              sku.toLowerCase();
+
+            const variant =
+              variantBySku.get(
+                normalizedSku,
+              ) ??
+              null;
+
+            let error:
+              string |
+              null =
+              null;
+
+            if (
+              !sku
+            ) {
+              error =
+                "SKU is required.";
+            } else if (
+              !rawQuantity
+            ) {
+              return {
+                sku,
+                quantity:
+                  0,
+                variant,
+                error:
+                  null,
+              };
+            } else if (
+              !Number.isInteger(
+                quantity,
+              ) ||
+              quantity <
+                0
+            ) {
+              error =
+                "Add Quantity must be a whole number of 0 or more.";
+            } else if (
+              !variant
+            ) {
+              error =
+                "SKU was not found.";
+            } else if (
+              seen.has(
+                normalizedSku,
+              )
+            ) {
+              error =
+                "Duplicate SKU in CSV.";
+            }
+
+            seen.add(
+              normalizedSku,
+            );
+
+            return {
+              sku,
+              quantity,
+              variant,
+              error,
+            };
+          },
+        )
+        .filter(
+          (
+            row,
+          ) =>
+            row.quantity >
+              0 ||
+            Boolean(
+              row.error,
+            ),
+        );
+
+    setCsvImport({
+      filename:
+        file.name,
+
+      rows:
+        parsedRows,
+    });
+
+    const importedQuantities:
+      Record<
+        string,
+        number
+      > =
+      {};
+
+    for (
+      const row
+      of parsedRows
+    ) {
+      if (
+        !row.error &&
+        row.variant &&
+        row.quantity >
+          0
+      ) {
+        importedQuantities[
+          row.variant.id
+        ] =
+          row.quantity;
+      }
+    }
+
+    setQuantities(
+      importedQuantities,
+    );
+  }
 
   async function handleSubmit(
     event:
@@ -3779,6 +4234,160 @@ function BulkRestockDrawer({
               />
             </label>
           </section>
+                    <section
+            className={
+              styles.csvTools
+            }
+          >
+            <button
+              type="button"
+              className={
+                styles.csvTemplateButton
+              }
+              onClick={
+                downloadTemplate
+              }
+            >
+              <Download
+                size={
+                  14
+                }
+              />
+
+              Download CSV Template
+            </button>
+
+            <label
+              className={
+                styles.csvUploadButton
+              }
+            >
+              <FileUp
+                size={
+                  14
+                }
+              />
+
+              Upload Completed CSV
+
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(
+                  event,
+                ) => {
+                  const file =
+                    event.target
+                      .files?.[
+                        0
+                      ];
+
+                  if (
+                    file
+                  ) {
+                    void handleCsvFile(
+                      file,
+                    );
+                  }
+
+                  event.target.value =
+                    "";
+                }}
+              />
+            </label>
+          </section>
+                    {csvImport ? (
+            <section
+              className={
+                styles.csvPreview
+              }
+            >
+              <div
+                className={
+                  styles.csvPreviewHeader
+                }
+              >
+                <div>
+                  <strong>
+                    {
+                      csvImport.filename
+                    }
+                  </strong>
+
+                  <span>
+                    {
+                      csvValidRows.length
+                    }{" "}
+                    valid SKUs ·{" "}
+                    {
+                      csvErrors.length
+                    }{" "}
+                    errors
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCsvImport(
+                      null,
+                    );
+
+                    setQuantities(
+                      {},
+                    );
+                  }}
+                >
+                  Clear CSV
+                </button>
+              </div>
+
+              {csvErrors.length >
+              0 ? (
+                <div
+                  className={
+                    styles.csvErrorList
+                  }
+                >
+                  {csvErrors.map(
+                    (
+                      row,
+                      index,
+                    ) => (
+                      <div
+                        key={`${row.sku}-${index}`}
+                      >
+                        <strong>
+                          {row.sku ||
+                            "Missing SKU"}
+                        </strong>
+
+                        <span>
+                          {
+                            row.error
+                          }
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              ) : (
+                <div
+                  className={
+                    styles.csvReady
+                  }
+                >
+                  <CheckCircle2
+                    size={
+                      15
+                    }
+                  />
+
+                  CSV validated and ready to import.
+                </div>
+              )}
+            </section>
+          ) : null}
 
           <label
             className={
@@ -3939,7 +4548,9 @@ function BulkRestockDrawer({
                 adjustments.length ===
                   0 ||
                 reason.trim().length <
-                  3
+                  3 ||
+                csvErrors.length >
+                  0
               }
             >
               {busy
