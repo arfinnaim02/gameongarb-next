@@ -506,6 +506,34 @@ export function InventoryManager({
   ] =
     useState("");
 
+      const [
+    historyTypeFilter,
+    setHistoryTypeFilter,
+  ] =
+    useState(
+      "ALL",
+    );
+
+  const [
+    historyMovementFilter,
+    setHistoryMovementFilter,
+  ] =
+    useState<HistoryMovementFilter>(
+      "ALL",
+    );
+
+  const [
+    historyFrom,
+    setHistoryFrom,
+  ] =
+    useState("");
+
+  const [
+    historyTo,
+    setHistoryTo,
+  ] =
+    useState("");
+
   useEffect(
     () => {
       setVariants(
@@ -945,6 +973,26 @@ export function InventoryManager({
       ],
     );
 
+
+      const variantMap =
+    useMemo(
+      () =>
+        new Map(
+          variants.map(
+            (
+              variant,
+            ) => [
+              variant.id,
+              variant,
+            ],
+          ),
+        ),
+
+      [
+        variants,
+      ],
+    );
+
   /* =======================================================
      FILTERED HISTORY
      ======================================================= */
@@ -957,32 +1005,206 @@ export function InventoryManager({
             .trim()
             .toLowerCase();
 
+        const selectedCategoryIds =
+          categoryFilter ===
+          "ALL"
+            ? null
+            : categoryDescendantIds(
+                categoryFilter,
+              );
+
+        const selectedSubcategoryIds =
+          subcategoryFilter ===
+          "ALL"
+            ? null
+            : categoryDescendantIds(
+                subcategoryFilter,
+              );
+
         return history.filter(
           (
             item,
-          ) =>
-            !cleanQuery ||
-            [
-              item.product,
-              item.sku,
-              item.type,
-              item.reason,
-              item.reference ??
-                "",
-              item.actor,
-            ]
-              .join(
-                " ",
-              )
-              .toLowerCase()
-              .includes(
-                cleanQuery,
-              ),
+          ) => {
+            const matchesQuery =
+              !cleanQuery ||
+              [
+                item.product,
+                item.sku,
+                item.type,
+                item.reason,
+                item.reference ??
+                  "",
+                item.actor,
+              ]
+                .join(
+                  " ",
+                )
+                .toLowerCase()
+                .includes(
+                  cleanQuery,
+                );
+
+            const matchesType =
+              historyTypeFilter ===
+                "ALL" ||
+              item.type ===
+                historyTypeFilter;
+
+            const matchesMovement =
+              historyMovementFilter ===
+                "ALL" ||
+              (
+                historyMovementFilter ===
+                  "IN" &&
+                item.quantityChange >
+                  0
+              ) ||
+              (
+                historyMovementFilter ===
+                  "OUT" &&
+                item.quantityChange <
+                  0
+              );
+
+            const created =
+              new Date(
+                item.createdAt,
+              );
+
+            const matchesFrom =
+              !historyFrom ||
+              created >=
+                new Date(
+                  `${historyFrom}T00:00:00`,
+                );
+
+            const matchesTo =
+              !historyTo ||
+              created <=
+                new Date(
+                  `${historyTo}T23:59:59.999`,
+                );
+
+            const variant =
+              variantMap.get(
+                item.variantId,
+              );
+
+            const matchesCategory =
+              !selectedCategoryIds ||
+              Boolean(
+                variant?.categoryIds.some(
+                  (
+                    id,
+                  ) =>
+                    selectedCategoryIds.has(
+                      id,
+                    ),
+                ),
+              );
+
+            const matchesSubcategory =
+              !selectedSubcategoryIds ||
+              Boolean(
+                variant?.categoryIds.some(
+                  (
+                    id,
+                  ) =>
+                    selectedSubcategoryIds.has(
+                      id,
+                    ),
+                ),
+              );
+
+            return (
+              matchesQuery &&
+              matchesType &&
+              matchesMovement &&
+              matchesFrom &&
+              matchesTo &&
+              matchesCategory &&
+              matchesSubcategory
+            );
+          },
         );
       },
+
       [
         history,
         query,
+        historyTypeFilter,
+        historyMovementFilter,
+        historyFrom,
+        historyTo,
+        categoryFilter,
+        subcategoryFilter,
+        categories,
+        variantMap,
+      ],
+    );
+
+
+  const historySummary =
+    useMemo(
+      () => {
+        const stockIn =
+          filteredHistory
+            .filter(
+              (
+                item,
+              ) =>
+                item.quantityChange >
+                0,
+            )
+            .reduce(
+              (
+                total,
+                item,
+              ) =>
+                total +
+                item.quantityChange,
+
+              0,
+            );
+
+        const stockOut =
+          Math.abs(
+            filteredHistory
+              .filter(
+                (
+                  item,
+                ) =>
+                  item.quantityChange <
+                  0,
+              )
+              .reduce(
+                (
+                  total,
+                  item,
+                ) =>
+                  total +
+                  item.quantityChange,
+
+                0,
+              ),
+          );
+
+        return {
+          stockIn,
+
+          stockOut,
+
+          net:
+            stockIn -
+            stockOut,
+
+          transactions:
+            filteredHistory.length,
+        };
+      },
+
+      [
+        filteredHistory,
       ],
     );
 
@@ -1090,87 +1312,6 @@ export function InventoryManager({
         false,
       );
     }
-  }
-    setBusy(
-      true,
-    );
-
-    setMessage("");
-    setError("");
-
-    try {
-      const response =
-        await fetch(
-          "/api/admin/inventory",
-          {
-            method:
-              "POST",
-
-            headers: {
-              "content-type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                variantId:
-                  variant.id,
-
-                quantityChange,
-
-                reason,
-              }),
-          },
-        );
-
-      const result =
-        await response
-          .json()
-          .catch(
-            () => ({
-              error:
-                "Request failed.",
-            }),
-          );
-
-      if (
-        !response.ok
-      ) {
-        throw new Error(
-          result.error ??
-            "Unable to adjust stock.",
-        );
-      }
-
-      setMessage(
-        result.message ??
-          "Stock adjusted.",
-      );
-
-      setSelected(
-        null,
-      );
-
-      router.refresh();
-
-      return true;
-    } catch (
-      caught
-    ) {
-      setError(
-        caught instanceof
-          Error
-          ? caught.message
-          : "Unable to adjust stock.",
-      );
-
-      return false;
-    } finally {
-      setBusy(
-        false,
-      );
-    }
-  }
 
 
     /* =======================================================
@@ -1575,6 +1716,18 @@ export function InventoryManager({
     setSort(
       "PRODUCT",
     );
+
+    setHistoryTypeFilter(
+      "ALL",
+    );
+
+    setHistoryMovementFilter(
+      "ALL",
+    );
+
+    setHistoryFrom("");
+
+    setHistoryTo("");
   }
 
   const filtersActive =
@@ -1588,7 +1741,17 @@ export function InventoryManager({
     stockFilter !==
       "ALL" ||
     sort !==
-      "PRODUCT";
+      "PRODUCT" ||
+    historyTypeFilter !==
+      "ALL" ||
+    historyMovementFilter !==
+      "ALL" ||
+    Boolean(
+      historyFrom,
+    ) ||
+    Boolean(
+      historyTo,
+    );
 
   return (
     <div
@@ -2137,6 +2300,199 @@ export function InventoryManager({
             </>
           ) : null}
 
+                    {view ===
+          "HISTORY" ? (
+            <>
+              <select
+                value={
+                  categoryFilter
+                }
+                onChange={(
+                  event,
+                ) => {
+                  setCategoryFilter(
+                    event.target
+                      .value,
+                  );
+
+                  setSubcategoryFilter(
+                    "ALL",
+                  );
+                }}
+              >
+                <option value="ALL">
+                  All categories
+                </option>
+
+                {rootCategories.map(
+                  (
+                    category,
+                  ) => (
+                    <option
+                      key={
+                        category.id
+                      }
+                      value={
+                        category.id
+                      }
+                    >
+                      {
+                        category.name
+                      }
+                    </option>
+                  ),
+                )}
+              </select>
+
+              <select
+                value={
+                  subcategoryFilter
+                }
+                disabled={
+                  categoryFilter ===
+                    "ALL" ||
+                  availableSubcategories.length ===
+                    0
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setSubcategoryFilter(
+                    event.target
+                      .value,
+                  )
+                }
+              >
+                <option value="ALL">
+                  All subcategories
+                </option>
+
+                {availableSubcategories.map(
+                  (
+                    category,
+                  ) => (
+                    <option
+                      key={
+                        category.id
+                      }
+                      value={
+                        category.id
+                      }
+                    >
+                      {
+                        category.name
+                      }
+                    </option>
+                  ),
+                )}
+              </select>
+
+              <select
+                value={
+                  historyTypeFilter
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setHistoryTypeFilter(
+                    event.target
+                      .value,
+                  )
+                }
+              >
+                <option value="ALL">
+                  All types
+                </option>
+
+                <option value="PURCHASE">
+                  Purchase
+                </option>
+
+                <option value="SALE">
+                  Sale
+                </option>
+
+                <option value="RETURN">
+                  Return
+                </option>
+
+                <option value="DAMAGE">
+                  Damage
+                </option>
+
+                <option value="MANUAL_ADJUSTMENT">
+                  Manual Adjustment
+                </option>
+
+                <option value="CORRECTION">
+                  Correction
+                </option>
+
+                <option value="CANCELLATION_RESTORE">
+                  Cancellation Restore
+                </option>
+              </select>
+
+              <select
+                value={
+                  historyMovementFilter
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setHistoryMovementFilter(
+                    event.target
+                      .value as HistoryMovementFilter,
+                  )
+                }
+              >
+                <option value="ALL">
+                  All movements
+                </option>
+
+                <option value="IN">
+                  Stock In
+                </option>
+
+                <option value="OUT">
+                  Stock Out
+                </option>
+              </select>
+
+              <input
+                type="date"
+                value={
+                  historyFrom
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setHistoryFrom(
+                    event.target
+                      .value,
+                  )
+                }
+                aria-label="History from date"
+              />
+
+              <input
+                type="date"
+                value={
+                  historyTo
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setHistoryTo(
+                    event.target
+                      .value,
+                  )
+                }
+                aria-label="History to date"
+              />
+            </>
+          ) : null}
+
           {filtersActive ? (
             <button
               type="button"
@@ -2659,11 +3015,72 @@ export function InventoryManager({
            HISTORY
            ================================================= */
 
-        <section
-          className={
-            styles.tableCard
-          }
-        >
+        <>
+          <section
+            className={
+              styles.historySummary
+            }
+          >
+            <div>
+              <span>
+                Stock In
+              </span>
+
+              <strong>
+                +
+                {
+                  historySummary.stockIn
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Stock Out
+              </span>
+
+              <strong>
+                -
+                {
+                  historySummary.stockOut
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Net Movement
+              </span>
+
+              <strong>
+                {historySummary.net >
+                0
+                  ? "+"
+                  : ""}
+                {
+                  historySummary.net
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Transactions
+              </span>
+
+              <strong>
+                {
+                  historySummary.transactions
+                }
+              </strong>
+            </div>
+          </section>
+
+          <section
+            className={
+              styles.tableCard
+            }
+          >
           <div
             className={
               styles.tableHeading
@@ -2758,6 +3175,9 @@ export function InventoryManager({
                           >
                             {formatDateTime(
                               item.createdAt,
+
+                                        </section>
+        </>
                             )}
                           </span>
                         </td>
@@ -2944,7 +3364,13 @@ function AdjustmentDrawer({
       quantityChange:
         number,
 
+      type:
+        AdjustmentType,
+
       reason:
+        string,
+
+      reference:
         string,
     ) =>
       Promise<boolean>;
@@ -2985,10 +3411,49 @@ function AdjustmentDrawer({
     );
 
   const [
+    type,
+    setType,
+  ] =
+    useState<AdjustmentType>(
+      "PURCHASE",
+    );
+
+  const [
+    reference,
+    setReference,
+  ] =
+    useState("");
+
+  const [
     reason,
     setReason,
   ] =
     useState("");
+
+      useEffect(
+    () => {
+      if (
+        type ===
+        "PURCHASE"
+      ) {
+        setDirection(
+          "ADD",
+        );
+      }
+
+      if (
+        type ===
+        "DAMAGE"
+      ) {
+        setDirection(
+          "REMOVE",
+        );
+      }
+    },
+    [
+      type,
+    ],
+  );
 
   const [
     threshold,
@@ -3029,7 +3494,11 @@ function AdjustmentDrawer({
         ? quantity
         : -quantity,
 
+      type,
+
       reason.trim(),
+
+      reference.trim(),
     );
   }
 
@@ -3148,6 +3617,45 @@ function AdjustmentDrawer({
               submit
             }
           >
+                        <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Transaction Type
+              </span>
+
+              <select
+                value={
+                  type
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setType(
+                    event.target
+                      .value as AdjustmentType,
+                  )
+                }
+              >
+                <option value="PURCHASE">
+                  Purchase / Restock
+                </option>
+
+                <option value="DAMAGE">
+                  Damaged Stock
+                </option>
+
+                <option value="MANUAL_ADJUSTMENT">
+                  Manual Adjustment
+                </option>
+
+                <option value="CORRECTION">
+                  Stock Correction
+                </option>
+              </select>
+            </label>
             <div
               className={
                 styles.directionTabs
@@ -3234,6 +3742,35 @@ function AdjustmentDrawer({
               />
             </label>
 
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Reference
+              </span>
+
+              <input
+                type="text"
+                maxLength={
+                  120
+                }
+                value={
+                  reference
+                }
+                placeholder="Example: PO-1025, Supplier invoice"
+                onChange={(
+                  event,
+                ) =>
+                  setReference(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+            </label>
             <label
               className={
                 styles.field
@@ -3254,7 +3791,18 @@ function AdjustmentDrawer({
                 value={
                   reason
                 }
-                placeholder="Example: New warehouse stock received"
+                placeholder={
+  type ===
+  "PURCHASE"
+    ? "Example: October supplier restock"
+    : type ===
+        "DAMAGE"
+      ? "Example: Two pieces damaged in warehouse"
+      : type ===
+          "CORRECTION"
+        ? "Example: Physical stock count correction"
+        : "Explain why this adjustment is required"
+}
                 onChange={(
                   event,
                 ) =>

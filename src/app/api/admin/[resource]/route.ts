@@ -1104,7 +1104,7 @@ export async function PATCH(
       revalidatePath("/");
       return ok("Homepage updated");
     }
-        if (
+    if (
       resource ===
       "inventory"
     ) {
@@ -1178,10 +1178,10 @@ export async function PATCH(
       );
     }
 
-if (
-  resource ===
-  "orders"
-) {
+    if (
+      resource ===
+      "orders"
+    ) {
   const nextStatus =
     z
       .enum([
