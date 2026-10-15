@@ -73,7 +73,10 @@
   align-items: center;
 
   justify-content: flex-end;
+
+  gap: 8px;
 }
+
 
 .downloadButton {
   min-height: 42px;
@@ -102,6 +105,315 @@
   font-weight: 900;
 
   cursor: pointer;
+}
+
+.bulkButton {
+  min-height: 42px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    var(--orange);
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  background:
+    var(--orange);
+
+  color: #fff;
+
+  font: inherit;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.bulkButton:hover {
+  filter:
+    brightness(
+      .95
+    );
+}
+
+
+.bulkDrawer {
+  width:
+    min(
+      760px,
+      100%
+    );
+}
+
+.bulkRestockForm {
+  min-height:
+    calc(
+      100vh - 92px
+    );
+
+  padding: 16px;
+
+  display: grid;
+
+  grid-template-rows:
+    auto
+    auto
+    minmax(
+      0,
+      1fr
+    )
+    auto;
+
+  gap: 12px;
+}
+
+.bulkMeta {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap: 10px;
+}
+
+.bulkSearch {
+  height: 42px;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(
+      0,
+      1fr
+    );
+
+  align-items: center;
+
+  gap: 8px;
+
+  background:
+    #fafbf9;
+}
+
+.bulkSearch input {
+  width: 100%;
+
+  border: 0;
+
+  outline: 0;
+
+  background:
+    transparent;
+
+  font: inherit;
+}
+
+.bulkVariantList {
+  overflow-y: auto;
+
+  border:
+    1px solid
+    var(--line);
+}
+
+.bulkVariantRow {
+  min-height: 72px;
+
+  padding:
+    10px 12px;
+
+  border-bottom:
+    1px solid
+    var(--line);
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1fr
+    )
+    80px
+    90px;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.bulkVariantRow:last-child {
+  border-bottom: 0;
+}
+
+.bulkVariantRow > div:first-child strong,
+.bulkVariantRow > div:first-child span {
+  display: block;
+}
+
+.bulkVariantRow > div:first-child strong {
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+.bulkVariantRow > div:first-child span {
+  margin-top: 4px;
+
+  color:
+    var(--muted);
+
+  font-size: 8px;
+}
+
+.bulkStockInfo {
+  text-align: center;
+}
+
+.bulkStockInfo span,
+.bulkStockInfo strong {
+  display: block;
+}
+
+.bulkStockInfo span,
+.bulkQty span {
+  color:
+    var(--muted);
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  text-transform:
+    uppercase;
+}
+
+.bulkStockInfo strong {
+  margin-top: 4px;
+
+  font-size: 15px;
+}
+
+.bulkQty {
+  display: grid;
+
+  gap: 5px;
+}
+
+.bulkQty input {
+  width: 100%;
+
+  height: 38px;
+
+  padding:
+    0 8px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  outline: 0;
+
+  font: inherit;
+}
+
+.bulkQty input:focus {
+  border-color:
+    var(--orange);
+}
+
+.bulkFooter {
+  position: sticky;
+
+  bottom: 0;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    var(--line);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 14px;
+
+  background: #fff;
+}
+
+.bulkFooter span,
+.bulkFooter strong {
+  display: block;
+}
+
+.bulkFooter span {
+  color:
+    var(--muted);
+
+  font-size: 8px;
+}
+
+.bulkFooter strong {
+  margin-top: 3px;
+
+  font-size: 14px;
+}
+
+.bulkFooter button {
+  min-height: 42px;
+
+  padding:
+    0 16px;
+
+  border: 0;
+
+  background:
+    #171a18;
+
+  color: #fff;
+
+  font: inherit;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.bulkFooter button:hover:not(
+  :disabled
+) {
+  background:
+    var(--orange);
+}
+
+.bulkFooter button:disabled {
+  opacity: .45;
+
+  cursor:
+    not-allowed;
 }
 
 .downloadButton:hover {
@@ -1837,6 +2149,46 @@ tr:hover {
 @media (
   max-width: 700px
 ) {
+
+  .headerActions {
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+
+  .bulkButton,
+  .downloadButton {
+    width: 100%;
+  }
+
+  .bulkMeta {
+    grid-template-columns:
+      1fr;
+  }
+
+  .bulkVariantRow {
+    grid-template-columns:
+      minmax(
+        0,
+        1fr
+      )
+      60px
+      76px;
+  }
+
+  .bulkFooter {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .bulkFooter button {
+    width: 100%;
+  }
+
+
   .page {
     gap: 12px;
   }

@@ -486,6 +486,14 @@ export function InventoryManager({
       null,
     );
 
+      const [
+    bulkRestockOpen,
+    setBulkRestockOpen,
+  ] =
+    useState(
+      false,
+    );
+
   const [
     busy,
     setBusy,
@@ -1314,6 +1322,106 @@ export function InventoryManager({
     }
   }
 
+    async function bulkRestock(
+    adjustments:
+      {
+        variantId:
+          string;
+
+        quantityChange:
+          number;
+      }[],
+
+    reference:
+      string,
+
+    reason:
+      string,
+  ) {
+    setBusy(
+      true,
+    );
+
+    setMessage("");
+    setError("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/inventory",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                adjustments,
+
+                reference:
+                  reference.trim(),
+
+                reason:
+                  reason.trim(),
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Request failed.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to complete bulk restock.",
+        );
+      }
+
+      setMessage(
+        result.message ??
+          "Bulk restock completed.",
+      );
+
+      setBulkRestockOpen(
+        false,
+      );
+
+      router.refresh();
+
+      return true;
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to complete bulk restock.",
+      );
+
+      return false;
+    } finally {
+      setBusy(
+        false,
+      );
+    }
+  }
+
+
+
   /* =======================================================
      CATEGORY GROUPS
      ======================================================= */
@@ -1795,6 +1903,31 @@ export function InventoryManager({
             styles.headerActions
           }
         >
+
+                    {view ===
+          "STOCK" ? (
+            <button
+              type="button"
+              className={
+                styles.bulkButton
+              }
+              onClick={() =>
+                setBulkRestockOpen(
+                  true,
+                )
+              }
+            >
+              <Plus
+                size={
+                  15
+                }
+              />
+
+              Bulk Restock
+            </button>
+          ) : null}
+
+
           <button
             type="button"
             className={
@@ -3309,6 +3442,25 @@ export function InventoryManager({
         </>
       )}
 
+            {bulkRestockOpen ? (
+        <BulkRestockDrawer
+          variants={
+            filteredVariants
+          }
+          busy={
+            busy
+          }
+          close={() =>
+            setBulkRestockOpen(
+              false,
+            )
+          }
+          submit={
+            bulkRestock
+          }
+        />
+      ) : null}
+
       {selected ? (
         <AdjustmentDrawer
           variant={
@@ -3333,6 +3485,475 @@ export function InventoryManager({
     </div>
   );
 }
+
+function BulkRestockDrawer({
+  variants,
+  busy,
+  close,
+  submit,
+}: {
+  variants:
+    InventoryVariant[];
+
+  busy:
+    boolean;
+
+  close:
+    () => void;
+
+  submit:
+    (
+      adjustments:
+        {
+          variantId:
+            string;
+
+          quantityChange:
+            number;
+        }[],
+
+      reference:
+        string,
+
+      reason:
+        string,
+    ) =>
+      Promise<boolean>;
+}) {
+  const [
+    search,
+    setSearch,
+  ] =
+    useState("");
+
+  const [
+    reference,
+    setReference,
+  ] =
+    useState("");
+
+  const [
+    reason,
+    setReason,
+  ] =
+    useState("");
+
+  const [
+    quantities,
+    setQuantities,
+  ] =
+    useState<
+      Record<
+        string,
+        number
+      >
+    >({});
+
+  const visibleVariants =
+    useMemo(
+      () => {
+        const clean =
+          search
+            .trim()
+            .toLowerCase();
+
+        if (
+          !clean
+        ) {
+          return variants;
+        }
+
+        return variants.filter(
+          (
+            variant,
+          ) =>
+            [
+              variant.product,
+              variant.sku,
+              variant.size ??
+                "",
+              variant.color ??
+                "",
+              variant.category,
+            ]
+              .join(
+                " ",
+              )
+              .toLowerCase()
+              .includes(
+                clean,
+              ),
+        );
+      },
+
+      [
+        variants,
+        search,
+      ],
+    );
+
+  const adjustments =
+    Object.entries(
+      quantities,
+    )
+      .filter(
+        (
+          [
+            ,
+            quantity,
+          ],
+        ) =>
+          quantity >
+          0,
+      )
+      .map(
+        (
+          [
+            variantId,
+            quantityChange,
+          ],
+        ) => ({
+          variantId,
+          quantityChange,
+        }),
+      );
+
+  const totalUnits =
+    adjustments.reduce(
+      (
+        total,
+        adjustment,
+      ) =>
+        total +
+        adjustment.quantityChange,
+
+      0,
+    );
+
+  async function handleSubmit(
+    event:
+      React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (
+      adjustments.length ===
+        0 ||
+      reason.trim().length <
+        3
+    ) {
+      return;
+    }
+
+    await submit(
+      adjustments,
+      reference,
+      reason,
+    );
+  }
+
+  return (
+    <div
+      className={
+        styles.drawerBackdrop
+      }
+      onMouseDown={(
+        event,
+      ) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          close();
+        }
+      }}
+    >
+      <aside
+        className={`${styles.drawer} ${styles.bulkDrawer}`}
+      >
+        <header
+          className={
+            styles.drawerHeader
+          }
+        >
+          <div>
+            <span>
+              Warehouse Restock
+            </span>
+
+            <h2>
+              Bulk Restock
+            </h2>
+
+            <small>
+              Add stock to multiple SKUs in one transaction.
+            </small>
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              close
+            }
+            aria-label="Close"
+          >
+            <X
+              size={
+                18
+              }
+            />
+          </button>
+        </header>
+
+        <form
+          className={
+            styles.bulkRestockForm
+          }
+          onSubmit={
+            handleSubmit
+          }
+        >
+          <section
+            className={
+              styles.bulkMeta
+            }
+          >
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Reference
+              </span>
+
+              <input
+                type="text"
+                maxLength={
+                  120
+                }
+                value={
+                  reference
+                }
+                placeholder="Example: SUPPLIER-INV-104"
+                onChange={(
+                  event,
+                ) =>
+                  setReference(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+            </label>
+
+            <label
+              className={
+                styles.field
+              }
+            >
+              <span>
+                Reason
+              </span>
+
+              <textarea
+                rows={
+                  3
+                }
+                required
+                minLength={
+                  3
+                }
+                value={
+                  reason
+                }
+                placeholder="Example: October supplier shipment"
+                onChange={(
+                  event,
+                ) =>
+                  setReason(
+                    event.target
+                      .value,
+                  )
+                }
+              />
+            </label>
+          </section>
+
+          <label
+            className={
+              styles.bulkSearch
+            }
+          >
+            <Search
+              size={
+                15
+              }
+            />
+
+            <input
+              value={
+                search
+              }
+              placeholder="Search product, SKU, size or color..."
+              onChange={(
+                event,
+              ) =>
+                setSearch(
+                  event.target
+                    .value,
+                )
+              }
+            />
+          </label>
+
+          <div
+            className={
+              styles.bulkVariantList
+            }
+          >
+            {visibleVariants.map(
+              (
+                variant,
+              ) => (
+                <div
+                  key={
+                    variant.id
+                  }
+                  className={
+                    styles.bulkVariantRow
+                  }
+                >
+                  <div>
+                    <strong>
+                      {
+                        variant.product
+                      }
+                    </strong>
+
+                    <span>
+                      {
+                        variant.sku
+                      }
+
+                      {variant.color
+                        ? ` · ${variant.color}`
+                        : ""}
+
+                      {variant.size
+                        ? ` · ${variant.size}`
+                        : ""}
+                    </span>
+                  </div>
+
+                  <div
+                    className={
+                      styles.bulkStockInfo
+                    }
+                  >
+                    <span>
+                      Current
+                    </span>
+
+                    <strong>
+                      {
+                        variant.stock
+                      }
+                    </strong>
+                  </div>
+
+                  <label
+                    className={
+                      styles.bulkQty
+                    }
+                  >
+                    <span>
+                      Add
+                    </span>
+
+                    <input
+                      type="number"
+                      min={
+                        0
+                      }
+                      value={
+                        quantities[
+                          variant.id
+                        ] ??
+                        0
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setQuantities(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            [variant.id]:
+                              Math.max(
+                                0,
+                                Number(
+                                  event.target
+                                    .value,
+                                ) ||
+                                  0,
+                              ),
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              ),
+            )}
+          </div>
+
+          <footer
+            className={
+              styles.bulkFooter
+            }
+          >
+            <div>
+              <span>
+                {
+                  adjustments.length
+                }{" "}
+                SKUs
+              </span>
+
+              <strong>
+                +
+                {
+                  totalUnits
+                }{" "}
+                units
+              </strong>
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                busy ||
+                adjustments.length ===
+                  0 ||
+                reason.trim().length <
+                  3
+              }
+            >
+              {busy
+                ? "Saving..."
+                : "Confirm Bulk Restock"}
+            </button>
+          </footer>
+        </form>
+      </aside>
+    </div>
+  );
+}
+
+
 
 /* =========================================================
    ADJUSTMENT DRAWER
@@ -3661,6 +4282,10 @@ function AdjustmentDrawer({
             >
               <button
                 type="button"
+                disabled={
+                  type ===
+                  "DAMAGE"
+                }
                 className={
                   direction ===
                   "ADD"
@@ -3684,6 +4309,10 @@ function AdjustmentDrawer({
 
               <button
                 type="button"
+                disabled={
+                  type ===
+                  "PURCHASE"
+                }
                 className={
                   direction ===
                   "REMOVE"
