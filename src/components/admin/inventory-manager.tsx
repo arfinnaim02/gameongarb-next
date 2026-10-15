@@ -179,6 +179,17 @@ type ViewMode =
   | "STOCK"
   | "HISTORY";
 
+  type AdjustmentType =
+  | "PURCHASE"
+  | "DAMAGE"
+  | "MANUAL_ADJUSTMENT"
+  | "CORRECTION";
+
+type HistoryMovementFilter =
+  | "ALL"
+  | "IN"
+  | "OUT";
+
 /* =========================================================
    HELPERS
    ========================================================= */
@@ -986,9 +997,100 @@ export function InventoryManager({
     quantityChange:
       number,
 
+    type:
+      AdjustmentType,
+
     reason:
       string,
+
+    reference:
+      string,
   ) {
+    setBusy(
+      true,
+    );
+
+    setMessage("");
+    setError("");
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/inventory",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                variantId:
+                  variant.id,
+
+                quantityChange,
+
+                type,
+
+                reason,
+
+                reference:
+                  reference.trim(),
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Request failed.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to adjust stock.",
+        );
+      }
+
+      setMessage(
+        result.message ??
+          "Stock adjusted.",
+      );
+
+      setSelected(
+        null,
+      );
+
+      router.refresh();
+
+      return true;
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to adjust stock.",
+      );
+
+      return false;
+    } finally {
+      setBusy(
+        false,
+      );
+    }
+  }
     setBusy(
       true,
     );

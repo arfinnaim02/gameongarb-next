@@ -329,44 +329,186 @@ export async function POST(
     if (resource === "inventory") {
       const input = z
         .object({
-          variantId: z.string(),
-          quantityChange: z.coerce
-            .number()
-            .int()
-            .refine((v) => v !== 0),
-          reason: z.string().min(3),
+          variantId:
+            z.string(),
+
+          quantityChange:
+            z.coerce
+              .number()
+              .int()
+              .refine(
+                (value) =>
+                  value !==
+                  0,
+                {
+                  message:
+                    "Quantity change cannot be zero.",
+                },
+              ),
+
+          type:
+            z.enum([
+              "PURCHASE",
+              "DAMAGE",
+              "MANUAL_ADJUSTMENT",
+              "CORRECTION",
+            ]),
+
+          reference:
+            z
+              .string()
+              .max(
+                120,
+              )
+              .optional(),
+
+          reason:
+            z
+              .string()
+              .trim()
+              .min(
+                3,
+              )
+              .max(
+                500,
+              ),
         })
-        .parse(body);
-      await db.$transaction(async (tx) => {
-        const variant = await tx.productVariant.findUniqueOrThrow({
-          where: { id: input.variantId },
-        });
-        const after = stockAfterAdjustment(variant.stock, input.quantityChange);
-        await tx.productVariant.update({
-          where: { id: variant.id },
-          data: { stock: after },
-        });
-        await tx.inventoryTransaction.create({
-          data: {
-            variantId: variant.id,
-            quantityChange: input.quantityChange,
-            beforeQuantity: variant.stock,
-            afterQuantity: after,
-            type: "MANUAL_ADJUSTMENT",
-            reason: input.reason,
-            createdById: auth.id,
+        .parse(
+          body,
+        );
+
+      if (
+        input.type ===
+          "PURCHASE" &&
+        input.quantityChange <
+          0
+      ) {
+        throw new Error(
+          "Purchase transactions must add stock.",
+        );
+      }
+
+      if (
+        input.type ===
+          "DAMAGE" &&
+        input.quantityChange >
+          0
+      ) {
+        throw new Error(
+          "Damage transactions must remove stock.",
+        );
+      }
+
+      const result =
+        await db.$transaction(
+          async (
+            tx,
+          ) => {
+            const variant =
+              await tx.productVariant.findUniqueOrThrow({
+                where: {
+                  id:
+                    input.variantId,
+                },
+              });
+
+            const before =
+              variant.stock;
+
+            const after =
+              stockAfterAdjustment(
+                before,
+                input.quantityChange,
+              );
+
+            await tx.productVariant.update({
+              where: {
+                id:
+                  variant.id,
+              },
+
+              data: {
+                stock:
+                  after,
+              },
+            });
+
+            await tx.inventoryTransaction.create({
+              data: {
+                variantId:
+                  variant.id,
+
+                quantityChange:
+                  input.quantityChange,
+
+                beforeQuantity:
+                  before,
+
+                afterQuantity:
+                  after,
+
+                type:
+                  input.type,
+
+                reference:
+                  input.reference
+                    ?.trim() ||
+                  null,
+
+                reason:
+                  input.reason,
+
+                createdById:
+                  auth.id,
+              },
+            });
+
+            return {
+              before,
+              after,
+            };
           },
-        });
-      });
+
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel
+                .Serializable,
+          },
+        );
+
       await audit(
         auth.id,
         "INVENTORY_ADJUSTED",
         "ProductVariant",
         input.variantId,
-        { change: input.quantityChange, reason: input.reason },
+        {
+          type:
+            input.type,
+
+          change:
+            input.quantityChange,
+
+          before:
+            result.before,
+
+          after:
+            result.after,
+
+          reference:
+            input.reference
+              ?.trim() ||
+            null,
+
+          reason:
+            input.reason,
+        },
       );
+
       revalidateStore();
-      return ok("Stock adjusted");
+
+      return ok(
+        "Inventory transaction recorded successfully.",
+      );
     }
     if (resource === "integrations") {
       const input = z
