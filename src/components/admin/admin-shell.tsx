@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import {
   Activity,
+  BarChart3,
   ChevronRight,
   CircleUserRound,
   ExternalLink,
@@ -13,6 +14,7 @@ import {
   Images,
   LayoutDashboard,
   Package,
+  BarChart3,
   Ruler,
   Settings,
   ShoppingBag,
@@ -57,6 +59,12 @@ const navigationGroups: NavigationGroup[] = [
         label: "Dashboard",
         href: "/admin",
         icon: LayoutDashboard,
+      },
+
+      {
+        label: "Reports",
+        href: "/admin/reports",
+        icon: BarChart3,
       },
     ],
   },

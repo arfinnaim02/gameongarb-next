@@ -1,0 +1,808 @@
+.page {
+  display: grid;
+
+  gap: 18px;
+}
+
+.header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 24px;
+}
+
+.eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color:
+    var(--orange);
+
+  font-size: 8px;
+
+  font-weight: 950;
+
+  letter-spacing: .12em;
+
+  text-transform:
+    uppercase;
+}
+
+.header h1 {
+  margin: 0;
+
+  color: #111412;
+
+  font-size:
+    clamp(
+      30px,
+      3vw,
+      42px
+    );
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: -.045em;
+}
+
+.header p {
+  max-width: 620px;
+
+  margin:
+    9px 0
+    0;
+
+  color: #777d78;
+
+  font-size: 12px;
+
+  line-height: 1.55;
+}
+
+.periodBadge {
+  min-width: 250px;
+
+  padding:
+    13px 15px;
+
+  border:
+    1px solid
+    #e0e4df;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  background: #fff;
+}
+
+.periodBadge svg {
+  color:
+    var(--orange);
+}
+
+.periodBadge span,
+.periodBadge strong {
+  display: block;
+}
+
+.periodBadge span {
+  color:
+    #929893;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  letter-spacing: .08em;
+
+  text-transform:
+    uppercase;
+}
+
+.periodBadge strong {
+  margin-top: 3px;
+
+  color: #242824;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   RANGE
+   ========================================================= */
+
+.rangeCard {
+  padding: 10px;
+
+  border:
+    1px solid
+    #e1e4e0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 14px;
+
+  background: #fff;
+}
+
+.presets {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 5px;
+}
+
+.presets a {
+  min-height: 38px;
+
+  padding:
+    0 12px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: #6b716c;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  text-decoration: none;
+}
+
+.presets a:hover {
+  background:
+    #f4f5f3;
+
+  color:
+    #222622;
+}
+
+.presets .activePreset {
+  background:
+    #171a18;
+
+  color: #fff;
+}
+
+.customRange {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 7px;
+}
+
+.customRange label {
+  display: grid;
+
+  gap: 4px;
+}
+
+.customRange label span {
+  color:
+    #8d938e;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  text-transform:
+    uppercase;
+}
+
+.customRange input {
+  height: 38px;
+
+  padding:
+    0 9px;
+
+  border:
+    1px solid
+    #dce0dc;
+
+  outline: 0;
+
+  background:
+    #fafbf9;
+
+  color: #333834;
+
+  font: inherit;
+
+  font-size: 9px;
+}
+
+.customRange input:focus {
+  border-color:
+    var(--orange);
+
+  background: #fff;
+}
+
+.customRange button {
+  min-height: 38px;
+
+  padding:
+    0 12px;
+
+  border: 0;
+
+  background:
+    var(--orange);
+
+  color: #fff;
+
+  font: inherit;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+/* =========================================================
+   KPI
+   ========================================================= */
+
+.kpiGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+}
+
+.kpiCard {
+  min-height: 128px;
+
+  padding: 15px;
+
+  border:
+    1px solid
+    #e1e4e0;
+
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(
+      0,
+      1fr
+    );
+
+  align-items: start;
+
+  gap: 12px;
+
+  background: #fff;
+
+  box-shadow:
+    0 8px 28px
+    rgb(
+      20 24 21 /
+      3%
+    );
+}
+
+.kpiIcon {
+  width: 42px;
+
+  height: 42px;
+
+  display: grid;
+
+  place-items: center;
+
+  background:
+    var(--orange-soft);
+
+  color:
+    var(--orange);
+}
+
+.successIcon {
+  background:
+    #edf8f1;
+
+  color:
+    #17703d;
+}
+
+.warningIcon {
+  background:
+    #fff7e6;
+
+  color:
+    #9f6a16;
+}
+
+.dangerIcon {
+  background:
+    #fff1ef;
+
+  color:
+    #b43a30;
+}
+
+.kpiCard span,
+.kpiCard strong,
+.kpiCard small {
+  display: block;
+}
+
+.kpiCard span {
+  color:
+    #8d938e;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing: .06em;
+
+  text-transform:
+    uppercase;
+}
+
+.kpiCard strong {
+  margin-top: 8px;
+
+  color: #171a18;
+
+  font-size:
+    clamp(
+      20px,
+      2vw,
+      27px
+    );
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing: -.03em;
+}
+
+.kpiCard small {
+  margin-top: 8px;
+
+  color:
+    #989e99;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+}
+
+/* =========================================================
+   REPORT CARDS
+   ========================================================= */
+
+.sectionCard {
+  border:
+    1px solid
+    #e1e4e0;
+
+  background: #fff;
+
+  box-shadow:
+    0 8px 28px
+    rgb(
+      20 24 21 /
+      3%
+    );
+}
+
+.sectionHeading {
+  min-height: 68px;
+
+  padding:
+    13px 15px;
+
+  border-bottom:
+    1px solid
+    #e7eae6;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.sectionHeading span,
+.sectionHeading strong {
+  display: block;
+}
+
+.sectionHeading span {
+  color:
+    var(--orange);
+
+  font-size: 7px;
+
+  font-weight: 950;
+
+  letter-spacing: .1em;
+
+  text-transform:
+    uppercase;
+}
+
+.sectionHeading strong {
+  margin-top: 4px;
+
+  color: #242824;
+
+  font-size: 13px;
+
+  font-weight: 950;
+}
+
+.sectionHeading svg {
+  color:
+    #8b918c;
+}
+
+.summaryGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(
+        0,
+        1fr
+      )
+    );
+}
+
+.summaryGrid > div {
+  min-height: 92px;
+
+  padding: 15px;
+
+  border-right:
+    1px solid
+    #eceeeb;
+}
+
+.summaryGrid > div:last-child {
+  border-right: 0;
+}
+
+.summaryGrid span,
+.summaryGrid strong {
+  display: block;
+}
+
+.summaryGrid span {
+  color:
+    #8c928d;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  text-transform:
+    uppercase;
+}
+
+.summaryGrid strong {
+  margin-top: 8px;
+
+  color: #1f231f;
+
+  font-size: 15px;
+
+  font-weight: 950;
+}
+
+.twoColumn {
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      0,
+      1.15fr
+    )
+    minmax(
+      0,
+      .85fr
+    );
+
+  gap: 10px;
+}
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.statusList {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+}
+
+.statusList > div {
+  min-height: 54px;
+
+  padding:
+    10px 14px;
+
+  border-bottom:
+    1px solid
+    #eceeeb;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.statusList > div:nth-child(
+  odd
+) {
+  border-right:
+    1px solid
+    #eceeeb;
+}
+
+.statusList span {
+  color:
+    #696f6a;
+
+  font-size: 8px;
+
+  font-weight: 850;
+}
+
+.statusList strong {
+  min-width: 30px;
+
+  height: 28px;
+
+  padding:
+    0 8px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background:
+    #f4f5f3;
+
+  color: #202420;
+
+  font-size: 10px;
+
+  font-weight: 950;
+}
+
+/* =========================================================
+   PAYMENTS
+   ========================================================= */
+
+.paymentGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+}
+
+.paymentGrid > div {
+  min-height: 100px;
+
+  padding: 15px;
+
+  border-bottom:
+    1px solid
+    #eceeeb;
+}
+
+.paymentGrid > div:nth-child(
+  odd
+) {
+  border-right:
+    1px solid
+    #eceeeb;
+}
+
+.paymentGrid span,
+.paymentGrid strong,
+.paymentGrid small {
+  display: block;
+}
+
+.paymentGrid span {
+  color:
+    #898f8a;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  text-transform:
+    uppercase;
+}
+
+.paymentGrid strong {
+  margin-top: 8px;
+
+  color: #202420;
+
+  font-size: 21px;
+
+  font-weight: 950;
+}
+
+.paymentGrid small {
+  margin-top: 4px;
+
+  color:
+    #9aa09b;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (
+  max-width: 1100px
+) {
+  .header {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .periodBadge {
+    width: 100%;
+  }
+
+  .rangeCard {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .customRange {
+    width: 100%;
+  }
+
+  .customRange label {
+    flex: 1;
+  }
+
+  .customRange input {
+    width: 100%;
+  }
+
+  .kpiGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .summaryGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+
+  .summaryGrid > div {
+    border-bottom:
+      1px solid
+      #eceeeb;
+  }
+
+  .twoColumn {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+@media (
+  max-width: 650px
+) {
+  .customRange {
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+
+  .customRange button {
+    grid-column:
+      1 /
+      -1;
+  }
+
+  .kpiGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .summaryGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .summaryGrid > div {
+    border-right: 0;
+  }
+
+  .statusList,
+  .paymentGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .statusList > div:nth-child(
+    odd
+  ),
+  .paymentGrid > div:nth-child(
+    odd
+  ) {
+    border-right: 0;
+  }
+}
