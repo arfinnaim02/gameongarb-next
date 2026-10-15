@@ -15,7 +15,7 @@ import {
   useMemo,
 } from "react";
 
-import styles from "./reports-manager.module.css";
+import styles from "@/app/admin/(panel)/reports/reports.module.css";
 
 export type ReportOrder = {
   id:
@@ -198,7 +198,8 @@ export function ReportsManager({
 
         <div
           className={
-            styles.rangeBadge
+            styles.periodBadge
+            }
           }
         >
           <CalendarDays
