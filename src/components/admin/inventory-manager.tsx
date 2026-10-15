@@ -1312,9 +1312,9 @@ export function InventoryManager({
         false,
       );
     }
+  }
 
-
-    /* =======================================================
+  /* =======================================================
      CATEGORY GROUPS
      ======================================================= */
 
@@ -3175,9 +3175,6 @@ export function InventoryManager({
                           >
                             {formatDateTime(
                               item.createdAt,
-
-                                        </section>
-        </>
                             )}
                           </span>
                         </td>
@@ -3309,6 +3306,7 @@ export function InventoryManager({
             <EmptyState />
           )}
         </section>
+        </>
       )}
 
       {selected ? (
