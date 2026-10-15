@@ -66,6 +66,29 @@ export default async function ReportsPage() {
 
         createdAt:
           true,
+
+
+        items: {
+          select: {
+            productId:
+              true,
+
+            name:
+              true,
+
+            sku:
+              true,
+
+            quantity:
+              true,
+
+            unitPrice:
+              true,
+
+            lineTotal:
+              true,
+          },
+        },
       },
 
       orderBy: {
@@ -118,6 +141,37 @@ export default async function ReportsPage() {
 
             createdAt:
               order.createdAt.toISOString(),
+
+
+
+            items:
+              order.items.map(
+                (
+                  item,
+                ) => ({
+                  productId:
+                    item.productId,
+
+                  name:
+                    item.name,
+
+                  sku:
+                    item.sku,
+
+                  quantity:
+                    item.quantity,
+
+                  unitPrice:
+                    Number(
+                      item.unitPrice,
+                    ),
+
+                  lineTotal:
+                    Number(
+                      item.lineTotal,
+                    ),
+                }),
+              ),
           }),
         )
       }

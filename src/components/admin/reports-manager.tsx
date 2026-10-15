@@ -30,6 +30,15 @@ export type ReportOrder = {
   paymentMethod: string;
   paymentStatus: string;
   createdAt: string;
+
+  items: {
+    productId: string | null;
+    name: string;
+    sku: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+  }[];
 };
 
 function formatBDT(value: number) {
@@ -188,6 +197,208 @@ export function ReportsManager({
       validOrders: validOrders.length,
     };
   }, [filteredOrders]);
+    const productPerformance = useMemo(() => {
+    const productMap = new Map<
+      string,
+      {
+        key: string;
+        name: string;
+        sku: string;
+        quantity: number;
+        revenue: number;
+        orders: Set<string>;
+      }
+    >();
+
+    filteredOrders.forEach((order) => {
+      const isValidOrder =
+        order.status !== "CANCELLED" &&
+        order.status !== "FAILED_DELIVERY";
+
+      if (!isValidOrder) {
+        return;
+      }
+
+      order.items.forEach((item) => {
+        const key =
+          item.productId ??
+          `${item.name}-${item.sku}`;
+
+        const existing =
+          productMap.get(key);
+
+        const deliveredRevenue =
+          order.status === "DELIVERED"
+            ? item.lineTotal
+            : 0;
+
+        if (existing) {
+          existing.quantity +=
+            item.quantity;
+
+          existing.revenue +=
+            deliveredRevenue;
+
+          existing.orders.add(
+            order.id,
+          );
+
+          return;
+        }
+
+        productMap.set(key, {
+          key,
+          name: item.name,
+          sku: item.sku,
+          quantity: item.quantity,
+          revenue: deliveredRevenue,
+          orders: new Set([
+            order.id,
+          ]),
+        });
+      });
+    });
+
+    return Array.from(
+      productMap.values(),
+    )
+      .map((product) => ({
+        key: product.key,
+        name: product.name,
+        sku: product.sku,
+        quantity: product.quantity,
+        revenue: product.revenue,
+        orders:
+          product.orders.size,
+      }))
+      .sort((a, b) => {
+        if (
+          b.quantity !==
+          a.quantity
+        ) {
+          return (
+            b.quantity -
+            a.quantity
+          );
+        }
+
+        return (
+          b.revenue -
+          a.revenue
+        );
+      })
+      .slice(
+        0,
+        8,
+      );
+  }, [filteredOrders]);
+
+  const productTotals = useMemo(() => {
+    return productPerformance.reduce(
+      (
+        totals,
+        product,
+      ) => ({
+        quantity:
+          totals.quantity +
+          product.quantity,
+
+        revenue:
+          totals.revenue +
+          product.revenue,
+      }),
+      {
+        quantity: 0,
+        revenue: 0,
+      },
+    );
+  }, [productPerformance]);
+
+  const salesTrend = useMemo(() => {
+    const trendMap = new Map<
+      string,
+      {
+        date: string;
+        label: string;
+        revenue: number;
+        orders: number;
+      }
+    >();
+
+    filteredOrders.forEach((order) => {
+      const orderDate = new Date(order.createdAt);
+
+      if (Number.isNaN(orderDate.getTime())) {
+        return;
+      }
+
+      const year = orderDate.getFullYear();
+      const month = String(
+        orderDate.getMonth() + 1,
+      ).padStart(2, "0");
+      const day = String(
+        orderDate.getDate(),
+      ).padStart(2, "0");
+
+      const dateKey =
+        `${year}-${month}-${day}`;
+
+      const existing =
+        trendMap.get(dateKey);
+
+      const isValidOrder =
+        order.status !== "CANCELLED" &&
+        order.status !== "FAILED_DELIVERY";
+
+      const deliveredRevenue =
+        order.status === "DELIVERED"
+          ? order.total
+          : 0;
+
+      if (existing) {
+        if (isValidOrder) {
+          existing.orders += 1;
+        }
+
+        existing.revenue +=
+          deliveredRevenue;
+
+        return;
+      }
+
+      trendMap.set(dateKey, {
+        date: dateKey,
+        label: orderDate.toLocaleDateString(
+          "en-BD",
+          {
+            day: "2-digit",
+            month: "short",
+          },
+        ),
+        revenue: deliveredRevenue,
+        orders: isValidOrder ? 1 : 0,
+      });
+    });
+
+    return Array.from(
+      trendMap.values(),
+    )
+      .sort(
+        (a, b) =>
+          new Date(a.date).getTime() -
+          new Date(b.date).getTime(),
+      )
+      .slice(-14);
+  }, [filteredOrders]);
+
+  const maxTrendRevenue = useMemo(() => {
+    return Math.max(
+      ...salesTrend.map(
+        (item) => item.revenue,
+      ),
+      1,
+    );
+  }, [salesTrend]);
 
   return (
     <div className={styles.page}>
@@ -227,6 +438,138 @@ export function ReportsManager({
             </div>
             </div>
       </header>
+
+      <section className={styles.rangeCard}>
+        <div className={styles.presets}>
+          <a
+            href="#"
+            className={
+              datePreset === "today" &&
+              !customRangeActive
+                ? styles.activePreset
+                : undefined
+            }
+            onClick={(event) => {
+              event.preventDefault();
+              setDatePreset("today");
+              setCustomRangeActive(false);
+            }}
+          >
+            Today
+          </a>
+
+          <a
+            href="#"
+            className={
+              datePreset === "7days" &&
+              !customRangeActive
+                ? styles.activePreset
+                : undefined
+            }
+            onClick={(event) => {
+              event.preventDefault();
+              setDatePreset("7days");
+              setCustomRangeActive(false);
+            }}
+          >
+            Last 7 Days
+          </a>
+
+          <a
+            href="#"
+            className={
+              datePreset === "30days" &&
+              !customRangeActive
+                ? styles.activePreset
+                : undefined
+            }
+            onClick={(event) => {
+              event.preventDefault();
+              setDatePreset("30days");
+              setCustomRangeActive(false);
+            }}
+          >
+            Last 30 Days
+          </a>
+
+          <a
+            href="#"
+            className={
+              datePreset === "month" &&
+              !customRangeActive
+                ? styles.activePreset
+                : undefined
+            }
+            onClick={(event) => {
+              event.preventDefault();
+              setDatePreset("month");
+              setCustomRangeActive(false);
+            }}
+          >
+            This Month
+          </a>
+
+          <a
+            href="#"
+            className={
+              datePreset === "all" &&
+              !customRangeActive
+                ? styles.activePreset
+                : undefined
+            }
+            onClick={(event) => {
+              event.preventDefault();
+              setDatePreset("all");
+              setCustomRangeActive(false);
+            }}
+          >
+            All Time
+          </a>
+        </div>
+
+        <div className={styles.customRange}>
+          <label>
+            <span>From</span>
+
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(event) => {
+                setCustomFrom(
+                  event.target.value,
+                );
+              }}
+            />
+          </label>
+
+          <label>
+            <span>To</span>
+
+            <input
+              type="date"
+              value={customTo}
+              onChange={(event) => {
+                setCustomTo(
+                  event.target.value,
+                );
+              }}
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!customFrom || !customTo) {
+                return;
+              }
+
+              setCustomRangeActive(true);
+            }}
+          >
+            Apply Range
+          </button>
+        </div>
+      </section>
 
       <section className={styles.kpiGrid}>
         <ReportCard
@@ -275,6 +618,335 @@ export function ReportsManager({
       <section className={styles.sectionCard}>
         <div className={styles.sectionHeading}>
           <div>
+            <span>Sales Performance</span>
+            <strong>Revenue Trend</strong>
+          </div>
+
+          <TrendingUp size={20} />
+        </div>
+
+        {salesTrend.length > 0 ? (
+          <div className={styles.trendChart}>
+            <div className={styles.trendChartHeader}>
+              <div>
+                <span>Selected Period</span>
+
+                <strong>
+                  {formatBDT(
+                    salesTrend.reduce(
+                      (total, item) =>
+                        total +
+                        item.revenue,
+                      0,
+                    ),
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>Orders</span>
+
+                <strong>
+                  {salesTrend.reduce(
+                    (total, item) =>
+                      total +
+                      item.orders,
+                    0,
+                  )}
+                </strong>
+              </div>
+            </div>
+
+            <div className={styles.trendBars}>
+              {salesTrend.map((item) => {
+                const barHeight =
+                  item.revenue > 0
+                    ? Math.max(
+                        (
+                          item.revenue /
+                          maxTrendRevenue
+                        ) *
+                          100,
+                        6,
+                      )
+                    : 2;
+
+                return (
+                  <div
+                    className={styles.trendItem}
+                    key={item.date}
+                  >
+                    <div
+                      className={
+                        styles.trendBarArea
+                      }
+                    >
+                      <div
+                        className={
+                          styles.trendBar
+                        }
+                        style={{
+                          height:
+                            `${barHeight}%`,
+                        }}
+                        title={
+                          `${item.label}: ${formatBDT(
+                            item.revenue,
+                          )}`
+                        }
+                      />
+                    </div>
+
+                    <div
+                      className={
+                        styles.trendMeta
+                      }
+                    >
+                      <strong>
+                        {formatBDT(
+                          item.revenue,
+                        )}
+                      </strong>
+
+                      <span>
+                        {item.orders}{" "}
+                        {item.orders === 1
+                          ? "order"
+                          : "orders"}
+                      </span>
+
+                      <small>
+                        {item.label}
+                      </small>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className={styles.trendEmpty}>
+            <BarChart3 size={28} />
+
+            <strong>
+              No sales data
+            </strong>
+
+            <span>
+              No orders were found for the
+              selected date range.
+            </span>
+          </div>
+        )}
+      </section>
+
+
+      <section className={styles.sectionCard}>
+        <div className={styles.sectionHeading}>
+          <div>
+            <span>Product Analytics</span>
+
+            <strong>
+              Top Product Performance
+            </strong>
+          </div>
+
+          <ShoppingBag size={20} />
+        </div>
+
+        {productPerformance.length > 0 ? (
+          <>
+            <div
+              className={
+                styles.productSummary
+              }
+            >
+              <div>
+                <span>
+                  Products
+                </span>
+
+                <strong>
+                  {
+                    productPerformance.length
+                  }
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Units Sold
+                </span>
+
+                <strong>
+                  {
+                    productTotals.quantity
+                  }
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Delivered Revenue
+                </span>
+
+                <strong>
+                  {formatBDT(
+                    productTotals.revenue,
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Best Seller
+                </span>
+
+                <strong>
+                  {
+                    productPerformance[0]
+                      ?.name
+                  }
+                </strong>
+              </div>
+            </div>
+
+            <div
+              className={
+                styles.productTableWrap
+              }
+            >
+              <table
+                className={
+                  styles.productTable
+                }
+              >
+                <thead>
+                  <tr>
+                    <th>
+                      Rank
+                    </th>
+
+                    <th>
+                      Product
+                    </th>
+
+                    <th>
+                      SKU
+                    </th>
+
+                    <th>
+                      Orders
+                    </th>
+
+                    <th>
+                      Units
+                    </th>
+
+                    <th>
+                      Revenue
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {productPerformance.map(
+                    (
+                      product,
+                      index,
+                    ) => (
+                      <tr
+                        key={
+                          product.key
+                        }
+                      >
+                        <td>
+                          <span
+                            className={
+                              styles.productRank
+                            }
+                          >
+                            #
+                            {
+                              index +
+                              1
+                            }
+                          </span>
+                        </td>
+
+                        <td>
+                          <strong
+                            className={
+                              styles.productName
+                            }
+                          >
+                            {
+                              product.name
+                            }
+                          </strong>
+                        </td>
+
+                        <td>
+                          <span
+                            className={
+                              styles.productSku
+                            }
+                          >
+                            {
+                              product.sku
+                            }
+                          </span>
+                        </td>
+
+                        <td>
+                          {
+                            product.orders
+                          }
+                        </td>
+
+                        <td>
+                          <strong>
+                            {
+                              product.quantity
+                            }
+                          </strong>
+                        </td>
+
+                        <td>
+                          <strong>
+                            {formatBDT(
+                              product.revenue,
+                            )}
+                          </strong>
+                        </td>
+                      </tr>
+                    ),
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className={styles.trendEmpty}>
+            <ShoppingBag size={28} />
+
+            <strong>
+              No product data
+            </strong>
+
+            <span>
+              No product sales were found
+              for the selected date range.
+            </span>
+          </div>
+        )}
+      </section>
+
+
+
+      <section className={styles.sectionCard}>
+        <div className={styles.sectionHeading}>
+          <div>
             <span>Reports V2</span>
             <strong>Analytics data layer ready</strong>
           </div>
@@ -289,7 +961,7 @@ export function ReportsManager({
           </div>
 
           <div>
-            <span>Next Step</span>
+            <span>Completed</span>
             <strong>Sales Trends</strong>
           </div>
 
