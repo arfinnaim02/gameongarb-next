@@ -1,0 +1,280 @@
+.page {
+  display: grid;
+
+  gap: 18px;
+}
+
+.header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+}
+
+.eyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color:
+    var(--orange);
+
+  font-size: 8px;
+
+  font-weight: 950;
+
+  letter-spacing:
+    .12em;
+
+  text-transform:
+    uppercase;
+}
+
+.header h1 {
+  margin: 0;
+
+  color: #111412;
+
+  font-size:
+    clamp(
+      30px,
+      3vw,
+      42px
+    );
+
+  line-height: 1;
+
+  font-weight: 950;
+
+  letter-spacing:
+    -.045em;
+}
+
+.header p {
+  max-width: 620px;
+
+  margin:
+    9px 0
+    0;
+
+  color: #767c77;
+
+  font-size: 12px;
+
+  line-height: 1.55;
+}
+
+.rangeBadge {
+  min-height: 42px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    #dfe3df;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  background: #fff;
+
+  color: #555b56;
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.kpiGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+}
+
+.kpiCard {
+  min-height: 130px;
+
+  padding: 16px;
+
+  border:
+    1px solid
+    #e2e5e1;
+
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(
+      0,
+      1fr
+    );
+
+  align-items: start;
+
+  gap: 12px;
+
+  background: #fff;
+
+  box-shadow:
+    0 8px 26px
+    rgb(
+      20 24 21 /
+      3%
+    );
+}
+
+.kpiIcon {
+  width: 42px;
+
+  height: 42px;
+
+  display: grid;
+
+  place-items: center;
+
+  background:
+    var(--orange-soft);
+
+  color:
+    var(--orange);
+}
+
+.kpiCard div > span,
+.kpiCard strong,
+.kpiCard small {
+  display: block;
+}
+
+.kpiCard div > span {
+  color: #8b918c;
+
+  font-size: 8px;
+
+  font-weight: 900;
+
+  letter-spacing:
+    .06em;
+
+  text-transform:
+    uppercase;
+}
+
+.kpiCard strong {
+  margin-top: 8px;
+
+  color: #171a18;
+
+  font-size:
+    clamp(
+      22px,
+      2.2vw,
+      30px
+    );
+
+  line-height: 1;
+
+  font-weight: 950;
+}
+
+.kpiCard small {
+  margin-top: 7px;
+
+  color: #989e99;
+
+  font-size: 8px;
+}
+
+.placeholderCard {
+  min-height: 150px;
+
+  padding: 20px;
+
+  border:
+    1px dashed
+    #d8ddd8;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 14px;
+
+  background:
+    #fafbf9;
+
+  color:
+    #777e78;
+}
+
+.placeholderCard strong,
+.placeholderCard span {
+  display: block;
+}
+
+.placeholderCard strong {
+  color:
+    #272c28;
+
+  font-size: 12px;
+
+  font-weight: 900;
+}
+
+.placeholderCard span {
+  margin-top: 4px;
+
+  font-size: 9px;
+}
+
+@media (
+  max-width: 950px
+) {
+  .kpiGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+@media (
+  max-width: 620px
+) {
+  .header {
+    flex-direction: column;
+  }
+
+  .rangeBadge {
+    width: 100%;
+  }
+
+  .kpiGrid {
+    grid-template-columns:
+      1fr;
+  }
+}

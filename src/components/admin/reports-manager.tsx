@@ -966,7 +966,7 @@ export function ReportsManager({
           </div>
 
           <div>
-            <span>Next Step</span>
+            <span>Completed</span>
             <strong>Product Performance</strong>
           </div>
 
