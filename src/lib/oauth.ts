@@ -544,13 +544,22 @@ async function getGoogleProfile(
       },
     );
 
-  if (
+    if (
     !tokenResponse.ok
-  ) {
-    throw new Error(
-      "Google token exchange failed.",
+    ) {
+    const errorText =
+        await tokenResponse.text();
+
+    console.error(
+        "Google token exchange failed:",
+        tokenResponse.status,
+        errorText,
     );
-  }
+
+    throw new Error(
+        "Google token exchange failed.",
+    );
+    }
 
   const token =
     (await tokenResponse.json()) as {
@@ -580,14 +589,22 @@ async function getGoogleProfile(
       },
     );
 
-  if (
+    if (
     !profileResponse.ok
-  ) {
-    throw new Error(
-      "Google profile request failed.",
-    );
-  }
+    ) {
+    const errorText =
+        await profileResponse.text();
 
+    console.error(
+        "Google profile request failed:",
+        profileResponse.status,
+        errorText,
+    );
+
+    throw new Error(
+        "Google profile request failed.",
+    );
+    }
   const profile =
     (await profileResponse.json()) as {
       sub?:
