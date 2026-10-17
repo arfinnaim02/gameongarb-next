@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  LockKeyhole,
+  Mail,
+} from "lucide-react";
+
 import Link from "next/link";
 
 import {
@@ -15,7 +23,8 @@ import {
 import styles from "./customer-auth.module.css";
 
 export function LoginForm({
-  admin = false,
+  admin =
+    false,
 }: {
   admin?:
     boolean;
@@ -38,12 +47,17 @@ export function LoginForm({
   ] =
     useState(false);
 
+  const [
+    showPassword,
+    setShowPassword,
+  ] =
+    useState(false);
+
   const loggedOut =
-    !admin &&
     searchParams.get(
       "loggedout",
     ) ===
-      "1";
+    "1";
 
   async function submit(
     event:
@@ -51,19 +65,12 @@ export function LoginForm({
   ) {
     event.preventDefault();
 
-    if (
-      busy
-    ) {
+    if (busy) {
       return;
     }
 
-    setBusy(
-      true,
-    );
-
-    setError(
-      "",
-    );
+    setBusy(true);
+    setError("");
 
     try {
       const form =
@@ -160,9 +167,7 @@ export function LoginForm({
         "Unable to sign in. Please try again.",
       );
     } finally {
-      setBusy(
-        false,
-      );
+      setBusy(false);
     }
   }
 
@@ -171,81 +176,186 @@ export function LoginForm({
       onSubmit={
         submit
       }
-      className={styles.form}
+      className={
+        styles.form
+      }
     >
       {loggedOut ? (
-        <p className={styles.success}>
-          You have been logged out
-          successfully.
-        </p>
+        <div
+          className={
+            styles.success
+          }
+        >
+          You have been logged
+          out successfully.
+        </div>
       ) : null}
 
-      <label className={styles.field}>
+      <label
+        className={
+          styles.field
+        }
+      >
         <span>
           Email Address
         </span>
 
-        <input
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          required
-        />
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <Mail
+            size={17}
+          />
+
+          <input
+            name="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
       </label>
 
-      <label className={styles.field}>
-        <span>
-          Password
-        </span>
-
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          required
-          minLength={
-            8
+      <label
+        className={
+          styles.field
+        }
+      >
+        <div
+          className={
+            styles.fieldTop
           }
-        />
+        >
+          <span>
+            Password
+          </span>
+
+          {!admin ? (
+            <Link
+              href="/account/forgot-password"
+            >
+              Forgot Password?
+            </Link>
+          ) : null}
+        </div>
+
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <LockKeyhole
+            size={17}
+          />
+
+          <input
+            name="password"
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            required
+            minLength={8}
+          />
+
+          <button
+            type="button"
+            className={
+              styles.passwordToggle
+            }
+            aria-label={
+              showPassword
+                ? "Hide password"
+                : "Show password"
+            }
+            onClick={() =>
+              setShowPassword(
+                (
+                  current,
+                ) =>
+                  !current,
+              )
+            }
+          >
+            {showPassword ? (
+              <EyeOff
+                size={16}
+              />
+            ) : (
+              <Eye
+                size={16}
+              />
+            )}
+          </button>
+        </div>
       </label>
 
       {error ? (
-        <p
+        <div
           role="alert"
-          className={styles.error}
-        >
-          {
-            error
+          className={
+            styles.error
           }
-        </p>
+        >
+          {error}
+        </div>
       ) : null}
 
       <button
         type="submit"
-        className={styles.submit}
+        className={
+          styles.submit
+        }
         disabled={
           busy
         }
       >
-        {busy
-          ? "Signing In..."
-          : admin
-            ? "Sign In to Admin"
-            : "Sign In to My Account"}
+        {busy ? (
+          <>
+            <Loader2
+              size={16}
+              className={
+                styles.spin
+              }
+            />
+
+            Signing In
+          </>
+        ) : admin ? (
+          "Sign In to Admin"
+        ) : (
+          "Sign In"
+        )}
       </button>
 
       {!admin ? (
-        <div className={styles.links}>
-          <Link href="/account/forgot-password">
-            Forgot Password?
-          </Link>
+        <>
+          <div
+            className={
+              styles.divider
+            }
+          >
+            <span>
+              New to Game On Garb?
+            </span>
+          </div>
 
-          <Link href="/account/register">
-            Create Account
+          <Link
+            href="/account/register"
+            className={
+              styles.secondaryAction
+            }
+          >
+            Create an Account
           </Link>
-        </div>
+        </>
       ) : null}
     </form>
   );

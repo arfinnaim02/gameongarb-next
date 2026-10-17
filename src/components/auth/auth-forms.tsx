@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  Phone,
+  UserRound,
+} from "lucide-react";
+
 import Link from "next/link";
 
 import {
@@ -11,6 +21,12 @@ import {
   FormEvent,
   useState,
 } from "react";
+
+import styles from "./customer-auth.module.css";
+
+/* =========================================================
+   SHARED MUTATION STATE
+   ========================================================= */
 
 function useMutation() {
   const [
@@ -41,6 +57,10 @@ function useMutation() {
   };
 }
 
+/* =========================================================
+   REGISTER
+   ========================================================= */
+
 export function RegisterForm() {
   const state =
     useMutation();
@@ -48,11 +68,29 @@ export function RegisterForm() {
   const router =
     useRouter();
 
+  const [
+    showPassword,
+    setShowPassword,
+  ] =
+    useState(false);
+
+  const [
+    showConfirmPassword,
+    setShowConfirmPassword,
+  ] =
+    useState(false);
+
   async function submit(
     event:
       FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (
+      state.busy
+    ) {
+      return;
+    }
 
     state.setBusy(
       true,
@@ -62,13 +100,42 @@ export function RegisterForm() {
       "",
     );
 
+    state.setMessage(
+      "",
+    );
+
     try {
-      const values =
-        Object.fromEntries(
-          new FormData(
-            event.currentTarget,
-          ),
+      const formData =
+        new FormData(
+          event.currentTarget,
         );
+
+      const values = {
+        name:
+          formData.get(
+            "name",
+          ),
+
+        phone:
+          formData.get(
+            "phone",
+          ),
+
+        email:
+          formData.get(
+            "email",
+          ),
+
+        password:
+          formData.get(
+            "password",
+          ),
+
+        confirmPassword:
+          formData.get(
+            "confirmPassword",
+          ),
+      };
 
       const response =
         await fetch(
@@ -103,7 +170,7 @@ export function RegisterForm() {
         return;
       }
 
-      router.push(
+      router.replace(
         "/account",
       );
 
@@ -124,92 +191,306 @@ export function RegisterForm() {
       onSubmit={
         submit
       }
-      style={{
-        display:
-          "grid",
-
-        gap:
-          12,
-      }}
+      className={
+        styles.form
+      }
     >
-      <Field
-        name="name"
-        label="Full Name"
-        autoComplete="name"
-      />
+      <label
+        className={
+          styles.field
+        }
+      >
+        <span>
+          Full Name
+        </span>
 
-      <Field
-        name="phone"
-        label="Phone Number"
-        pattern="01[0-9]{9}"
-        placeholder="01XXXXXXXXX"
-        autoComplete="tel"
-      />
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <UserRound
+            size={17}
+          />
 
-      <Field
-        name="email"
-        label="Email"
-        type="email"
-        autoComplete="email"
-      />
+          <input
+            name="name"
+            type="text"
+            autoComplete="name"
+            placeholder="Your full name"
+            required
+            minLength={2}
+            maxLength={100}
+          />
+        </div>
+      </label>
 
-      <Field
-        name="password"
-        label="Password"
-        type="password"
-        minLength={8}
-        autoComplete="new-password"
-      />
+      <div
+        className={
+          styles.twoFields
+        }
+      >
+        <label
+          className={
+            styles.field
+          }
+        >
+          <span>
+            Phone Number
+          </span>
 
-      <Field
-        name="confirmPassword"
-        label="Confirm Password"
-        type="password"
-        minLength={8}
-        autoComplete="new-password"
-      />
+          <div
+            className={
+              styles.inputWrap
+            }
+          >
+            <Phone
+              size={17}
+            />
+
+            <input
+              name="phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
+              pattern="01[0-9]{9}"
+              placeholder="01XXXXXXXXX"
+              required
+            />
+          </div>
+        </label>
+
+        <label
+          className={
+            styles.field
+          }
+        >
+          <span>
+            Email Address
+          </span>
+
+          <div
+            className={
+              styles.inputWrap
+            }
+          >
+            <Mail
+              size={17}
+            />
+
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              required
+              maxLength={180}
+            />
+          </div>
+        </label>
+      </div>
+
+      <label
+        className={
+          styles.field
+        }
+      >
+        <span>
+          Password
+        </span>
+
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <LockKeyhole
+            size={17}
+          />
+
+          <input
+            name="password"
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            minLength={8}
+            maxLength={100}
+            autoComplete="new-password"
+            placeholder="Minimum 8 characters"
+            required
+          />
+
+          <button
+            type="button"
+            className={
+              styles.passwordToggle
+            }
+            onClick={() =>
+              setShowPassword(
+                (
+                  current,
+                ) =>
+                  !current,
+              )
+            }
+            aria-label={
+              showPassword
+                ? "Hide password"
+                : "Show password"
+            }
+          >
+            {showPassword ? (
+              <EyeOff
+                size={16}
+              />
+            ) : (
+              <Eye
+                size={16}
+              />
+            )}
+          </button>
+        </div>
+      </label>
+
+      <label
+        className={
+          styles.field
+        }
+      >
+        <span>
+          Confirm Password
+        </span>
+
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <LockKeyhole
+            size={17}
+          />
+
+          <input
+            name="confirmPassword"
+            type={
+              showConfirmPassword
+                ? "text"
+                : "password"
+            }
+            minLength={8}
+            maxLength={100}
+            autoComplete="new-password"
+            placeholder="Enter password again"
+            required
+          />
+
+          <button
+            type="button"
+            className={
+              styles.passwordToggle
+            }
+            onClick={() =>
+              setShowConfirmPassword(
+                (
+                  current,
+                ) =>
+                  !current,
+              )
+            }
+            aria-label={
+              showConfirmPassword
+                ? "Hide password"
+                : "Show password"
+            }
+          >
+            {showConfirmPassword ? (
+              <EyeOff
+                size={16}
+              />
+            ) : (
+              <Eye
+                size={16}
+              />
+            )}
+          </button>
+        </div>
+      </label>
 
       {state.error ? (
-        <p
+        <div
           role="alert"
-          style={{
-            color:
-              "#b42318",
-          }}
+          className={
+            styles.error
+          }
         >
           {
             state.error
           }
-        </p>
+        </div>
       ) : null}
 
       <button
-        className="btn btn-primary"
+        type="submit"
+        className={
+          styles.submit
+        }
         disabled={
           state.busy
         }
       >
-        {state.busy
-          ? "Creating account…"
-          : "Create Account"}
+        {state.busy ? (
+          <>
+            <Loader2
+              size={16}
+              className={
+                styles.spin
+              }
+            />
+
+            Creating Account
+          </>
+        ) : (
+          "Create Account"
+        )}
       </button>
+
+      <div
+        className={
+          styles.divider
+        }
+      >
+        <span>
+          Already have an account?
+        </span>
+      </div>
 
       <Link
         href="/account/login"
-        style={{
-          textAlign:
-            "center",
-
-          fontSize:
-            12,
-        }}
+        className={
+          styles.secondaryAction
+        }
       >
-        Already registered?
-        Sign in
+        Sign In Instead
       </Link>
+
+      <p
+        className={
+          styles.terms
+        }
+      >
+        By creating an account,
+        you agree to Game On Garb&apos;s
+        store policies and terms.
+      </p>
     </form>
   );
 }
+
+/* =========================================================
+   FORGOT PASSWORD
+   ========================================================= */
 
 export function ForgotPasswordForm() {
   const state =
@@ -227,11 +508,21 @@ export function ForgotPasswordForm() {
   ) {
     event.preventDefault();
 
+    if (
+      state.busy
+    ) {
+      return;
+    }
+
     state.setBusy(
       true,
     );
 
     state.setError(
+      "",
+    );
+
+    state.setMessage(
       "",
     );
 
@@ -301,46 +592,61 @@ export function ForgotPasswordForm() {
       onSubmit={
         submit
       }
-      style={{
-        display:
-          "grid",
-
-        gap:
-          12,
-      }}
+      className={
+        styles.form
+      }
     >
-      <Field
-        name="email"
-        label="Account Email"
-        type="email"
-        autoComplete="email"
-      />
+      <label
+        className={
+          styles.field
+        }
+      >
+        <span>
+          Account Email
+        </span>
+
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <Mail
+            size={17}
+          />
+
+          <input
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+      </label>
 
       {state.error ? (
-        <p
+        <div
           role="alert"
-          style={{
-            color:
-              "#b42318",
-          }}
+          className={
+            styles.error
+          }
         >
           {
             state.error
           }
-        </p>
+        </div>
       ) : null}
 
       {state.message ? (
-        <p
-          style={{
-            color:
-              "#087844",
-          }}
+        <div
+          className={
+            styles.success
+          }
         >
           {
             state.message
           }
-        </p>
+        </div>
       ) : null}
 
       {resetUrl ? (
@@ -348,38 +654,64 @@ export function ForgotPasswordForm() {
           href={
             resetUrl
           }
-          className="btn btn-outline"
+          className={
+            styles.secondaryAction
+          }
         >
-          Open local reset link
+          Open Reset Link
         </Link>
       ) : null}
 
       <button
-        className="btn btn-primary"
+        type="submit"
+        className={
+          styles.submit
+        }
         disabled={
           state.busy
         }
       >
-        {state.busy
-          ? "Creating instructions…"
-          : "Request Password Reset"}
+        {state.busy ? (
+          <>
+            <Loader2
+              size={16}
+              className={
+                styles.spin
+              }
+            />
+
+            Creating Instructions
+          </>
+        ) : (
+          "Request Password Reset"
+        )}
       </button>
+
+      <div
+        className={
+          styles.divider
+        }
+      >
+        <span>
+          Remembered your password?
+        </span>
+      </div>
 
       <Link
         href="/account/login"
-        style={{
-          textAlign:
-            "center",
-
-          fontSize:
-            12,
-        }}
+        className={
+          styles.secondaryAction
+        }
       >
-        Back to sign in
+        Back to Sign In
       </Link>
     </form>
   );
 }
+
+/* =========================================================
+   RESET PASSWORD
+   ========================================================= */
 
 export function ResetPasswordForm() {
   const state =
@@ -397,17 +729,34 @@ export function ResetPasswordForm() {
     ) ??
     "";
 
+  const [
+    showPassword,
+    setShowPassword,
+  ] =
+    useState(false);
+
   async function submit(
     event:
       FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
+    if (
+      state.busy ||
+      !token
+    ) {
+      return;
+    }
+
     state.setBusy(
       true,
     );
 
     state.setError(
+      "",
+    );
+
+    state.setMessage(
       "",
     );
 
@@ -459,10 +808,13 @@ export function ResetPasswordForm() {
       );
 
       window.setTimeout(
-        () =>
-          router.push(
+        () => {
+          router.replace(
             "/account/login",
-          ),
+          );
+
+          router.refresh();
+        },
         1200,
       );
     } catch {
@@ -481,82 +833,146 @@ export function ResetPasswordForm() {
       onSubmit={
         submit
       }
-      style={{
-        display:
-          "grid",
-
-        gap:
-          12,
-      }}
+      className={
+        styles.form
+      }
     >
-      <Field
-        name="password"
-        label="New Password"
-        type="password"
-        minLength={8}
-        autoComplete="new-password"
-      />
+      {!token ? (
+        <div
+          role="alert"
+          className={
+            styles.error
+          }
+        >
+          This password reset link
+          is invalid or missing its
+          token.
+        </div>
+      ) : null}
+
+      <label
+        className={
+          styles.field
+        }
+      >
+        <span>
+          New Password
+        </span>
+
+        <div
+          className={
+            styles.inputWrap
+          }
+        >
+          <LockKeyhole
+            size={17}
+          />
+
+          <input
+            name="password"
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            minLength={8}
+            maxLength={100}
+            autoComplete="new-password"
+            placeholder="Minimum 8 characters"
+            required
+          />
+
+          <button
+            type="button"
+            className={
+              styles.passwordToggle
+            }
+            onClick={() =>
+              setShowPassword(
+                (
+                  current,
+                ) =>
+                  !current,
+              )
+            }
+            aria-label={
+              showPassword
+                ? "Hide password"
+                : "Show password"
+            }
+          >
+            {showPassword ? (
+              <EyeOff
+                size={16}
+              />
+            ) : (
+              <Eye
+                size={16}
+              />
+            )}
+          </button>
+        </div>
+      </label>
 
       {state.error ? (
-        <p
+        <div
           role="alert"
-          style={{
-            color:
-              "#b42318",
-          }}
+          className={
+            styles.error
+          }
         >
           {
             state.error
           }
-        </p>
+        </div>
       ) : null}
 
       {state.message ? (
-        <p
-          style={{
-            color:
-              "#087844",
-          }}
+        <div
+          className={
+            styles.success
+          }
         >
           {
             state.message
           }
-        </p>
+        </div>
       ) : null}
 
       <button
-        className="btn btn-primary"
+        type="submit"
+        className={
+          styles.submit
+        }
         disabled={
           state.busy ||
           !token
         }
       >
-        {state.busy
-          ? "Updating…"
-          : "Update Password"}
+        {state.busy ? (
+          <>
+            <Loader2
+              size={16}
+              className={
+                styles.spin
+              }
+            />
+
+            Updating Password
+          </>
+        ) : (
+          "Update Password"
+        )}
       </button>
+
+      <Link
+        href="/account/login"
+        className={
+          styles.secondaryAction
+        }
+      >
+        Back to Sign In
+      </Link>
     </form>
-  );
-}
-
-function Field({
-  label,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  label:
-    string;
-}) {
-  return (
-    <label>
-      <span className="label">
-        {label}
-      </span>
-
-      <input
-        {...props}
-        className="field"
-        required
-      />
-    </label>
   );
 }

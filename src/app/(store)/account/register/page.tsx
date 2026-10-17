@@ -1,20 +1,129 @@
-﻿import { RegisterForm } from "@/components/auth/auth-forms";
+﻿import {
+  Heart,
+  PackageCheck,
+  ShieldCheck,
+} from "lucide-react";
+
+import {
+  RegisterForm,
+} from "@/components/auth/auth-forms";
+
+import styles from "@/components/auth/customer-auth.module.css";
 
 export default function RegisterPage() {
   return (
-    <div className="container auth-page" style={{ padding: "40px 0" }}>
-      <div
-        className="card"
-        style={{ maxWidth: 460, margin: "auto", padding: 28 }}
+    <main
+      className={
+        styles.page
+      }
+    >
+      <section
+        className={
+          styles.shell
+        }
       >
-        <span className="eyebrow">Join the movement</span>
-        <h1>Create Account</h1>
-        <p className="muted">
-          Save addresses, track orders and keep your wishlist in sync.
-        </p>
-        <RegisterForm />
-      </div>
-    </div>
+        <div
+          className={
+            styles.brandPanel
+          }
+        >
+          <div
+            className={
+              styles.brandTop
+            }
+          >
+            <span>
+              Game On Garb
+            </span>
+
+            <h2>
+              Join
+              <br />
+              The Game.
+            </h2>
+
+            <p>
+              Create your account
+              for a faster,
+              personalized shopping
+              experience.
+            </p>
+          </div>
+
+          <div
+            className={
+              styles.benefits
+            }
+          >
+            <div>
+              <PackageCheck
+                size={16}
+              />
+
+              <span>
+                Track your orders
+              </span>
+            </div>
+
+            <div>
+              <Heart
+                size={16}
+              />
+
+              <span>
+                Save your wishlist
+              </span>
+            </div>
+
+            <div>
+              <ShieldCheck
+                size={16}
+              />
+
+              <span>
+                Secure account
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={
+            styles.formPanel
+          }
+        >
+          <div
+            className={
+              styles.formHeading
+            }
+          >
+            <span
+              className={
+                styles.eyebrow
+              }
+            >
+              Create Account
+            </span>
+
+            <h1>
+              Get Started
+            </h1>
+
+            <p
+              className={
+                styles.description
+              }
+            >
+              Create an account to
+              save addresses, track
+              orders and keep your
+              wishlist synchronized.
+            </p>
+          </div>
+
+          <RegisterForm />
+        </div>
+      </section>
+    </main>
   );
 }
-

@@ -1,36 +1,84 @@
 .page {
+  position: relative;
+
   min-height:
-    70vh;
+    calc(
+      100vh -
+      var(--header-height)
+    );
 
   padding:
-    48px 0
-    72px;
+    42px 20px
+    64px;
 
-  display:
-    grid;
+  display: grid;
 
   place-items:
     center;
 
+  overflow: hidden;
+
   background:
-    #f6f7f4;
+    radial-gradient(
+      circle at 8% 12%,
+      rgb(255 90 22 / 7%),
+      transparent 24%
+    ),
+    linear-gradient(
+      135deg,
+      #f4f5f1,
+      #fafbf8
+    );
+}
+
+.page::before {
+  content: "";
+
+  position: absolute;
+
+  width: 440px;
+  height: 440px;
+
+  right: -180px;
+  bottom: -220px;
+
+  border:
+    1px solid
+    rgb(20 24 21 / 5%);
+
+  border-radius:
+    50%;
+
+  pointer-events: none;
 }
 
 .shell {
+  position: relative;
+
+  z-index: 2;
+
   width:
     min(
-      900px,
-      calc(
-        100% - 32px
-      )
+      1040px,
+      100%
     );
 
-  display:
-    grid;
+  min-height:
+    610px;
+
+  display: grid;
 
   grid-template-columns:
-    .9fr
-    1.1fr;
+    minmax(
+      330px,
+      .88fr
+    )
+    minmax(
+      420px,
+      1.12fr
+    );
+
+  overflow: hidden;
 
   border:
     1px solid
@@ -40,25 +88,25 @@
     #fff;
 
   box-shadow:
-    0 20px 65px
-    rgb(
-      0 0 0 /
-      6%
-    );
+    0 28px 80px
+    rgb(18 22 19 / 11%);
 }
 
-.brandPanel {
-  position:
-    relative;
+/* =========================================================
+   BRAND SIDE
+   ========================================================= */
 
-  overflow:
-    hidden;
+.brandPanel {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 100%;
 
   padding:
-    38px 30px;
+    46px 38px;
 
-  display:
-    flex;
+  display: flex;
 
   flex-direction:
     column;
@@ -67,30 +115,51 @@
     space-between;
 
   background:
-    #111412;
+    linear-gradient(
+      145deg,
+      #090b0a,
+      #151916
+    );
 
   color:
     #fff;
 }
 
-.brandPanel::after {
-  content:
-    "";
+.brandPanel::before {
+  content: "";
 
-  position:
-    absolute;
+  position: absolute;
+
+  inset:
+    0;
+
+  background:
+    linear-gradient(
+      115deg,
+      transparent 40%,
+      rgb(255 255 255 / 2%)
+    );
+
+  pointer-events:
+    none;
+}
+
+.brandPanel::after {
+  content: "";
+
+  position: absolute;
 
   right:
-    -110px;
-
-  bottom:
     -170px;
 
+  bottom:
+    -190px;
+
   width:
-    330px;
+    430px;
 
   height:
-    330px;
+    430px;
 
   border-radius:
     50%;
@@ -98,65 +167,62 @@
   background:
     radial-gradient(
       circle,
-      rgb(
-        241 90 36 /
-        28%
-      ),
+      rgb(255 90 22 / 34%),
+      rgb(255 90 22 / 8%)
+        43%,
       transparent
-        68%
+        70%
     );
+
+  pointer-events:
+    none;
 }
 
-.brandPanel
-span {
-  position:
-    relative;
+.brandTop {
+  position: relative;
 
-  z-index:
-    2;
+  z-index: 2;
+}
+
+.brandTop > span {
+  display: block;
 
   color:
-    #ff7540;
+    #ff753d;
 
   font-size:
-    9px;
+    10px;
 
   font-weight:
     950;
 
   letter-spacing:
-    .17em;
+    .19em;
 
   text-transform:
     uppercase;
 }
 
-.brandPanel
-h2 {
-  position:
-    relative;
-
-  z-index:
-    2;
-
+.brandTop h2 {
   max-width:
-    330px;
+    390px;
 
   margin:
-    12px 0;
+    25px 0
+    20px;
 
   color:
     #fff;
 
   font-size:
     clamp(
-      2rem,
-      4vw,
-      3.5rem
+      3.5rem,
+      6vw,
+      5.7rem
     );
 
   line-height:
-    .9;
+    .82;
 
   font-weight:
     950;
@@ -165,86 +231,120 @@ h2 {
     italic;
 
   letter-spacing:
-    -.06em;
+    -.075em;
 
   text-transform:
     uppercase;
 }
 
-.brandPanel
-p {
-  position:
-    relative;
-
-  z-index:
-    2;
-
+.brandTop p {
   max-width:
-    310px;
+    330px;
 
   margin: 0;
 
   color:
     rgb(
       255 255 255 /
-      58%
+      55%
     );
 
   font-size:
-    11px;
+    13px;
 
   line-height:
-    1.65;
+    1.7;
 }
 
 .benefits {
-  position:
-    relative;
+  position: relative;
 
-  z-index:
-    2;
+  z-index: 2;
 
-  margin-top:
-    40px;
-
-  display:
-    grid;
+  display: grid;
 
   gap:
-    8px;
+    10px;
 }
 
-.benefits
-div {
-  display:
-    flex;
+.benefits > div {
+  min-height:
+    42px;
+
+  padding:
+    0 12px;
+
+  border:
+    1px solid
+    rgb(
+      255 255 255 /
+      8%
+    );
+
+  display: flex;
 
   align-items:
     center;
 
   gap:
-    8px;
+    10px;
+
+  background:
+    rgb(
+      255 255 255 /
+      3%
+    );
 
   color:
     rgb(
       255 255 255 /
-      75%
+      72%
     );
 
   font-size:
-    10px;
+    11px;
 
   font-weight:
     750;
 }
 
+.benefits svg {
+  flex:
+    0 0 auto;
+
+  color:
+    #ff6b2b;
+}
+
+/* =========================================================
+   FORM SIDE
+   ========================================================= */
+
 .formPanel {
+  min-width: 0;
+
   padding:
     clamp(
-      28px,
+      36px,
       5vw,
-      46px
+      60px
     );
+
+  display: flex;
+
+  flex-direction:
+    column;
+
+  justify-content:
+    center;
+
+  background:
+    #fff;
+}
+
+.formHeading {
+  margin-bottom:
+    24px;
 }
 
 .eyebrow {
@@ -252,197 +352,475 @@ div {
     block;
 
   margin-bottom:
-    7px;
+    9px;
 
   color:
     var(--orange);
-
-  font-size:
-    9px;
-
-  font-weight:
-    950;
-
-  letter-spacing:
-    .17em;
-
-  text-transform:
-    uppercase;
-}
-
-.formPanel
-h1 {
-  margin: 0;
-
-  color:
-    #171a18;
-
-  font-size:
-    clamp(
-      2rem,
-      4vw,
-      2.8rem
-    );
-
-  line-height:
-    .95;
-
-  font-weight:
-    950;
-
-  letter-spacing:
-    -.055em;
-}
-
-.description {
-  margin:
-    10px 0
-    21px;
-
-  color:
-    #818782;
-
-  font-size:
-    11px;
-
-  line-height:
-    1.6;
-}
-
-.form {
-  display:
-    grid;
-
-  gap:
-    12px;
-}
-
-.field {
-  display:
-    grid;
-
-  gap:
-    6px;
-}
-
-.field
-span {
-  color:
-    #424743;
 
   font-size:
     10px;
 
   font-weight:
-    900;
+    950;
+
+  letter-spacing:
+    .16em;
+
+  text-transform:
+    uppercase;
 }
 
-.field
-input {
-  width:
-    100%;
-
-  min-height:
-    46px;
-
-  padding:
-    0 12px;
-
-  border:
-    1px solid
-    #d9ddda;
-
-  outline:
-    none;
-
-  background:
-    #fff;
+.formPanel h1 {
+  margin: 0;
 
   color:
-    #242824;
+    #141714;
 
-  font:
-    inherit;
+  font-size:
+    clamp(
+      2.7rem,
+      5vw,
+      4.2rem
+    );
+
+  line-height:
+    .9;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    -.065em;
+}
+
+.description {
+  max-width:
+    520px;
+
+  margin:
+    14px 0
+    0;
+
+  color:
+    #7b817c;
 
   font-size:
     13px;
+
+  line-height:
+    1.65;
 }
 
-.field
-input:focus {
-  border-color:
-    #707671;
+/* =========================================================
+   FORM
+   ========================================================= */
 
-  box-shadow:
-    0 0 0 3px
-    rgb(
-      17 20 18 /
-      4%
-    );
+.form {
+  display: grid;
+
+  gap:
+    15px;
 }
 
-.submit {
-  min-height:
-    46px;
+.field {
+  display: grid;
 
-  margin-top:
-    2px;
+  gap:
+    7px;
+}
 
-  border: 0;
-
-  background:
-    var(--orange);
-
+.field > span,
+.fieldTop > span {
   color:
-    #fff;
-
-  font:
-    inherit;
+    #424843;
 
   font-size:
     11px;
 
   font-weight:
-    950;
-
-  cursor:
-    pointer;
+    850;
 }
 
-.submit:disabled {
-  opacity:
-    .55;
+.fieldTop {
+  display: flex;
 
-  cursor:
-    not-allowed;
-}
-
-.links {
-  display:
-    flex;
+  align-items:
+    center;
 
   justify-content:
     space-between;
 
   gap:
     12px;
+}
 
-  margin-top:
-    3px;
+.fieldTop a {
+  color:
+    var(--orange);
 
   font-size:
     10px;
 
   font-weight:
+    850;
+}
+
+.fieldTop a:hover {
+  text-decoration:
+    underline;
+}
+
+.inputWrap {
+  position:
+    relative;
+
+  min-height:
+    50px;
+
+  border:
+    1px solid
+    #d9ded9;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  background:
+    #fafbfa;
+
+  transition:
+    border-color
+      160ms ease,
+    box-shadow
+      160ms ease,
+    background-color
+      160ms ease;
+}
+
+.inputWrap:focus-within {
+  border-color:
+    #8f9590;
+
+  background:
+    #fff;
+
+  box-shadow:
+    0 0 0 3px
+    rgb(
+      20 24 21 /
+      4%
+    );
+}
+
+.inputWrap > svg {
+  margin-left:
+    14px;
+
+  flex:
+    0 0 auto;
+
+  color:
+    #929893;
+}
+
+.inputWrap input {
+  min-width: 0;
+
+  width: 100%;
+
+  min-height:
+    48px;
+
+  padding:
+    0 13px;
+
+  border: 0;
+
+  outline: 0;
+
+  background:
+    transparent;
+
+  color:
+    #202421;
+
+  font:
+    inherit;
+
+  font-size:
+    14px;
+}
+
+.inputWrap input::placeholder {
+  color:
+    #a2a7a3;
+}
+
+.passwordToggle {
+  width:
+    43px;
+
+  height:
+    48px;
+
+  flex:
+    0 0 43px;
+
+  padding: 0;
+
+  border: 0;
+
+  display: grid;
+
+  place-items:
+    center;
+
+  background:
+    transparent;
+
+  color:
+    #848a85;
+
+  cursor:
+    pointer;
+}
+
+.passwordToggle:hover {
+  color:
+    var(--orange);
+}
+
+.twoFields {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap:
+    11px;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.submit {
+  min-height:
+    50px;
+
+  margin-top:
+    3px;
+
+  padding:
+    0 18px;
+
+  border:
+    1px solid
+    var(--orange);
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    8px;
+
+  background:
+    var(--orange);
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    12px;
+
+  font-weight:
+    950;
+
+  letter-spacing:
+    .015em;
+
+  cursor:
+    pointer;
+
+  box-shadow:
+    0 12px 24px
+    rgb(
+      255 90 22 /
+      14%
+    );
+
+  transition:
+    background-color
+      170ms ease,
+    transform
+      170ms ease,
+    box-shadow
+      170ms ease;
+}
+
+.submit:not(
+  :disabled
+):hover {
+  background:
+    var(--orange-dark);
+
+  transform:
+    translateY(
+      -1px
+    );
+
+  box-shadow:
+    0 16px 28px
+    rgb(
+      255 90 22 /
+      20%
+    );
+}
+
+.submit:disabled {
+  opacity:
+    .58;
+
+  cursor:
+    not-allowed;
+}
+
+.secondaryAction {
+  min-height:
+    48px;
+
+  border:
+    1px solid
+    #d9ded9;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  background:
+    #fff;
+
+  color:
+    #282d29;
+
+  font-size:
+    11px;
+
+  font-weight:
+    900;
+
+  transition:
+    border-color
+      160ms ease,
+    background-color
+      160ms ease,
+    color
+      160ms ease;
+}
+
+.secondaryAction:hover {
+  border-color:
+    #292e2a;
+
+  background:
+    #f8f9f7;
+
+  color:
+    #111412;
+}
+
+/* =========================================================
+   DIVIDER
+   ========================================================= */
+
+.divider {
+  position:
+    relative;
+
+  height:
+    24px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  color:
+    #979c98;
+
+  font-size:
+    9px;
+
+  font-weight:
     800;
 }
+
+.divider::before {
+  content: "";
+
+  position:
+    absolute;
+
+  left:
+    0;
+
+  right:
+    0;
+
+  top:
+    50%;
+
+  height:
+    1px;
+
+  background:
+    #ecefeb;
+}
+
+.divider span {
+  position:
+    relative;
+
+  padding:
+    0 10px;
+
+  background:
+    #fff;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
 
 .error,
 .success {
   margin: 0;
 
   padding:
-    9px 10px;
+    10px 12px;
+
+  border:
+    1px solid;
 
   font-size:
     10px;
@@ -452,8 +830,7 @@ input:focus {
 }
 
 .error {
-  border:
-    1px solid
+  border-color:
     #efd0cc;
 
   background:
@@ -464,8 +841,7 @@ input:focus {
 }
 
 .success {
-  border:
-    1px solid
+  border-color:
     #cce4d4;
 
   background:
@@ -475,20 +851,98 @@ input:focus {
     #25744d;
 }
 
+.terms {
+  margin:
+    -2px 0 0;
+
+  color:
+    #979d98;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.55;
+
+  text-align:
+    center;
+}
+
+.spin {
+  animation:
+    authSpin
+    .75s linear
+    infinite;
+}
+
+@keyframes authSpin {
+  to {
+    transform:
+      rotate(
+        360deg
+      );
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
 @media (
-  max-width: 720px
+  max-width: 900px
+) {
+  .shell {
+    grid-template-columns:
+      320px
+      minmax(
+        0,
+        1fr
+      );
+  }
+
+  .brandPanel {
+    padding:
+      38px 28px;
+  }
+
+  .brandTop h2 {
+    font-size:
+      3.7rem;
+  }
+
+  .formPanel {
+    padding:
+      38px 30px;
+  }
+
+  .twoFields {
+    grid-template-columns:
+      1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+  max-width: 700px
 ) {
   .page {
+    min-height: auto;
+
     padding:
-      20px 0
-      50px;
+      18px 10px
+      48px;
+
+    display:
+      block;
   }
 
   .shell {
-    width:
-      calc(
-        100% - 20px
-      );
+    width: 100%;
+
+    min-height: 0;
 
     grid-template-columns:
       1fr;
@@ -496,34 +950,125 @@ input:focus {
 
   .brandPanel {
     min-height:
-      190px;
+      230px;
 
     padding:
-      24px 20px;
+      28px 22px;
   }
 
-  .brandPanel
-  h2 {
+  .brandTop h2 {
+    margin:
+      17px 0
+      13px;
+
     font-size:
-      2.2rem;
+      3rem;
+  }
+
+  .brandTop p {
+    max-width:
+      100%;
+
+    font-size:
+      12px;
   }
 
   .benefits {
     margin-top:
-      22px;
+      28px;
 
     grid-template-columns:
       repeat(
-        2,
+        3,
         minmax(
           0,
           1fr
         )
       );
+
+    gap:
+      5px;
+  }
+
+  .benefits > div {
+    min-height:
+      54px;
+
+    padding:
+      7px;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+
+    flex-direction:
+      column;
+
+    gap:
+      5px;
+
+    text-align:
+      center;
+
+    font-size:
+      8px;
   }
 
   .formPanel {
     padding:
-      25px 18px;
+      29px 20px
+      32px;
+  }
+
+  .formPanel h1 {
+    font-size:
+      2.8rem;
+  }
+
+  .description {
+    font-size:
+      12px;
+  }
+
+  .twoFields {
+    grid-template-columns:
+      1fr;
+  }
+
+  .inputWrap input {
+    /*
+     * Prevent iOS Safari
+     * form zoom.
+     */
+    font-size:
+      16px;
+  }
+}
+
+@media (
+  max-width: 430px
+) {
+  .page {
+    padding-inline:
+      0;
+  }
+
+  .shell {
+    border-inline:
+      0;
+  }
+
+  .brandPanel {
+    min-height:
+      215px;
+  }
+
+  .benefits {
+    grid-template-columns:
+      1fr
+      1fr
+      1fr;
   }
 }
