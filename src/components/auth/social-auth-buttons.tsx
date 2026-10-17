@@ -26,10 +26,13 @@ function getSocialErrorMessage(
       return "An account already exists with this email. Sign in with your existing method.";
 
     case "account_unavailable":
-      return "This account is not available for sign-in.";
+    return "This account is not available for sign-in.";
+
+    case "session_expired":
+    return "Your social registration session has expired. Please try again.";
 
     default:
-      return null;
+    return null;
   }
 }
 

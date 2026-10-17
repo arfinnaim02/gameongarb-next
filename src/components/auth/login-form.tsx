@@ -184,28 +184,22 @@ export function LoginForm({
         styles.form
       }
     >
-      {!admin ? (
-        <SocialAuthButtons
-          mode="login"
-        />
-      ) : null}
+{loggedOut ? (
+  <div
+    className={
+      styles.success
+    }
+  >
+    You have been logged
+    out successfully.
+  </div>
+) : null}
 
-      {loggedOut ? (
-        <div
-          className={
-            styles.success
-          }
-        >
-          You have been logged
-          out successfully.
-        </div>
-      ) : null}
-
-      {!admin ? (
-        <SocialAuthButtons
-          mode="login"
-        />
-      ) : null}
+{!admin ? (
+  <SocialAuthButtons
+    mode="login"
+  />
+) : null}
 
       <label
         className={
