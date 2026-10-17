@@ -21,6 +21,11 @@ enum UserStatus {
   PENDING
 }
 
+enum OAuthProvider {
+  GOOGLE
+  FACEBOOK
+}
+
 enum ProductStatus {
   DRAFT
   ACTIVE
@@ -109,11 +114,12 @@ model User {
   name                  String
   email                 String                 @unique
   phone                 String?                @unique
-  passwordHash          String
+  passwordHash          String?
   role                  UserRole               @default(CUSTOMER)
   status                UserStatus             @default(ACTIVE)
   customer              Customer?
   sessions              Session[]
+  oauthAccounts         OAuthAccount[]
   passwordResetTokens   PasswordResetToken[]
   activityLogs          ActivityLog[]
   inventoryTransactions InventoryTransaction[]
@@ -145,6 +151,22 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([userId, expiresAt])
+}
+
+model OAuthAccount {
+  id                String        @id @default(cuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  email             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([email])
 }
 
 model Customer {

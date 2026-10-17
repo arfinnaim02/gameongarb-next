@@ -128,15 +128,47 @@ export async function POST(
           },
         );
       }
-      if (
-        input.password &&
-        (!input.currentPassword ||
-          !(await bcrypt.compare(input.currentPassword, user.passwordHash)))
-      )
-        return NextResponse.json(
-          { error: "Current password is incorrect." },
-          { status: 400 },
-        );
+if (
+  input.password
+) {
+  /*
+   * Social-only accounts do not
+   * have a local password yet.
+   */
+  if (
+    !user.passwordHash
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "This account uses social sign-in and does not have a current password.",
+      },
+      {
+        status:
+          400,
+      },
+    );
+  }
+
+  if (
+    !input.currentPassword ||
+    !(await bcrypt.compare(
+      input.currentPassword,
+      user.passwordHash,
+    ))
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "Current password is incorrect.",
+      },
+      {
+        status:
+          400,
+      },
+    );
+  }
+}
       const passwordHash = input.password
         ? await bcrypt.hash(input.password, 12)
         : undefined;

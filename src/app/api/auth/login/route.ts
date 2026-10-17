@@ -129,6 +129,21 @@ export async function POST(
       );
     }
 
+    if (
+      !user.passwordHash
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "This account uses social sign-in. Continue with Google or Facebook.",
+        },
+        {
+          status:
+            401,
+        },
+      );
+    }
+
     const validPassword =
       await bcrypt.compare(
         input.password,
