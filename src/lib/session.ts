@@ -1,18 +1,33 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
-import { db } from "@/lib/db";
 import {
+  cookies,
+} from "next/headers";
+
+import {
+  redirect,
+} from "next/navigation";
+
+import {
+  SESSION_COOKIE_NAME,
   readOrderAccessToken,
   readSessionToken,
 } from "@/lib/auth";
+
+import {
+  db,
+} from "@/lib/db";
 
 import {
   isAdminRole,
   type AdminRole,
 } from "@/lib/roles";
 
-export type { AdminRole };
+export type {
+  AdminRole,
+};
+
+/* =========================================================
+   CURRENT USER
+   ========================================================= */
 
 export async function getCurrentUser() {
   const cookieStore =
@@ -20,7 +35,7 @@ export async function getCurrentUser() {
 
   const token =
     cookieStore.get(
-      "gog_session",
+      SESSION_COOKIE_NAME,
     )?.value;
 
   if (!token) {
@@ -40,13 +55,15 @@ export async function getCurrentUser() {
     const user =
       await db.user.findUnique({
         where: {
-          id: String(
-            payload.sub,
-          ),
+          id:
+            String(
+              payload.sub,
+            ),
         },
 
         include: {
-          customer: true,
+          customer:
+            true,
         },
       });
 
@@ -64,6 +81,10 @@ export async function getCurrentUser() {
   }
 }
 
+/* =========================================================
+   CUSTOMER GUARD
+   ========================================================= */
+
 export async function requireCustomer() {
   const user =
     await getCurrentUser();
@@ -79,34 +100,26 @@ export async function requireCustomer() {
 
   return {
     user,
+
     customer:
       user.customer,
   };
 }
 
+/* =========================================================
+   ADMIN GUARD
+   ========================================================= */
+
 export async function requireAdmin() {
   const user =
     await getCurrentUser();
 
-  /*
-   * Not signed in:
-   * go to ADMIN login.
-   */
   if (!user) {
     redirect(
       "/admin/login",
     );
   }
 
-  /*
-   * Customer session:
-   * also go to ADMIN login.
-   *
-   * Important:
-   * DO NOT redirect to /account.
-   * The customer must be allowed to
-   * enter separate admin credentials.
-   */
   if (
     !isAdminRole(
       user.role,
@@ -119,18 +132,26 @@ export async function requireAdmin() {
 
   return {
     ...user,
+
     role:
-      user.role as AdminRole,
+      user.role as
+      AdminRole,
   };
 }
 
+/* =========================================================
+   API ADMIN
+   ========================================================= */
+
 export async function getApiAdmin(
-  request: Request,
+  request:
+    Request,
 ) {
   const cookie =
     request.headers.get(
       "cookie",
-    ) ?? "";
+    ) ??
+    "";
 
   const token =
     cookie.match(
@@ -156,9 +177,10 @@ export async function getApiAdmin(
     const user =
       await db.user.findUnique({
         where: {
-          id: String(
-            payload.sub,
-          ),
+          id:
+            String(
+              payload.sub,
+            ),
         },
       });
 
@@ -184,13 +206,19 @@ export async function getApiAdmin(
   }
 }
 
+/* =========================================================
+   API USER
+   ========================================================= */
+
 export async function getApiUser(
-  request: Request,
+  request:
+    Request,
 ) {
   const cookie =
     request.headers.get(
       "cookie",
-    ) ?? "";
+    ) ??
+    "";
 
   const token =
     cookie.match(
@@ -216,13 +244,15 @@ export async function getApiUser(
     const user =
       await db.user.findUnique({
         where: {
-          id: String(
-            payload.sub,
-          ),
+          id:
+            String(
+              payload.sub,
+            ),
         },
 
         include: {
-          customer: true,
+          customer:
+            true,
         },
       });
 
@@ -235,16 +265,25 @@ export async function getApiUser(
   }
 }
 
+/* =========================================================
+   ORDER ACCESS
+   ========================================================= */
+
 export async function canAccessOrder(
-  request: Request,
-  orderNumber: string,
+  request:
+    Request,
+
+  orderNumber:
+    string,
 ) {
   const user =
     await getApiUser(
       request,
     );
 
-  if (user?.customer) {
+  if (
+    user?.customer
+  ) {
     const owned =
       await db.order.count({
         where: {
@@ -264,7 +303,8 @@ export async function canAccessOrder(
   const cookie =
     request.headers.get(
       "cookie",
-    ) ?? "";
+    ) ??
+    "";
 
   const token =
     cookie.match(

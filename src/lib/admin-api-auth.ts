@@ -2,11 +2,14 @@ import {
   cookies,
 } from "next/headers";
 
-import { db } from "@/lib/db";
-
 import {
+  SESSION_COOKIE_NAME,
   readSessionToken,
 } from "@/lib/auth";
+
+import {
+  db,
+} from "@/lib/db";
 
 import {
   isAdminRole,
@@ -19,7 +22,7 @@ export async function requireAdminApi() {
 
   const token =
     cookieStore.get(
-      "gog_session",
+      SESSION_COOKIE_NAME,
     )?.value;
 
   if (!token) {
@@ -45,7 +48,8 @@ export async function requireAdminApi() {
     const user =
       await db.user.findUnique({
         where: {
-          id: userId,
+          id:
+            userId,
         },
       });
 
@@ -68,19 +72,12 @@ export async function requireAdminApi() {
       return null;
     }
 
-    /*
-     * isAdminRole guarantees CUSTOMER
-     * cannot reach this point.
-     *
-     * Returning a narrowed object also
-     * means every API route gets the
-     * correct AdminRole type automatically.
-     */
     return {
       ...user,
 
       role:
-        user.role as AdminRole,
+        user.role as
+        AdminRole,
     };
   } catch {
     return null;

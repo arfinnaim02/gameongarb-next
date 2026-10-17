@@ -13,6 +13,7 @@ import {
   Home,
   Images,
   LayoutDashboard,
+  LogOut,
   Package,
   Ruler,
   Settings,
@@ -334,6 +335,25 @@ export function AdminShell({
               </span>
             </div>
           </div>
+
+          <form
+            method="post"
+            action="/api/auth/logout?next=%2Fadmin%2Flogin%3Floggedout%3D1"
+            className="admin-sidebar-logout-form"
+          >
+            <button
+              type="submit"
+              className="admin-sidebar-logout"
+            >
+              <LogOut
+                size={16}
+              />
+
+              <span>
+                Sign Out
+              </span>
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -370,6 +390,27 @@ export function AdminShell({
 
               View Store
             </Link>
+
+                        <form
+              method="post"
+              action="/api/auth/logout?next=%2Fadmin%2Flogin%3Floggedout%3D1"
+              className="admin-header-logout-form"
+            >
+              <button
+                type="submit"
+                className="admin-header-logout-button"
+                title="Sign out"
+                aria-label="Sign out"
+              >
+                <LogOut
+                  size={15}
+                />
+
+                <span>
+                  Sign Out
+                </span>
+              </button>
+            </form>
 
             <div className="admin-header-user">
               <div className="admin-header-user-copy">

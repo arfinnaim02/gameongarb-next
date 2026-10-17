@@ -2,6 +2,39 @@ import {
   NextResponse,
 } from "next/server";
 
+import {
+  SESSION_COOKIE_NAME,
+  readSessionCookieFromRequest,
+  revokeSessionToken,
+} from "@/lib/auth";
+
+import {
+  db,
+} from "@/lib/db";
+
+import {
+  requestIp,
+} from "@/lib/security/rate-limit";
+
+function safeRedirectPath(
+  value:
+    string | null,
+) {
+  if (
+    !value ||
+    !value.startsWith(
+      "/",
+    ) ||
+    value.startsWith(
+      "//",
+    )
+  ) {
+    return "/";
+  }
+
+  return value;
+}
+
 export async function POST(
   request:
     Request,
@@ -11,21 +44,61 @@ export async function POST(
       request.url,
     );
 
-  const requestedNext =
-    requestUrl.searchParams.get(
-      "next",
+  const safeNext =
+    safeRedirectPath(
+      requestUrl.searchParams.get(
+        "next",
+      ),
     );
 
-  const safeNext =
-    requestedNext &&
-    requestedNext.startsWith(
-      "/",
-    ) &&
-    !requestedNext.startsWith(
-      "//",
-    )
-      ? requestedNext
-      : "/";
+  const token =
+    readSessionCookieFromRequest(
+      request,
+    );
+
+  let userId:
+    string | null =
+    null;
+
+  if (token) {
+    userId =
+      await revokeSessionToken(
+        token,
+      ).catch(
+        () =>
+          null,
+      );
+  }
+
+  if (userId) {
+    await db.activityLog
+      .create({
+        data: {
+          actorId:
+            userId,
+
+          action:
+            "USER_LOGOUT",
+
+          entityType:
+            "User",
+
+          entityId:
+            userId,
+
+          ip:
+            requestIp(
+              request,
+            ),
+        },
+      })
+      .catch(() => {
+        /*
+         * Never block logout because
+         * audit logging failed.
+         */
+      });
+  }
 
   const response =
     NextResponse.redirect(
@@ -37,7 +110,7 @@ export async function POST(
     );
 
   response.cookies.set(
-    "gog_session",
+    SESSION_COOKIE_NAME,
     "",
     {
       httpOnly:
@@ -60,6 +133,11 @@ export async function POST(
       maxAge:
         0,
     },
+  );
+
+  response.headers.set(
+    "cache-control",
+    "no-store",
   );
 
   return response;
