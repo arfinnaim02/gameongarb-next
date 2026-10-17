@@ -199,9 +199,10 @@ export function RegisterForm() {
         styles.form
       }
     >
-            <SocialAuthButtons
+      <SocialAuthButtons
         mode="register"
       />
+
       <label
         className={
           styles.field

@@ -5,6 +5,10 @@
 } from "lucide-react";
 
 import {
+  Suspense,
+} from "react";
+
+import {
   RegisterForm,
 } from "@/components/auth/auth-forms";
 
@@ -121,7 +125,9 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <RegisterForm />
+          <Suspense fallback={null}>
+            <RegisterForm />
+          </Suspense>
         </div>
       </section>
     </main>
