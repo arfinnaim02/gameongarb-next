@@ -24,6 +24,10 @@ import {
 
 import styles from "./customer-auth.module.css";
 
+import {
+  SocialAuthButtons,
+} from "./social-auth-buttons";
+
 /* =========================================================
    SHARED MUTATION STATE
    ========================================================= */
@@ -195,6 +199,9 @@ export function RegisterForm() {
         styles.form
       }
     >
+            <SocialAuthButtons
+        mode="register"
+      />
       <label
         className={
           styles.field

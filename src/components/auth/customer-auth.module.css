@@ -1072,3 +1072,247 @@
       1fr;
   }
 }
+
+/* =========================================================
+   SOCIAL AUTH
+   ========================================================= */
+
+.socialSection {
+  display:
+    grid;
+
+  gap:
+    13px;
+}
+
+.socialButtons {
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    10px;
+}
+
+.googleButton,
+.facebookButton {
+  min-height:
+    48px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid
+    #d9ded9;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    9px;
+
+  font-size:
+    11px;
+
+  font-weight:
+    850;
+
+  transition:
+    border-color
+      160ms ease,
+    background-color
+      160ms ease,
+    transform
+      160ms ease;
+}
+
+.googleButton {
+  background:
+    #fff;
+
+  color:
+    #252925;
+}
+
+.googleButton:hover {
+  border-color:
+    #aeb4af;
+
+  background:
+    #fafbfa;
+
+  transform:
+    translateY(-1px);
+}
+
+.facebookButton {
+  border-color:
+    #1877f2;
+
+  background:
+    #1877f2;
+
+  color:
+    #fff;
+}
+
+.facebookButton:hover {
+  background:
+    #1268d3;
+
+  border-color:
+    #1268d3;
+
+  transform:
+    translateY(-1px);
+}
+
+.googleIcon,
+.facebookIcon {
+  width:
+    22px;
+
+  height:
+    22px;
+
+  flex:
+    0 0 22px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    50%;
+
+  font-weight:
+    950;
+}
+
+.googleIcon {
+  border:
+    1px solid
+    #d9ded9;
+
+  background:
+    #fff;
+
+  color:
+    #4285f4;
+}
+
+.facebookIcon {
+  background:
+    #fff;
+
+  color:
+    #1877f2;
+
+  font-family:
+    Arial,
+    sans-serif;
+
+  font-size:
+    16px;
+}
+
+.socialDivider {
+  position:
+    relative;
+
+  min-height:
+    24px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  color:
+    #999e9a;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .08em;
+}
+
+.socialDivider::before {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  left:
+    0;
+
+  right:
+    0;
+
+  top:
+    50%;
+
+  height:
+    1px;
+
+  background:
+    #ecefeb;
+}
+
+.socialDivider span {
+  position:
+    relative;
+
+  padding:
+    0 10px;
+
+  background:
+    #fff;
+}
+
+.helperText {
+  margin:
+    -3px 0
+    0;
+
+  color:
+    #8a908b;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.6;
+}
+
+@media (
+  max-width: 520px
+) {
+  .socialButtons {
+    grid-template-columns:
+      1fr;
+  }
+}

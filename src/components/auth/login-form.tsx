@@ -22,6 +22,10 @@ import {
 
 import styles from "./customer-auth.module.css";
 
+import {
+  SocialAuthButtons,
+} from "./social-auth-buttons";
+
 export function LoginForm({
   admin =
     false,
