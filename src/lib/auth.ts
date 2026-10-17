@@ -428,3 +428,116 @@ export async function readOrderAccessToken(
 
   return payload;
 }
+
+/* =========================================================
+   SOCIAL OAUTH PENDING REGISTRATION
+   ========================================================= */
+
+export const OAUTH_PENDING_COOKIE_NAME =
+  "gog_oauth_pending";
+
+export const OAUTH_PENDING_MAX_AGE_SECONDS =
+  60 * 10;
+
+export type OAuthPendingPayload = {
+  provider:
+    | "GOOGLE"
+    | "FACEBOOK";
+
+  providerAccountId:
+    string;
+
+  email:
+    string;
+
+  name:
+    string;
+};
+
+export async function createOAuthPendingToken(
+  payload:
+    OAuthPendingPayload,
+) {
+  return new SignJWT({
+    provider:
+      payload.provider,
+
+    providerAccountId:
+      payload.providerAccountId,
+
+    email:
+      payload.email,
+
+    name:
+      payload.name,
+
+    purpose:
+      "oauth-registration",
+  })
+    .setProtectedHeader({
+      alg:
+        "HS256",
+    })
+    .setIssuedAt()
+    .setExpirationTime(
+      "10m",
+    )
+    .sign(
+      getJwtSecret(),
+    );
+}
+
+export async function readOAuthPendingToken(
+  token:
+    string,
+): Promise<OAuthPendingPayload> {
+  const {
+    payload,
+  } =
+    await jwtVerify(
+      token,
+      getJwtSecret(),
+    );
+
+  if (
+    payload.purpose !==
+    "oauth-registration"
+  ) {
+    throw new Error(
+      "Invalid OAuth registration token.",
+    );
+  }
+
+  if (
+    (
+      payload.provider !==
+        "GOOGLE" &&
+      payload.provider !==
+        "FACEBOOK"
+    ) ||
+    typeof payload.providerAccountId !==
+      "string" ||
+    typeof payload.email !==
+      "string" ||
+    typeof payload.name !==
+      "string"
+  ) {
+    throw new Error(
+      "Invalid OAuth registration payload.",
+    );
+  }
+
+  return {
+    provider:
+      payload.provider,
+
+    providerAccountId:
+      payload.providerAccountId,
+
+    email:
+      payload.email,
+
+    name:
+      payload.name,
+  };
+}
