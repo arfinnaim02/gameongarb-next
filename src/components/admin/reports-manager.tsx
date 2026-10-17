@@ -24,7 +24,7 @@ import type {
   ComponentType,
 } from "react";
 
-import styles from "@/app/admin/(panel)/reports/reports.module.css";
+import styles from "@/components/admin/reports-manager.module.css";
 
 export type ReportOrder = {
   id: string;
