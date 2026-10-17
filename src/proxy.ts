@@ -18,6 +18,7 @@ export async function proxy(
     "/account/register",
     "/account/forgot-password",
     "/account/reset-password",
+    "/account/social-complete",
     "/admin/login",
   ];
 
