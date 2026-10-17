@@ -3,17 +3,6 @@ import {
   Smartphone,
 } from "lucide-react";
 
-import {
-  cookies,
-} from "next/headers";
-
-import {
-  redirect,
-} from "next/navigation";
-
-import {
-  OAUTH_PENDING_COOKIE_NAME,
-} from "@/lib/auth";
 
 import {
   SocialCompleteForm,
@@ -25,21 +14,6 @@ export const dynamic =
   "force-dynamic";
 
 export default async function SocialCompletePage() {
-  const cookieStore =
-    await cookies();
-
-  const pending =
-    cookieStore.get(
-      OAUTH_PENDING_COOKIE_NAME,
-    )?.value;
-
-  if (
-    !pending
-  ) {
-    redirect(
-      "/account/login?social_error=session_expired",
-    );
-  }
 
   return (
     <main
