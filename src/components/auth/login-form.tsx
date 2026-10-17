@@ -184,6 +184,12 @@ export function LoginForm({
         styles.form
       }
     >
+      {!admin ? (
+        <SocialAuthButtons
+          mode="login"
+        />
+      ) : null}
+
       {loggedOut ? (
         <div
           className={
@@ -193,6 +199,12 @@ export function LoginForm({
           You have been logged
           out successfully.
         </div>
+      ) : null}
+
+      {!admin ? (
+        <SocialAuthButtons
+          mode="login"
+        />
       ) : null}
 
       <label
