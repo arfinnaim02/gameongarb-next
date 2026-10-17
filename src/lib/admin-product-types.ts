@@ -16,11 +16,7 @@ export type AdminProductImage = {
 
   alt: string;
 
-  /*
-   * Empty/undefined means generic image.
-   */
-  color?:
-    string;
+  color?: string;
 
   sortOrder:
     number;
@@ -31,29 +27,54 @@ export type AdminProductImage = {
 
 export type AdminProductVariant = {
   id: string;
+
   sku: string;
+
   size: string;
+
   color: string;
+
   colorHex: string;
-  priceOverride: number | null;
+
+  priceOverride:
+    number | null;
+
   stock: number;
-  lowStockThreshold: number;
+
+  lowStockThreshold:
+    number;
+
   active: boolean;
+};
+
+export type AdminProductCategory = {
+  id: string;
+
+  name: string;
+
+  primary: boolean;
 };
 
 export type AdminProductRecord = {
   id: string;
 
   name: string;
+
   slug: string;
 
-  shortDescription: string;
-  description: string;
+  shortDescription:
+    string;
+
+  description:
+    string;
 
   brand: string;
 
-  regularPrice: number;
-  salePrice: number | null;
+  regularPrice:
+    number;
+
+  salePrice:
+    number | null;
 
   status:
     | "DRAFT"
@@ -61,47 +82,104 @@ export type AdminProductRecord = {
     | "INACTIVE"
     | "ARCHIVED";
 
-  featured: boolean;
-  newArrival: boolean;
-  trending: boolean;
+  featured:
+    boolean;
 
-  seoTitle: string;
-  seoDescription: string;
+  newArrival:
+    boolean;
 
-  categoryId: string;
-  category: string;
+  trending:
+    boolean;
 
-  sizeChartId: string;
-  sizeChartName: string;
+  seoTitle:
+    string;
 
-  image: string;
+  seoDescription:
+    string;
 
-  images: AdminProductImage[];
-  variants: AdminProductVariant[];
+  /*
+   * Kept for compatibility with
+   * the existing editor/API.
+   */
+  categoryId:
+    string;
 
-  stock: number;
-  activeVariantCount: number;
+  category:
+    string;
 
-  lowStock: boolean;
-  outOfStock: boolean;
+  /*
+   * Full category relation data
+   * for category-first browsing.
+   */
+  categoryIds:
+    string[];
 
-  createdAt: string;
-  updatedAt: string;
+  categories:
+    AdminProductCategory[];
+
+  sizeChartId:
+    string;
+
+  sizeChartName:
+    string;
+
+  image:
+    string;
+
+  images:
+    AdminProductImage[];
+
+  variants:
+    AdminProductVariant[];
+
+  stock:
+    number;
+
+  activeVariantCount:
+    number;
+
+  lowStock:
+    boolean;
+
+  outOfStock:
+    boolean;
+
+  createdAt:
+    string;
+
+  updatedAt:
+    string;
 };
 
 export type AdminCategoryOption = {
   id: string;
+
   name: string;
-  parentId: string | null;
+
+  parentId:
+    string | null;
+
+  sortOrder:
+    number;
 };
 
 export type ProductUploadResponse = {
   image: {
     url: string;
-    publicId: string;
-    width: number;
-    height: number;
-    format: string;
-    bytes: number;
+
+    publicId:
+      string;
+
+    width:
+      number;
+
+    height:
+      number;
+
+    format:
+      string;
+
+    bytes:
+      number;
   };
 };

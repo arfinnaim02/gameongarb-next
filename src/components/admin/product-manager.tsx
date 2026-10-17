@@ -3,10 +3,11 @@
 import Image from "next/image";
 
 import {
-  Check,
-  ChevronLeft,
+  ArrowLeft,
+  Boxes,
   ChevronRight,
   Copy,
+  FolderOpen,
   ImageIcon,
   Loader2,
   Package,
@@ -14,7 +15,6 @@ import {
   Plus,
   Search,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 
@@ -25,24 +25,18 @@ import {
   useState,
 } from "react";
 
-import {
-  formatBDT,
-} from "@/lib/money";
+import { formatBDT } from "@/lib/money";
 
 import type {
   AdminCategoryOption,
   AdminProductImage,
-  AdminSizeChartOption,
   AdminProductRecord,
   AdminProductVariant,
+  AdminSizeChartOption,
   ProductUploadResponse,
 } from "@/lib/admin-product-types";
 
 import styles from "./product-manager.module.css";
-
-/* =========================================================
-   TYPES
-   ========================================================= */
 
 type ProductManagerProps = {
   initialProducts:
@@ -55,17 +49,11 @@ type ProductManagerProps = {
     AdminSizeChartOption[];
 };
 
-type EditorImage =
-  Omit<
-    AdminProductImage,
-    "id"
-  > & {
-    id:
-      string | null;
-
-    clientId:
-      string;
-  };
+type StockFilter =
+  | "ALL"
+  | "IN_STOCK"
+  | "LOW_STOCK"
+  | "OUT_OF_STOCK";
 
 type EditorVariant =
   Omit<
@@ -79,9 +67,27 @@ type EditorVariant =
       string;
   };
 
+type EditorImage =
+  Omit<
+    AdminProductImage,
+    "id"
+  > & {
+    id:
+      string | null;
+
+    clientId:
+      string;
+  };
+
 type ProductFormState = {
-  name: string;
-  slug: string;
+  name:
+    string;
+
+  slug:
+    string;
+
+  brand:
+    string;
 
   shortDescription:
     string;
@@ -89,12 +95,16 @@ type ProductFormState = {
   description:
     string;
 
-  brand: string;
-
   regularPrice:
     string;
 
   salePrice:
+    string;
+
+  categoryId:
+    string;
+
+  sizeChartId:
     string;
 
   status:
@@ -109,12 +119,6 @@ type ProductFormState = {
   trending:
     boolean;
 
-  categoryId:
-    string;
-
-      sizeChartId:
-    string;
-
   seoTitle:
     string;
 
@@ -128,72 +132,20 @@ type ProductFormState = {
     EditorVariant[];
 };
 
-type EditorTab =
-  | "basic"
-  | "images"
-  | "pricing"
-  | "variants"
-  | "inventory"
-  | "seo";
-
-type StockFilter =
-  | "ALL"
-  | "IN_STOCK"
-  | "LOW_STOCK"
-  | "OUT_OF_STOCK";
-
 type ProductApiResponse = {
   product?:
     AdminProductRecord;
+
+  message?:
+    string;
 
   mode?:
     "archived"
     | "deleted";
 
-  message?:
-    string;
-
   error?:
     string;
 };
-
-/* =========================================================
-   CONSTANTS
-   ========================================================= */
-
-const TABS: {
-  id: EditorTab;
-  label: string;
-}[] = [
-  {
-    id: "basic",
-    label: "Basic Info",
-  },
-  {
-    id: "images",
-    label: "Images",
-  },
-  {
-    id: "pricing",
-    label: "Pricing",
-  },
-  {
-    id: "variants",
-    label: "Variants",
-  },
-  {
-    id: "inventory",
-    label: "Inventory",
-  },
-  {
-    id: "seo",
-    label: "SEO",
-  },
-];
-
-/* =========================================================
-   HELPERS
-   ========================================================= */
 
 function uid() {
   if (
@@ -209,7 +161,8 @@ function uid() {
 }
 
 function slugify(
-  value: string,
+  value:
+    string,
 ) {
   return value
     .toLowerCase()
@@ -222,162 +175,6 @@ function slugify(
       /^-+|-+$/g,
       "",
     );
-}
-
-/* =========================================================
-   SKU / VARIANT HELPERS
-   ========================================================= */
-
-function skuPart(
-  value: string,
-  fallback: string,
-  maxLength: number,
-) {
-  const clean =
-    value
-      .normalize(
-        "NFKD",
-      )
-      .replace(
-        /[^a-zA-Z0-9]+/g,
-        "-",
-      )
-      .replace(
-        /^-+|-+$/g,
-        "",
-      )
-      .toUpperCase();
-
-  return (
-    clean ||
-    fallback
-  ).slice(
-    0,
-    maxLength,
-  );
-}
-
-function buildVariantSku(
-  productSlug: string,
-  color: string,
-  size: string,
-) {
-  const product =
-    skuPart(
-      productSlug,
-      "PRODUCT",
-      44,
-    );
-
-  const colorPart =
-    skuPart(
-      color,
-      "DEFAULT",
-      18,
-    );
-
-  const sizePart =
-    skuPart(
-      size,
-      "ONE",
-      14,
-    );
-
-  return `GOG-${product}-${colorPart}-${sizePart}`;
-}
-
-function parseGeneratorValues(
-  value: string,
-) {
-  return [
-    ...new Set(
-      value
-        .split(
-          /[\n,;]+/,
-        )
-        .map(
-          (
-            item,
-          ) =>
-            item.trim(),
-        )
-        .filter(
-          Boolean,
-        ),
-    ),
-  ];
-}
-
-function variantKey(
-  color: string,
-  size: string,
-) {
-  return `${color
-    .trim()
-    .toLowerCase()}::${size
-    .trim()
-    .toLowerCase()}`;
-}
-
-function guessColorHex(
-  color: string,
-) {
-  const knownColors:
-    Record<
-      string,
-      string
-    > = {
-    black:
-      "#111111",
-
-    white:
-      "#FFFFFF",
-
-    green:
-      "#198754",
-
-    yellow:
-      "#F4C430",
-
-    red:
-      "#C9342F",
-
-    blue:
-      "#2463A9",
-
-    navy:
-      "#172A46",
-
-    orange:
-      "#F15A24",
-
-    grey:
-      "#777777",
-
-    gray:
-      "#777777",
-
-    beige:
-      "#D7C3A5",
-
-    brown:
-      "#704A34",
-
-    pink:
-      "#D982A4",
-
-    purple:
-      "#7651A8",
-  };
-
-  return (
-    knownColors[
-      color
-        .trim()
-        .toLowerCase()
-    ] ??
-    "#111111"
-  );
 }
 
 function emptyVariant():
@@ -400,20 +197,29 @@ function emptyVariant():
     priceOverride:
       null,
 
-    stock: 0,
+    stock:
+      0,
 
     lowStockThreshold:
       5,
 
-    active: true,
+    active:
+      true,
   };
 }
 
-function emptyForm():
+function emptyForm(
+  categoryId =
+    "",
+):
   ProductFormState {
   return {
     name: "",
+
     slug: "",
+
+    brand:
+      "Game On Garb",
 
     shortDescription:
       "",
@@ -421,13 +227,15 @@ function emptyForm():
     description:
       "",
 
-    brand:
-      "Game On Garb",
-
     regularPrice:
       "",
 
     salePrice:
+      "",
+
+    categoryId,
+
+    sizeChartId:
       "",
 
     status:
@@ -441,12 +249,6 @@ function emptyForm():
 
     trending:
       false,
-
-    categoryId:
-      "",
-
-          sizeChartId:
-      "",
 
     seoTitle:
       "",
@@ -465,7 +267,8 @@ function emptyForm():
 function productToForm(
   product:
     AdminProductRecord,
-): ProductFormState {
+):
+  ProductFormState {
   return {
     name:
       product.name,
@@ -473,14 +276,14 @@ function productToForm(
     slug:
       product.slug,
 
+    brand:
+      product.brand,
+
     shortDescription:
       product.shortDescription,
 
     description:
       product.description,
-
-    brand:
-      product.brand,
 
     regularPrice:
       String(
@@ -495,6 +298,12 @@ function productToForm(
             product.salePrice,
           ),
 
+    categoryId:
+      product.categoryId,
+
+    sizeChartId:
+      product.sizeChartId,
+
     status:
       product.status,
 
@@ -507,12 +316,6 @@ function productToForm(
     trending:
       product.trending,
 
-    categoryId:
-      product.categoryId,
-
-          sizeChartId:
-      product.sizeChartId,
-
     seoTitle:
       product.seoTitle,
 
@@ -521,9 +324,7 @@ function productToForm(
 
     images:
       product.images.map(
-        (
-          image,
-        ) => ({
+        (image) => ({
           ...image,
 
           clientId:
@@ -535,9 +336,7 @@ function productToForm(
       product.variants.length >
       0
         ? product.variants.map(
-            (
-              variant,
-            ) => ({
+            (variant) => ({
               ...variant,
 
               clientId:
@@ -561,14 +360,14 @@ function formPayload(
     slug:
       form.slug.trim(),
 
+    brand:
+      form.brand.trim(),
+
     shortDescription:
       form.shortDescription.trim(),
 
     description:
       form.description.trim(),
-
-    brand:
-      form.brand.trim(),
 
     regularPrice:
       Number(
@@ -582,6 +381,12 @@ function formPayload(
           )
         : null,
 
+    categoryId:
+      form.categoryId,
+
+    sizeChartId:
+      form.sizeChartId,
+
     status:
       form.status,
 
@@ -593,12 +398,6 @@ function formPayload(
 
     trending:
       form.trending,
-
-    categoryId:
-      form.categoryId,
-
-          sizeChartId:
-      form.sizeChartId,
 
     seoTitle:
       form.seoTitle.trim(),
@@ -642,9 +441,7 @@ function formPayload(
 
     variants:
       form.variants.map(
-        (
-          variant,
-        ) => ({
+        (variant) => ({
           ...(variant.id
             ? {
                 id:
@@ -653,12 +450,7 @@ function formPayload(
             : {}),
 
           sku:
-            variant.sku.trim() ||
-            buildVariantSku(
-              form.slug,
-              variant.color,
-              variant.size,
-            ),
+            variant.sku.trim(),
 
           size:
             variant.size.trim(),
@@ -667,7 +459,7 @@ function formPayload(
             variant.color.trim(),
 
           colorHex:
-            variant.colorHex.trim() ||
+            variant.colorHex ||
             null,
 
           priceOverride:
@@ -690,9 +482,28 @@ function formPayload(
   };
 }
 
-/* =========================================================
-   MANAGER
-   ========================================================= */
+function formatDate(
+  value:
+    string,
+) {
+  return new Intl.DateTimeFormat(
+    "en-BD",
+    {
+      day:
+        "2-digit",
+
+      month:
+        "short",
+
+      year:
+        "numeric",
+    },
+  ).format(
+    new Date(
+      value,
+    ),
+  );
+}
 
 export function ProductManager({
   initialProducts,
@@ -703,30 +514,29 @@ export function ProductManager({
     products,
     setProducts,
   ] =
-    useState<
-      AdminProductRecord[]
-    >(
+    useState(
       initialProducts,
     );
 
   const [
-    query,
-    setQuery,
-  ] = useState("");
+    selectedCategoryId,
+    setSelectedCategoryId,
+  ] =
+    useState<
+      string | null
+    >(null);
 
   const [
-    categoryFilter,
-    setCategoryFilter,
-  ] = useState(
-    "ALL",
-  );
+    query,
+    setQuery,
+  ] =
+    useState("");
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState(
-    "ALL",
-  );
+  ] =
+    useState("ALL");
 
   const [
     stockFilter,
@@ -739,7 +549,8 @@ export function ProductManager({
   const [
     editorOpen,
     setEditorOpen,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     editingProduct,
@@ -758,44 +569,151 @@ export function ProductManager({
     );
 
   const [
-    activeTab,
-    setActiveTab,
-  ] =
-    useState<EditorTab>(
-      "basic",
-    );
-
-  const [
     saving,
     setSaving,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     uploading,
     setUploading,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     busyProductId,
     setBusyProductId,
   ] =
-    useState<string | null>(
-      null,
-    );
+    useState<
+      string | null
+    >(null);
 
   const [
     message,
     setMessage,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     error,
     setError,
-  ] = useState("");
+  ] =
+    useState("");
 
-  /* =======================================================
-     METRICS
-     ======================================================= */
+  const categoryMap =
+    useMemo(
+      () =>
+        new Map(
+          categories.map(
+            (category) => [
+              category.id,
+              category,
+            ],
+          ),
+        ),
+      [
+        categories,
+      ],
+    );
+
+  const rootCategories =
+    useMemo(
+      () =>
+        categories.filter(
+          (category) =>
+            !category.parentId,
+        ),
+      [
+        categories,
+      ],
+    );
+
+  function descendantIds(
+    categoryId:
+      string,
+  ) {
+    const result =
+      new Set<string>([
+        categoryId,
+      ]);
+
+    let changed =
+      true;
+
+    while (changed) {
+      changed =
+        false;
+
+      categories.forEach(
+        (category) => {
+          if (
+            category.parentId &&
+            result.has(
+              category.parentId,
+            ) &&
+            !result.has(
+              category.id,
+            )
+          ) {
+            result.add(
+              category.id,
+            );
+
+            changed =
+              true;
+          }
+        },
+      );
+    }
+
+    return result;
+  }
+
+  function categoryPath(
+    categoryId:
+      string,
+  ) {
+    const names:
+      string[] = [];
+
+    let currentId:
+      string | null =
+      categoryId;
+
+    const visited =
+      new Set<string>();
+
+    while (
+      currentId &&
+      !visited.has(
+        currentId,
+      )
+    ) {
+      visited.add(
+        currentId,
+      );
+
+      const category =
+        categoryMap.get(
+          currentId,
+        );
+
+      if (!category) {
+        break;
+      }
+
+      names.unshift(
+        category.name,
+      );
+
+      currentId =
+        category.parentId;
+    }
+
+    return names.join(
+      " / ",
+    );
+  }
 
   const metrics =
     useMemo(
@@ -805,26 +723,20 @@ export function ProductManager({
 
         active:
           products.filter(
-            (
-              product,
-            ) =>
+            (product) =>
               product.status ===
               "ACTIVE",
           ).length,
 
         lowStock:
           products.filter(
-            (
-              product,
-            ) =>
+            (product) =>
               product.lowStock,
           ).length,
 
         outOfStock:
           products.filter(
-            (
-              product,
-            ) =>
+            (product) =>
               product.outOfStock,
           ).length,
       }),
@@ -833,11 +745,90 @@ export function ProductManager({
       ],
     );
 
-  /* =======================================================
-     FILTERS
-     ======================================================= */
+  const categoryCards =
+    useMemo(
+      () => {
+        return rootCategories.map(
+          (category) => {
+            const ids =
+              descendantIds(
+                category.id,
+              );
 
-  const filteredProducts =
+            const categoryProducts =
+              products.filter(
+                (product) =>
+                  product.categoryIds.some(
+                    (id) =>
+                      ids.has(
+                        id,
+                      ),
+                  ),
+              );
+
+            return {
+              ...category,
+
+              products:
+                categoryProducts.length,
+
+              active:
+                categoryProducts.filter(
+                  (product) =>
+                    product.status ===
+                    "ACTIVE",
+                ).length,
+
+              stock:
+                categoryProducts.reduce(
+                  (
+                    total,
+                    product,
+                  ) =>
+                    total +
+                    product.stock,
+                  0,
+                ),
+
+              lowStock:
+                categoryProducts.filter(
+                  (product) =>
+                    product.lowStock,
+                ).length,
+            };
+          },
+        );
+      },
+      [
+        rootCategories,
+        products,
+        categories,
+      ],
+    );
+
+  const selectedCategory =
+    selectedCategoryId
+      ? categoryMap.get(
+          selectedCategoryId,
+        ) ??
+        null
+      : null;
+
+  const selectedDescendants =
+    useMemo(
+      () =>
+        selectedCategoryId
+          ? descendantIds(
+              selectedCategoryId,
+            )
+          : null,
+      [
+        selectedCategoryId,
+        categories,
+      ],
+    );
+
+  const visibleProducts =
     useMemo(
       () => {
         const term =
@@ -846,25 +837,31 @@ export function ProductManager({
             .toLowerCase();
 
         return products.filter(
-          (
-            product,
-          ) => {
+          (product) => {
+            if (
+              selectedDescendants &&
+              !product.categoryIds.some(
+                (id) =>
+                  selectedDescendants.has(
+                    id,
+                  ),
+              )
+            ) {
+              return false;
+            }
+
             if (
               term &&
               ![
-                product.id,
                 product.name,
                 product.slug,
                 product.brand,
                 product.category,
-
                 ...product.variants.flatMap(
-                  (
-                    variant,
-                  ) => [
+                  (variant) => [
                     variant.sku,
-                    variant.color,
                     variant.size,
+                    variant.color,
                   ],
                 ),
               ]
@@ -872,24 +869,13 @@ export function ProductManager({
                   Boolean,
                 )
                 .some(
-                  (
-                    value,
-                  ) =>
+                  (value) =>
                     value
                       .toLowerCase()
                       .includes(
                         term,
                       ),
                 )
-            ) {
-              return false;
-            }
-
-            if (
-              categoryFilter !==
-                "ALL" &&
-              product.categoryId !==
-                categoryFilter
             ) {
               return false;
             }
@@ -935,17 +921,29 @@ export function ProductManager({
         );
       },
       [
-        categoryFilter,
         products,
         query,
         statusFilter,
         stockFilter,
+        selectedDescendants,
       ],
     );
 
-  /* =======================================================
-     EDITOR
-     ======================================================= */
+  const subcategories =
+    useMemo(
+      () =>
+        selectedCategoryId
+          ? categories.filter(
+              (category) =>
+                category.parentId ===
+                selectedCategoryId,
+            )
+          : [],
+      [
+        categories,
+        selectedCategoryId,
+      ],
+    );
 
   function openCreate() {
     setEditingProduct(
@@ -953,11 +951,10 @@ export function ProductManager({
     );
 
     setForm(
-      emptyForm(),
-    );
-
-    setActiveTab(
-      "basic",
+      emptyForm(
+        selectedCategoryId ??
+          "",
+      ),
     );
 
     setError("");
@@ -982,10 +979,6 @@ export function ProductManager({
       ),
     );
 
-    setActiveTab(
-      "basic",
-    );
-
     setError("");
     setMessage("");
 
@@ -1007,10 +1000,6 @@ export function ProductManager({
     );
   }
 
-  /* =======================================================
-     SAVE PRODUCT
-     ======================================================= */
-
   async function submitProduct(
     event:
       FormEvent<HTMLFormElement>,
@@ -1027,10 +1016,6 @@ export function ProductManager({
         "Product name is required.",
       );
 
-      setActiveTab(
-        "basic",
-      );
-
       return;
     }
 
@@ -1041,25 +1026,26 @@ export function ProductManager({
         "Product slug is required.",
       );
 
-      setActiveTab(
-        "basic",
+      return;
+    }
+
+    if (
+      !form.categoryId
+    ) {
+      setError(
+        "Please select a category.",
       );
 
       return;
     }
 
     if (
-      !form.regularPrice ||
       Number(
         form.regularPrice,
       ) <= 0
     ) {
       setError(
         "Regular price must be greater than zero.",
-      );
-
-      setActiveTab(
-        "pricing",
       );
 
       return;
@@ -1073,14 +1059,22 @@ export function ProductManager({
         "At least one variant is required.",
       );
 
-      setActiveTab(
-        "variants",
+      return;
+    }
+
+    const missingSku =
+      form.variants.some(
+        (variant) =>
+          !variant.sku.trim(),
+      );
+
+    if (missingSku) {
+      setError(
+        "Every variant needs a SKU.",
       );
 
       return;
     }
-
-
 
     setSaving(true);
 
@@ -1090,7 +1084,6 @@ export function ProductManager({
           editingProduct
             ? `/api/admin/products/${editingProduct.id}`
             : "/api/admin/products",
-
           {
             method:
               editingProduct
@@ -1126,17 +1119,12 @@ export function ProductManager({
       }
 
       setProducts(
-        (
-          current,
-        ) => {
+        (current) => {
           const exists =
             current.some(
-              (
-                product,
-              ) =>
+              (product) =>
                 product.id ===
-                data.product!
-                  .id,
+                data.product!.id,
             );
 
           if (!exists) {
@@ -1147,12 +1135,9 @@ export function ProductManager({
           }
 
           return current.map(
-            (
-              product,
-            ) =>
+            (product) =>
               product.id ===
-              data.product!
-                .id
+              data.product!.id
                 ? data.product!
                 : product,
           );
@@ -1167,7 +1152,9 @@ export function ProductManager({
       setEditorOpen(
         false,
       );
-    } catch (saveError) {
+    } catch (
+      saveError
+    ) {
       setError(
         saveError instanceof
         Error
@@ -1178,10 +1165,6 @@ export function ProductManager({
       setSaving(false);
     }
   }
-
-  /* =======================================================
-     UPLOAD
-     ======================================================= */
 
   async function uploadImages(
     event:
@@ -1197,7 +1180,8 @@ export function ProductManager({
       "";
 
     if (
-      files.length === 0
+      files.length ===
+      0
     ) {
       return;
     }
@@ -1210,7 +1194,8 @@ export function ProductManager({
       );
 
     if (
-      remaining === 0
+      remaining ===
+      0
     ) {
       setError(
         "A product can have up to 12 images.",
@@ -1227,8 +1212,8 @@ export function ProductManager({
         EditorImage[] = [];
 
       for (
-        const file
-        of files.slice(
+        const file of
+        files.slice(
           0,
           remaining,
         )
@@ -1263,8 +1248,10 @@ export function ProductManager({
 
         if (
           !response.ok ||
-          !("image" in
-            data)
+          !(
+            "image" in
+            data
+          )
         ) {
           throw new Error(
             "error" in
@@ -1276,7 +1263,8 @@ export function ProductManager({
         }
 
         uploaded.push({
-          id: null,
+          id:
+            null,
 
           clientId:
             uid(),
@@ -1307,9 +1295,7 @@ export function ProductManager({
       }
 
       setForm(
-        (
-          current,
-        ) => ({
+        (current) => ({
           ...current,
 
           images: [
@@ -1318,21 +1304,19 @@ export function ProductManager({
           ],
         }),
       );
-    } catch (uploadError) {
+    } catch (
+      uploadError
+    ) {
       setError(
         uploadError instanceof
         Error
           ? uploadError.message
-          : "Image upload failed.",
+          : "Unable to upload image.",
       );
     } finally {
       setUploading(false);
     }
   }
-
-  /* =======================================================
-     DUPLICATE
-     ======================================================= */
 
   async function duplicateProduct(
     product:
@@ -1380,19 +1364,14 @@ export function ProductManager({
       }
 
       setProducts(
-        (
-          current,
-        ) => [
+        (current) => [
           data.product!,
           ...current,
         ],
       );
-
-      setMessage(
-        data.message ??
-          "Product duplicated.",
-      );
-    } catch (duplicateError) {
+    } catch (
+      duplicateError
+    ) {
       setError(
         duplicateError instanceof
         Error
@@ -1406,110 +1385,16 @@ export function ProductManager({
     }
   }
 
-  /* =======================================================
-     ACTIVATE / DEACTIVATE
-     ======================================================= */
-
-  async function toggleProduct(
-    product:
-      AdminProductRecord,
-  ) {
-    setBusyProductId(
-      product.id,
-    );
-
-    setError("");
-
-    try {
-      const nextStatus =
-        product.status ===
-        "ACTIVE"
-          ? "INACTIVE"
-          : "ACTIVE";
-
-      const response =
-        await fetch(
-          `/api/admin/products/${product.id}`,
-          {
-            method:
-              "PATCH",
-
-            headers: {
-              "content-type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                ...formPayload(
-                  productToForm(
-                    product,
-                  ),
-                ),
-
-                status:
-                  nextStatus,
-              }),
-          },
-        );
-
-      const data =
-        (await response.json()) as
-          ProductApiResponse;
-
-      if (
-        !response.ok ||
-        !data.product
-      ) {
-        throw new Error(
-          data.error ??
-            "Unable to update product.",
-        );
-      }
-
-      setProducts(
-        (
-          current,
-        ) =>
-          current.map(
-            (
-              item,
-            ) =>
-              item.id ===
-              data.product!
-                .id
-                ? data.product!
-                : item,
-          ),
-      );
-    } catch (toggleError) {
-      setError(
-        toggleError instanceof
-        Error
-          ? toggleError.message
-          : "Unable to update product.",
-      );
-    } finally {
-      setBusyProductId(
-        null,
-      );
-    }
-  }
-
-  /* =======================================================
-     DELETE
-     ======================================================= */
-
   async function deleteProduct(
     product:
       AdminProductRecord,
   ) {
-    const accepted =
+    const confirmed =
       window.confirm(
-        `Delete ${product.name}? Products with order or inventory history will be archived instead.`,
+        `Delete or archive "${product.name}"?`,
       );
 
-    if (!accepted) {
+    if (!confirmed) {
       return;
     }
 
@@ -1533,12 +1418,10 @@ export function ProductManager({
         (await response.json()) as
           ProductApiResponse;
 
-      if (
-        !response.ok
-      ) {
+      if (!response.ok) {
         throw new Error(
           data.error ??
-            "Unable to delete product.",
+            "Unable to remove product.",
         );
       }
 
@@ -1548,29 +1431,20 @@ export function ProductManager({
         data.product
       ) {
         setProducts(
-          (
-            current,
-          ) =>
+          (current) =>
             current.map(
-              (
-                item,
-              ) =>
+              (item) =>
                 item.id ===
-                data.product!
-                  .id
+                product.id
                   ? data.product!
                   : item,
             ),
         );
       } else {
         setProducts(
-          (
-            current,
-          ) =>
+          (current) =>
             current.filter(
-              (
-                item,
-              ) =>
+              (item) =>
                 item.id !==
                 product.id,
             ),
@@ -1581,12 +1455,14 @@ export function ProductManager({
         data.message ??
           "Product updated.",
       );
-    } catch (deleteError) {
+    } catch (
+      deleteError
+    ) {
       setError(
         deleteError instanceof
         Error
           ? deleteError.message
-          : "Unable to delete product.",
+          : "Unable to remove product.",
       );
     } finally {
       setBusyProductId(
@@ -1595,196 +1471,24 @@ export function ProductManager({
     }
   }
 
-  /* =======================================================
-     IMAGE OPERATIONS
-     ======================================================= */
-
-  function makePrimary(
-    clientId:
-      string,
-  ) {
-    setForm(
-      (
-        current,
-      ) => ({
-        ...current,
-
-        images:
-          current.images.map(
-            (
-              image,
-            ) => ({
-              ...image,
-
-              primary:
-                image.clientId ===
-                clientId,
-            }),
-          ),
-      }),
-    );
-  }
-
-  function removeImage(
-    clientId:
-      string,
-  ) {
-    setForm(
-      (
-        current,
-      ) => {
-        const removed =
-          current.images.find(
-            (
-              image,
-            ) =>
-              image.clientId ===
-              clientId,
-          );
-
-        const next =
-          current.images.filter(
-            (
-              image,
-            ) =>
-              image.clientId !==
-              clientId,
-          );
-
-        if (
-          removed?.primary &&
-          next[0]
-        ) {
-          next[0] = {
-            ...next[0],
-
-            primary:
-              true,
-          };
-        }
-
-        return {
-          ...current,
-
-          images:
-            next,
-        };
-      },
-    );
-  }
-
-  function moveImage(
-    index:
-      number,
-
-    direction:
-      -1 | 1,
-  ) {
-    setForm(
-      (
-        current,
-      ) => {
-        const target =
-          index +
-          direction;
-
-        if (
-          target < 0 ||
-          target >=
-            current.images
-              .length
-        ) {
-          return current;
-        }
-
-        const next = [
-          ...current.images,
-        ];
-
-        [
-          next[index],
-          next[target],
-        ] = [
-          next[target],
-          next[index],
-        ];
-
-        return {
-          ...current,
-
-          images:
-            next,
-        };
-      },
-    );
-  }
-
-  /* =======================================================
-     VARIANT OPERATIONS
-     ======================================================= */
-
-  function updateVariant(
-    clientId:
-      string,
-
-    patch:
-      Partial<EditorVariant>,
-  ) {
-    setForm(
-      (
-        current,
-      ) => ({
-        ...current,
-
-        variants:
-          current.variants.map(
-            (
-              variant,
-            ) =>
-              variant.clientId ===
-              clientId
-                ? {
-                    ...variant,
-                    ...patch,
-                  }
-                : variant,
-          ),
-      }),
-    );
-  }
-
-  function removeVariant(
-    clientId:
-      string,
-  ) {
-    setForm(
-      (
-        current,
-      ) => ({
-        ...current,
-
-        variants:
-          current.variants.filter(
-            (
-              variant,
-            ) =>
-              variant.clientId !==
-              clientId,
-          ),
-      }),
-    );
-  }
-
-  /* =======================================================
-     RENDER
-     ======================================================= */
-
   return (
-    <div className={styles.manager}>
-      <div className={styles.header}>
+    <div
+      className={
+        styles.page
+      }
+    >
+      <section
+        className={
+          styles.hero
+        }
+      >
         <div>
-          <span className={styles.eyebrow}>
-            Catalog
+          <span
+            className={
+              styles.eyebrow
+            }
+          >
+            Catalog Management
           </span>
 
           <h1>
@@ -1792,17 +1496,18 @@ export function ProductManager({
           </h1>
 
           <p>
-            Manage products,
-            images, pricing,
-            size and color
-            variants, stock and
-            storefront visibility.
+            Manage your catalog by
+            category. Open a category
+            to view, add and edit its
+            products.
           </p>
         </div>
 
         <button
           type="button"
-          className={styles.primaryButton}
+          className={
+            styles.primaryButton
+          }
           onClick={
             openCreate
           }
@@ -1813,39 +1518,13 @@ export function ProductManager({
 
           Add Product
         </button>
-      </div>
+      </section>
 
-      {error ? (
-        <div className={styles.errorBanner}>
-          <span>
-            {error}
-          </span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setError("")
-            }
-            aria-label="Dismiss error"
-          >
-            <X
-              size={16}
-            />
-          </button>
-        </div>
-      ) : null}
-
-      {message ? (
-        <div className={styles.successBanner}>
-          <Check
-            size={16}
-          />
-
-          {message}
-        </div>
-      ) : null}
-
-      <div className={styles.metrics}>
+      <section
+        className={
+          styles.metrics
+        }
+      >
         <Metric
           label="Total Products"
           value={
@@ -1854,11 +1533,10 @@ export function ProductManager({
         />
 
         <Metric
-          label="Active Products"
+          label="Active"
           value={
             metrics.active
           }
-          tone="green"
         />
 
         <Metric
@@ -1866,7 +1544,6 @@ export function ProductManager({
           value={
             metrics.lowStock
           }
-          tone="orange"
         />
 
         <Metric
@@ -1874,603 +1551,1508 @@ export function ProductManager({
           value={
             metrics.outOfStock
           }
-          tone="red"
         />
-      </div>
+      </section>
 
-      <div className={styles.panel}>
-        <div className={styles.filters}>
-          <label className={styles.search}>
-            <Search
-              size={15}
-            />
+      {message ? (
+        <div
+          className={
+            styles.message
+          }
+        >
+          {message}
+        </div>
+      ) : null}
 
-            <input
+      {error ? (
+        <div
+          className={
+            styles.error
+          }
+        >
+          {error}
+        </div>
+      ) : null}
+
+      {!selectedCategory ? (
+        <section
+          className={
+            styles.categorySection
+          }
+        >
+          <div
+            className={
+              styles.sectionHeader
+            }
+          >
+            <div>
+              <span>
+                Catalog Structure
+              </span>
+
+              <h2>
+                Categories
+              </h2>
+
+              <p>
+                Select a category to
+                manage the products
+                assigned to it.
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={
+              styles.categoryGrid
+            }
+          >
+            {categoryCards.map(
+              (category) => (
+                <button
+                  key={
+                    category.id
+                  }
+                  type="button"
+                  className={
+                    styles.categoryCard
+                  }
+                  onClick={() =>
+                    setSelectedCategoryId(
+                      category.id,
+                    )
+                  }
+                >
+                  <div
+                    className={
+                      styles.categoryIcon
+                    }
+                  >
+                    <FolderOpen
+                      size={
+                        21
+                      }
+                    />
+                  </div>
+
+                  <div
+                    className={
+                      styles.categoryInfo
+                    }
+                  >
+                    <strong>
+                      {
+                        category.name
+                      }
+                    </strong>
+
+                    <span>
+                      {
+                        category.products
+                      }{" "}
+                      products
+                    </span>
+                  </div>
+
+                  <div
+                    className={
+                      styles.categoryStats
+                    }
+                  >
+                    <div>
+                      <span>
+                        Units
+                      </span>
+
+                      <strong>
+                        {
+                          category.stock
+                        }
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Active
+                      </span>
+
+                      <strong>
+                        {
+                          category.active
+                        }
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Low
+                      </span>
+
+                      <strong>
+                        {
+                          category.lowStock
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <ChevronRight
+                    size={
+                      18
+                    }
+                  />
+                </button>
+              ),
+            )}
+          </div>
+        </section>
+      ) : (
+        <>
+          <section
+            className={
+              styles.categoryToolbar
+            }
+          >
+            <button
+              type="button"
+              className={
+                styles.backButton
+              }
+              onClick={() => {
+                setSelectedCategoryId(
+                  null,
+                );
+
+                setQuery("");
+              }}
+            >
+              <ArrowLeft
+                size={
+                  15
+                }
+              />
+
+              Categories
+            </button>
+
+            <div
+              className={
+                styles.categoryTitle
+              }
+            >
+              <span>
+                {
+                  categoryPath(
+                    selectedCategory.id,
+                  )
+                }
+              </span>
+
+              <h2>
+                {
+                  selectedCategory.name
+                }
+              </h2>
+
+              <p>
+                {
+                  visibleProducts.length
+                }{" "}
+                products currently
+                shown
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className={
+                styles.primaryButton
+              }
+              onClick={
+                openCreate
+              }
+            >
+              <Plus
+                size={15}
+              />
+
+              Add Product
+            </button>
+          </section>
+
+          {subcategories.length >
+          0 ? (
+            <section
+              className={
+                styles.subcategoryBar
+              }
+            >
+              {subcategories.map(
+                (
+                  category,
+                ) => (
+                  <button
+                    key={
+                      category.id
+                    }
+                    type="button"
+                    onClick={() =>
+                      setSelectedCategoryId(
+                        category.id,
+                      )
+                    }
+                  >
+                    {
+                      category.name
+                    }
+
+                    <ChevronRight
+                      size={
+                        13
+                      }
+                    />
+                  </button>
+                ),
+              )}
+            </section>
+          ) : null}
+
+          <section
+            className={
+              styles.filters
+            }
+          >
+            <div
+              className={
+                styles.searchBox
+              }
+            >
+              <Search
+                size={
+                  15
+                }
+              />
+
+              <input
+                value={
+                  query
+                }
+                onChange={(
+                  event,
+                ) =>
+                  setQuery(
+                    event
+                      .target
+                      .value,
+                  )
+                }
+                placeholder="Search product, SKU, color or size"
+              />
+            </div>
+
+            <select
               value={
-                query
+                statusFilter
               }
               onChange={(
                 event,
               ) =>
-                setQuery(
-                  event.target
+                setStatusFilter(
+                  event
+                    .target
                     .value,
                 )
               }
-              aria-label="Search products"
-              placeholder="Search name, SKU, colour, size, category or ID..."
-            />
-          </label>
+            >
+              <option value="ALL">
+                All Status
+              </option>
 
-          <select
-            value={
-              categoryFilter
-            }
-            onChange={(
-              event,
-            ) =>
-              setCategoryFilter(
-                event.target
-                  .value,
-              )
+              <option value="ACTIVE">
+                Active
+              </option>
+
+              <option value="DRAFT">
+                Draft
+              </option>
+
+              <option value="INACTIVE">
+                Inactive
+              </option>
+
+              <option value="ARCHIVED">
+                Archived
+              </option>
+            </select>
+
+            <select
+              value={
+                stockFilter
+              }
+              onChange={(
+                event,
+              ) =>
+                setStockFilter(
+                  event
+                    .target
+                    .value as
+                    StockFilter,
+                )
+              }
+            >
+              <option value="ALL">
+                All Stock
+              </option>
+
+              <option value="IN_STOCK">
+                In Stock
+              </option>
+
+              <option value="LOW_STOCK">
+                Low Stock
+              </option>
+
+              <option value="OUT_OF_STOCK">
+                Out of Stock
+              </option>
+            </select>
+          </section>
+
+          <section
+            className={
+              styles.productPanel
             }
           >
-            <option value="ALL">
-              All Categories
-            </option>
+            <div
+              className={
+                styles.productPanelHeader
+              }
+            >
+              <div>
+                <span>
+                  Product Catalog
+                </span>
 
-            {categories.map(
-              (
-                category,
-              ) => (
-                <option
-                  key={
-                    category.id
+                <strong>
+                  {
+                    selectedCategory.name
                   }
-                  value={
-                    category.id
+                </strong>
+              </div>
+
+              <span>
+                {
+                  visibleProducts.length
+                }{" "}
+                results
+              </span>
+            </div>
+
+            {visibleProducts.length >
+            0 ? (
+              <div
+                className={
+                  styles.tableWrap
+                }
+              >
+                <table
+                  className={
+                    styles.productTable
                   }
                 >
-                  {
-                    category.name
-                  }
-                </option>
-              ),
-            )}
-          </select>
+                  <thead>
+                    <tr>
+                      <th>
+                        Product
+                      </th>
 
-          <select
-            value={
-              statusFilter
-            }
-            onChange={(
-              event,
-            ) =>
-              setStatusFilter(
-                event.target
-                  .value,
-              )
-            }
-          >
-            <option value="ALL">
-              All Status
-            </option>
+                      <th>
+                        Category
+                      </th>
 
-            <option value="ACTIVE">
-              Active
-            </option>
+                      <th>
+                        Price
+                      </th>
 
-            <option value="DRAFT">
-              Draft
-            </option>
+                      <th>
+                        Variants
+                      </th>
 
-            <option value="INACTIVE">
-              Inactive
-            </option>
+                      <th>
+                        Stock
+                      </th>
 
-            <option value="ARCHIVED">
-              Archived
-            </option>
-          </select>
+                      <th>
+                        Status
+                      </th>
 
-          <select
-            value={
-              stockFilter
-            }
-            onChange={(
-              event,
-            ) =>
-              setStockFilter(
-                event.target
-                  .value as
-                  StockFilter,
-              )
-            }
-          >
-            <option value="ALL">
-              All Stock
-            </option>
+                      <th>
+                        Updated
+                      </th>
 
-            <option value="IN_STOCK">
-              In Stock
-            </option>
-
-            <option value="LOW_STOCK">
-              Low Stock
-            </option>
-
-            <option value="OUT_OF_STOCK">
-              Out of Stock
-            </option>
-          </select>
-        </div>
-
-        <div className={styles.filterSummary}>
-          <span>
-            Showing{" "}
-            <strong>
-              {
-                filteredProducts.length
-              }
-            </strong>{" "}
-            of{" "}
-            <strong>
-              {
-                products.length
-              }
-            </strong>{" "}
-            products
-          </span>
-
-          {query ||
-          categoryFilter !==
-            "ALL" ||
-          statusFilter !==
-            "ALL" ||
-          stockFilter !==
-            "ALL" ? (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery(
-                  "",
-                );
-
-                setCategoryFilter(
-                  "ALL",
-                );
-
-                setStatusFilter(
-                  "ALL",
-                );
-
-                setStockFilter(
-                  "ALL",
-                );
-              }}
-            >
-              Clear Filters
-            </button>
-          ) : null}
-        </div>
-
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>
-                  Image
-                </th>
-
-                <th>
-                  Product
-                </th>
-
-                <th>
-                  Category
-                </th>
-
-                <th>
-                  SKU
-                </th>
-
-                <th>
-                  Price
-                </th>
-
-                <th>
-                  Stock
-                </th>
-
-                <th>
-                  Status
-                </th>
-
-                <th>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredProducts.map(
-                (
-                  product,
-                ) => {
-                  const firstVariant =
-                    product.variants.find(
-                      (
-                        variant,
-                      ) =>
-                        variant.active,
-                    ) ??
-                    product.variants[0];
-
-                  const busy =
-                    busyProductId ===
-                    product.id;
-
-                  return (
-                    <tr
-                      key={
-                        product.id
-                      }
-                    >
-                      <td>
-                        <div className={styles.productThumb}>
-                          <Image
-                            src={
-                              product.image
-                            }
-                            alt=""
-                            fill
-                            sizes="54px"
-                          />
-                        </div>
-                      </td>
-
-                      <td>
-                        <strong className={styles.productName}>
-                          {
-                            product.name
-                          }
-                        </strong>
-
-                        <span className={styles.productMeta}>
-                          {
-                            product.activeVariantCount
-                          }{" "}
-                          active variant
-                          {
-                            product.activeVariantCount ===
-                            1
-                              ? ""
-                              : "s"
-                          }
-                        </span>
-                      </td>
-
-                      <td>
-                        {
-                          product.category
-                        }
-                      </td>
-
-                      <td className={styles.mono}>
-                        {
-                          firstVariant?.sku ??
-                          "—"
-                        }
-
-                        {product.variants.length >
-                        1 ? (
-                          <small>
-                            +
-                            {
-                              product.variants.length -
-                              1
-                            }{" "}
-                            more
-                          </small>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <strong className={styles.price}>
-                          {formatBDT(
-                            product.salePrice ??
-                              product.regularPrice,
-                          )}
-                        </strong>
-
-                        {product.salePrice ? (
-                          <s>
-                            {formatBDT(
-                              product.regularPrice,
-                            )}
-                          </s>
-                        ) : null}
-                      </td>
-
-                      <td>
-                        <StockBadge
-                          product={
-                            product
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        <StatusBadge
-                          status={
-                            product.status
-                          }
-                        />
-                      </td>
-
-                      <td>
-                        <div className={styles.actions}>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openEdit(
-                                product,
-                              )
-                            }
-                            aria-label="Edit product"
-                            title="Edit product"
-                          >
-                            <Pencil
-                              size={14}
-                            />
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={
-                              busy
-                            }
-                            onClick={() =>
-                              duplicateProduct(
-                                product,
-                              )
-                            }
-                            aria-label="Duplicate product"
-                            title="Duplicate / copy product"
-                          >
-                            <Copy
-                              size={14}
-                            />
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={
-                              busy
-                            }
-                            onClick={() =>
-                              toggleProduct(
-                                product,
-                              )
-                            }
-                            aria-label={
-                              product.status ===
-                              "ACTIVE"
-                                ? "Deactivate product"
-                                : "Activate product"
-                            }
-                            title={
-                              product.status ===
-                              "ACTIVE"
-                                ? "Deactivate product"
-                                : "Activate product"
-                            }
-                          >
-                            {busy ? (
-                              <Loader2
-                                size={14}
-                                className={styles.spin}
-                              />
-                            ) : (
-                              <Package
-                                size={14}
-                              />
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={
-                              busy
-                            }
-                            className={styles.dangerAction}
-                            onClick={() =>
-                              deleteProduct(
-                                product,
-                              )
-                            }
-                            aria-label="Delete product"
-                            title="Delete / archive product"
-                          >
-                            <Trash2
-                              size={14}
-                            />
-                          </button>
-                        </div>
-                      </td>
+                      <th>
+                        Actions
+                      </th>
                     </tr>
-                  );
-                },
-              )}
-            </tbody>
-          </table>
+                  </thead>
 
-          {filteredProducts.length ===
-          0 ? (
-            <div className={styles.emptyState}>
-              No products match
-              the current filters.
-            </div>
-          ) : null}
-        </div>
-      </div>
+                  <tbody>
+                    {visibleProducts.map(
+                      (
+                        product,
+                      ) => (
+                        <tr
+                          key={
+                            product.id
+                          }
+                        >
+                          <td>
+                            <div
+                              className={
+                                styles.productCell
+                              }
+                            >
+                              <div
+                                className={
+                                  styles.productImage
+                                }
+                              >
+                                <Image
+                                  src={
+                                    product.image
+                                  }
+                                  alt={
+                                    product.name
+                                  }
+                                  fill
+                                  sizes="56px"
+                                />
+                              </div>
 
-      {editorOpen ? (
-        <div
-          className={styles.overlay}
-          onMouseDown={(
-            event,
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              closeEditor();
-            }
-          }}
-        >
-          <aside className={styles.editor}>
-            <form
-              className={styles.editorForm}
-              onSubmit={
-                submitProduct
-              }
-            >
-              <div className={styles.editorHeader}>
-                <div>
-                  <span>
-                    {
-                      editingProduct
-                        ? "Edit Product"
-                        : "New Product"
-                    }
-                  </span>
+                              <div>
+                                <strong>
+                                  {
+                                    product.name
+                                  }
+                                </strong>
 
-                  <h2>
-                    {
-                      editingProduct?.name ??
-                      "Add New Product"
-                    }
-                  </h2>
-                </div>
+                                <span>
+                                  {
+                                    product.slug
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span
+                              className={
+                                styles.categoryBadge
+                              }
+                            >
+                              {
+                                product.category
+                              }
+                            </span>
+                          </td>
+
+                          <td>
+                            <div
+                              className={
+                                styles.priceCell
+                              }
+                            >
+                              <strong>
+                                {formatBDT(
+                                  product.salePrice ??
+                                    product.regularPrice,
+                                )}
+                              </strong>
+
+                              {product.salePrice ? (
+                                <span>
+                                  {formatBDT(
+                                    product.regularPrice,
+                                  )}
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+
+                          <td>
+                            {
+                              product.activeVariantCount
+                            }
+                          </td>
+
+                          <td>
+                            <StockBadge
+                              product={
+                                product
+                              }
+                            />
+                          </td>
+
+                          <td>
+                            <span
+                              className={`${styles.statusBadge} ${styles[
+                                `status${product.status}`
+                              ]}`}
+                            >
+                              {
+                                product.status
+                              }
+                            </span>
+                          </td>
+
+                          <td>
+                            {
+                              formatDate(
+                                product.updatedAt,
+                              )
+                            }
+                          </td>
+
+                          <td>
+                            <div
+                              className={
+                                styles.rowActions
+                              }
+                            >
+                              <button
+                                type="button"
+                                title="Edit product"
+                                onClick={() =>
+                                  openEdit(
+                                    product,
+                                  )
+                                }
+                              >
+                                <Pencil
+                                  size={
+                                    14
+                                  }
+                                />
+                              </button>
+
+                              <button
+                                type="button"
+                                title="Duplicate product"
+                                disabled={
+                                  busyProductId ===
+                                  product.id
+                                }
+                                onClick={() =>
+                                  duplicateProduct(
+                                    product,
+                                  )
+                                }
+                              >
+                                <Copy
+                                  size={
+                                    14
+                                  }
+                                />
+                              </button>
+
+                              <button
+                                type="button"
+                                title="Delete or archive"
+                                className={
+                                  styles.dangerAction
+                                }
+                                disabled={
+                                  busyProductId ===
+                                  product.id
+                                }
+                                onClick={() =>
+                                  deleteProduct(
+                                    product,
+                                  )
+                                }
+                              >
+                                {busyProductId ===
+                                product.id ? (
+                                  <Loader2
+                                    size={
+                                      14
+                                    }
+                                    className={
+                                      styles.spin
+                                    }
+                                  />
+                                ) : (
+                                  <Trash2
+                                    size={
+                                      14
+                                    }
+                                  />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div
+                className={
+                  styles.empty
+                }
+              >
+                <Boxes
+                  size={
+                    28
+                  }
+                />
+
+                <strong>
+                  No products found
+                </strong>
+
+                <span>
+                  Add a product to this
+                  category or adjust the
+                  current filters.
+                </span>
 
                 <button
                   type="button"
-                  onClick={
-                    closeEditor
+                  className={
+                    styles.primaryButton
                   }
-                  aria-label="Close product editor"
+                  onClick={
+                    openCreate
+                  }
                 >
-                  <X
-                    size={19}
+                  <Plus
+                    size={
+                      14
+                    }
                   />
+
+                  Add Product
                 </button>
               </div>
+            )}
+          </section>
+        </>
+      )}
 
-              <div className={styles.tabs}>
-                {TABS.map(
-                  (
-                    tab,
-                  ) => (
-                    <button
-                      key={
-                        tab.id
+      {editorOpen ? (
+        <div
+          className={
+            styles.editorOverlay
+          }
+          role="presentation"
+        >
+          <form
+            className={
+              styles.editor
+            }
+            onSubmit={
+              submitProduct
+            }
+          >
+            <header
+              className={
+                styles.editorHeader
+              }
+            >
+              <div>
+                <span>
+                  {
+                    editingProduct
+                      ? "Edit Product"
+                      : "New Product"
+                  }
+                </span>
+
+                <h2>
+                  {
+                    editingProduct
+                      ?.name ??
+                    "Create Product"
+                  }
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  closeEditor
+                }
+              >
+                <X
+                  size={
+                    18
+                  }
+                />
+              </button>
+            </header>
+
+            <div
+              className={
+                styles.editorBody
+              }
+            >
+              {error ? (
+                <div
+                  className={
+                    styles.error
+                  }
+                >
+                  {error}
+                </div>
+              ) : null}
+
+              <section
+                className={
+                  styles.formSection
+                }
+              >
+                <div
+                  className={
+                    styles.sectionTitle
+                  }
+                >
+                  Basic Information
+                </div>
+
+                <div
+                  className={
+                    styles.twoColumns
+                  }
+                >
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Product Name
+                    </span>
+
+                    <input
+                      value={
+                        form.name
                       }
-                      type="button"
-                      className={
-                        activeTab ===
-                        tab.id
-                          ? styles.activeTab
-                          : ""
+                      onChange={(
+                        event,
+                      ) => {
+                        const name =
+                          event
+                            .target
+                            .value;
+
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            name,
+
+                            slug:
+                              editingProduct
+                                ? current.slug
+                                : slugify(
+                                    name,
+                                  ),
+                          }),
+                        );
+                      }}
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Slug
+                    </span>
+
+                    <input
+                      value={
+                        form.slug
                       }
-                      onClick={() =>
-                        setActiveTab(
-                          tab.id,
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            slug:
+                              slugify(
+                                event
+                                  .target
+                                  .value,
+                              ),
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Category
+                    </span>
+
+                    <select
+                      value={
+                        form.categoryId
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            categoryId:
+                              event
+                                .target
+                                .value,
+                          }),
                         )
                       }
                     >
-                      {
-                        tab.label
+                      <option value="">
+                        Select Category
+                      </option>
+
+                      {categories.map(
+                        (
+                          category,
+                        ) => (
+                          <option
+                            key={
+                              category.id
+                            }
+                            value={
+                              category.id
+                            }
+                          >
+                            {
+                              categoryPath(
+                                category.id,
+                              )
+                            }
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Brand
+                    </span>
+
+                    <input
+                      value={
+                        form.brand
                       }
-                    </button>
-                  ),
-                )}
-              </div>
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
 
-              <div className={styles.editorBody}>
-                {activeTab ===
-                "basic" ? (
-                  <BasicTab
-                    form={
-                      form
+                            brand:
+                              event
+                                .target
+                                .value,
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
                     }
-                    categories={
-                      categories
+                  >
+                    <span>
+                      Regular Price
+                    </span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        form.regularPrice
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            regularPrice:
+                              event
+                                .target
+                                .value,
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
                     }
-                    sizeCharts={
-                      sizeCharts
+                  >
+                    <span>
+                      Sale Price
+                    </span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        form.salePrice
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            salePrice:
+                              event
+                                .target
+                                .value,
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
                     }
-                    setForm={
-                      setForm
+                  >
+                    <span>
+                      Status
+                    </span>
+
+                    <select
+                      value={
+                        form.status
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            status:
+                              event
+                                .target
+                                .value as
+                                AdminProductRecord["status"],
+                          }),
+                        )
+                      }
+                    >
+                      <option value="DRAFT">
+                        Draft
+                      </option>
+
+                      <option value="ACTIVE">
+                        Active
+                      </option>
+
+                      <option value="INACTIVE">
+                        Inactive
+                      </option>
+
+                      <option value="ARCHIVED">
+                        Archived
+                      </option>
+                    </select>
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Size Chart
+                    </span>
+
+                    <select
+                      value={
+                        form.sizeChartId
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            sizeChartId:
+                              event
+                                .target
+                                .value,
+                          }),
+                        )
+                      }
+                    >
+                      <option value="">
+                        No Size Chart
+                      </option>
+
+                      {sizeCharts.map(
+                        (
+                          chart,
+                        ) => (
+                          <option
+                            key={
+                              chart.id
+                            }
+                            value={
+                              chart.id
+                            }
+                          >
+                            {
+                              chart.name
+                            }
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                </div>
+
+                <label
+                  className={
+                    styles.field
+                  }
+                >
+                  <span>
+                    Short Description
+                  </span>
+
+                  <textarea
+                    rows={
+                      3
+                    }
+                    value={
+                      form.shortDescription
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setForm(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
+
+                          shortDescription:
+                            event
+                              .target
+                              .value,
+                        }),
+                      )
                     }
                   />
-                ) : null}
+                </label>
 
-                {activeTab ===
-                "images" ? (
-                  <ImagesTab
-                    form={
-                      form
+                <label
+                  className={
+                    styles.field
+                  }
+                >
+                  <span>
+                    Description
+                  </span>
+
+                  <textarea
+                    rows={
+                      6
                     }
-                    uploading={
-                      uploading
+                    value={
+                      form.description
                     }
-                    uploadImages={
-                      uploadImages
-                    }
-                    makePrimary={
-                      makePrimary
-                    }
-                    removeImage={
-                      removeImage
-                    }
-                    moveImage={
-                      moveImage
-                    }
-                    setForm={
-                      setForm
+                    onChange={(
+                      event,
+                    ) =>
+                      setForm(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
+
+                          description:
+                            event
+                              .target
+                              .value,
+                        }),
+                      )
                     }
                   />
-                ) : null}
+                </label>
 
-                {activeTab ===
-                "pricing" ? (
-                  <PricingTab
-                    form={
-                      form
-                    }
-                    setForm={
-                      setForm
-                    }
-                  />
-                ) : null}
+                <div
+                  className={
+                    styles.checkGrid
+                  }
+                >
+                  {[
+                    [
+                      "Featured",
+                      "featured",
+                    ],
+                    [
+                      "New Arrival",
+                      "newArrival",
+                    ],
+                    [
+                      "Trending",
+                      "trending",
+                    ],
+                  ].map(
+                    ([
+                      label,
+                      key,
+                    ]) => (
+                      <label
+                        key={
+                          key
+                        }
+                        className={
+                          styles.checkbox
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            Boolean(
+                              form[
+                                key as
+                                  | "featured"
+                                  | "newArrival"
+                                  | "trending"
+                              ],
+                            )
+                          }
+                          onChange={(
+                            event,
+                          ) =>
+                            setForm(
+                              (
+                                current,
+                              ) => ({
+                                ...current,
 
-                {activeTab ===
-                "variants" ? (
-                  <VariantsTab
-                    variants={
-                      form.variants
-                    }
+                                [key]:
+                                  event
+                                    .target
+                                    .checked,
+                              }),
+                            )
+                          }
+                        />
 
-                    updateVariant={
-                      updateVariant
-                    }
+                        {
+                          label
+                        }
+                      </label>
+                    ),
+                  )}
+                </div>
+              </section>
 
-                    removeVariant={
-                      removeVariant
+              <section
+                className={
+                  styles.formSection
+                }
+              >
+                <div
+                  className={
+                    styles.sectionHeadingRow
+                  }
+                >
+                  <div
+                    className={
+                      styles.sectionTitle
                     }
+                  >
+                    Product Images
+                  </div>
 
-                    addVariant={() =>
+                  <label
+                    className={
+                      styles.uploadButton
+                    }
+                  >
+                    {uploading ? (
+                      <Loader2
+                        size={
+                          14
+                        }
+                        className={
+                          styles.spin
+                        }
+                      />
+                    ) : (
+                      <ImageIcon
+                        size={
+                          14
+                        }
+                      />
+                    )}
+
+                    Upload Images
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={
+                        uploading
+                      }
+                      onChange={
+                        uploadImages
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div
+                  className={
+                    styles.imageGrid
+                  }
+                >
+                  {form.images.map(
+                    (
+                      image,
+                      index,
+                    ) => (
+                      <article
+                        key={
+                          image.clientId
+                        }
+                        className={
+                          styles.imageCard
+                        }
+                      >
+                        <div
+                          className={
+                            styles.imagePreview
+                          }
+                        >
+                          <Image
+                            src={
+                              image.url
+                            }
+                            alt={
+                              image.alt ||
+                              form.name
+                            }
+                            fill
+                            sizes="160px"
+                          />
+                        </div>
+
+                        <input
+                          value={
+                            image.alt
+                          }
+                          placeholder="Alt text"
+                          onChange={(
+                            event,
+                          ) =>
+                            setForm(
+                              (
+                                current,
+                              ) => ({
+                                ...current,
+
+                                images:
+                                  current.images.map(
+                                    (
+                                      item,
+                                      itemIndex,
+                                    ) =>
+                                      itemIndex ===
+                                      index
+                                        ? {
+                                            ...item,
+
+                                            alt:
+                                              event
+                                                .target
+                                                .value,
+                                          }
+                                        : item,
+                                  ),
+                              }),
+                            )
+                          }
+                        />
+
+                        <div
+                          className={
+                            styles.imageActions
+                          }
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm(
+                                (
+                                  current,
+                                ) => ({
+                                  ...current,
+
+                                  images:
+                                    current.images.map(
+                                      (
+                                        item,
+                                        itemIndex,
+                                      ) => ({
+                                        ...item,
+
+                                        primary:
+                                          itemIndex ===
+                                          index,
+                                      }),
+                                    ),
+                                }),
+                              )
+                            }
+                          >
+                            {
+                              image.primary
+                                ? "Primary"
+                                : "Make Primary"
+                            }
+                          </button>
+
+                          <button
+                            type="button"
+                            className={
+                              styles.dangerText
+                            }
+                            onClick={() =>
+                              setForm(
+                                (
+                                  current,
+                                ) => {
+                                  const next =
+                                    current.images.filter(
+                                      (
+                                        _,
+                                        itemIndex,
+                                      ) =>
+                                        itemIndex !==
+                                        index,
+                                    );
+
+                                  if (
+                                    next.length >
+                                      0 &&
+                                    !next.some(
+                                      (
+                                        item,
+                                      ) =>
+                                        item.primary,
+                                    )
+                                  ) {
+                                    next[0] = {
+                                      ...next[0],
+
+                                      primary:
+                                        true,
+                                    };
+                                  }
+
+                                  return {
+                                    ...current,
+
+                                    images:
+                                      next,
+                                  };
+                                },
+                              )
+                            }
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </article>
+                    ),
+                  )}
+                </div>
+              </section>
+
+              <section
+                className={
+                  styles.formSection
+                }
+              >
+                <div
+                  className={
+                    styles.sectionHeadingRow
+                  }
+                >
+                  <div
+                    className={
+                      styles.sectionTitle
+                    }
+                  >
+                    Variants
+                  </div>
+
+                  <button
+                    type="button"
+                    className={
+                      styles.secondaryButton
+                    }
+                    onClick={() =>
                       setForm(
                         (
                           current,
@@ -2484,1982 +3066,509 @@ export function ProductManager({
                         }),
                       )
                     }
+                  >
+                    <Plus
+                      size={
+                        14
+                      }
+                    />
 
-                    setForm={
-                      setForm
-                    }
-                  />
-                ) : null}
+                    Add Variant
+                  </button>
+                </div>
 
-                {activeTab ===
-                "inventory" ? (
-                  <InventoryTab
-                    variants={
-                      form.variants
-                    }
-                    updateVariant={
-                      updateVariant
-                    }
-                  />
-                ) : null}
-
-                {activeTab ===
-                "seo" ? (
-                  <SeoTab
-                    form={
-                      form
-                    }
-                    setForm={
-                      setForm
-                    }
-                  />
-                ) : null}
-              </div>
-
-              <div className={styles.editorFooter}>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  onClick={
-                    closeEditor
+                <div
+                  className={
+                    styles.variantTableWrap
                   }
                 >
-                  Cancel
-                </button>
+                  <table
+                    className={
+                      styles.variantTable
+                    }
+                  >
+                    <thead>
+                      <tr>
+                        <th>
+                          SKU
+                        </th>
 
-                <button
-                  type="submit"
-                  className={styles.primaryButton}
-                  disabled={
-                    saving ||
-                    uploading
-                  }
-                >
-                  {saving ? (
-                    <Loader2
-                      size={15}
-                      className={styles.spin}
-                    />
-                  ) : (
-                    <Check
-                      size={15}
-                    />
-                  )}
+                        <th>
+                          Color
+                        </th>
 
-                  {saving
-                    ? "Saving..."
-                    : editingProduct
-                      ? "Save Changes"
-                      : "Create Product"}
-                </button>
-              </div>
-            </form>
-          </aside>
-        </div>
-      ) : null}
-    </div>
-  );
-}
+                        <th>
+                          Size
+                        </th>
 
-/* =========================================================
-   BASIC TAB
-   ========================================================= */
+                        <th>
+                          Stock
+                        </th>
 
-function BasicTab({
-  form,
-  categories,
-  sizeCharts,
-  setForm,
-}: {
-  form:
-    ProductFormState;
+                        <th>
+                          Low Stock
+                        </th>
 
-  categories:
-    AdminCategoryOption[];
+                        <th>
+                          Active
+                        </th>
 
-  sizeCharts:
-    AdminSizeChartOption[];
+                        <th />
+                      </tr>
+                    </thead>
 
-  setForm:
-    React.Dispatch<
-      React.SetStateAction<ProductFormState>
-    >;
-}) {
-  return (
-    <div className={styles.formStack}>
-      <div className={styles.sectionHeading}>
-        <h3>
-          Product Information
-        </h3>
+                    <tbody>
+                      {form.variants.map(
+                        (
+                          variant,
+                          index,
+                        ) => (
+                          <tr
+                            key={
+                              variant.clientId
+                            }
+                          >
+                            <td>
+                              <input
+                                value={
+                                  variant.sku
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
 
-        <p>
-          Core storefront identity
-          and catalog placement.
-        </p>
-      </div>
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
 
-      <Field
-        label="Product Name"
-        required
-      >
-        <input
-          value={
-            form.name
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => {
-                const previousAutoSlug =
-                  slugify(
-                    current.name,
-                  );
+                                                  sku:
+                                                    event
+                                                      .target
+                                                      .value,
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
 
-                const shouldUpdateSlug =
-                  !current.slug ||
-                  current.slug ===
-                    previousAutoSlug;
+                            <td>
+                              <input
+                                value={
+                                  variant.color
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
 
-                return {
-                  ...current,
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
 
-                  name:
-                    event.target
-                      .value,
+                                                  color:
+                                                    event
+                                                      .target
+                                                      .value,
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
 
-                  slug:
-                    shouldUpdateSlug
-                      ? slugify(
-                          event.target
-                            .value,
-                        )
-                      : current.slug,
-                };
-              },
-            )
-          }
-        />
-      </Field>
+                            <td>
+                              <input
+                                value={
+                                  variant.size
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
 
-      <div className={styles.twoColumns}>
-        <Field
-          label="Slug"
-          required
-        >
-          <input
-            value={
-              form.slug
-            }
-            onChange={(
-              event,
-            ) =>
-              setForm(
-                (
-                  current,
-                ) => ({
-                  ...current,
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
 
-                  slug:
-                    slugify(
-                      event.target
-                        .value,
-                    ),
-                }),
-              )
-            }
-          />
-        </Field>
+                                                  size:
+                                                    event
+                                                      .target
+                                                      .value,
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
 
-        <Field label="Brand">
-          <input
-            value={
-              form.brand
-            }
-            onChange={(
-              event,
-            ) =>
-              setForm(
-                (
-                  current,
-                ) => ({
-                  ...current,
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                value={
+                                  variant.stock
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
 
-                  brand:
-                    event.target
-                      .value,
-                }),
-              )
-            }
-          />
-        </Field>
-      </div>
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
 
-      <Field label="Category">
-        <select
-          value={
-            form.categoryId
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
+                                                  stock:
+                                                    Number(
+                                                      event
+                                                        .target
+                                                        .value,
+                                                    ),
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
 
-                categoryId:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        >
-          <option value="">
-            Uncategorized
-          </option>
+                            <td>
+                              <input
+                                type="number"
+                                min="0"
+                                value={
+                                  variant.lowStockThreshold
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
 
-          {categories.map(
-            (
-              category,
-            ) => (
-              <option
-                key={
-                  category.id
-                }
-                value={
-                  category.id
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
+
+                                                  lowStockThreshold:
+                                                    Number(
+                                                      event
+                                                        .target
+                                                        .value,
+                                                    ),
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
+
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={
+                                  variant.active
+                                }
+                                onChange={(
+                                  event,
+                                ) =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
+
+                                      variants:
+                                        current.variants.map(
+                                          (
+                                            item,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex ===
+                                            index
+                                              ? {
+                                                  ...item,
+
+                                                  active:
+                                                    event
+                                                      .target
+                                                      .checked,
+                                                }
+                                              : item,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              />
+                            </td>
+
+                            <td>
+                              <button
+                                type="button"
+                                className={
+                                  styles.variantDelete
+                                }
+                                disabled={
+                                  form.variants.length ===
+                                  1
+                                }
+                                onClick={() =>
+                                  setForm(
+                                    (
+                                      current,
+                                    ) => ({
+                                      ...current,
+
+                                      variants:
+                                        current.variants.filter(
+                                          (
+                                            _,
+                                            itemIndex,
+                                          ) =>
+                                            itemIndex !==
+                                            index,
+                                        ),
+                                    }),
+                                  )
+                                }
+                              >
+                                <Trash2
+                                  size={
+                                    13
+                                  }
+                                />
+                              </button>
+                            </td>
+                          </tr>
+                        ),
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section
+                className={
+                  styles.formSection
                 }
               >
-                {
-                  category.name
+                <div
+                  className={
+                    styles.sectionTitle
+                  }
+                >
+                  SEO
+                </div>
+
+                <label
+                  className={
+                    styles.field
+                  }
+                >
+                  <span>
+                    Meta Title
+                  </span>
+
+                  <input
+                    value={
+                      form.seoTitle
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setForm(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
+
+                          seoTitle:
+                            event
+                              .target
+                              .value,
+                        }),
+                      )
+                    }
+                  />
+                </label>
+
+                <label
+                  className={
+                    styles.field
+                  }
+                >
+                  <span>
+                    Meta Description
+                  </span>
+
+                  <textarea
+                    rows={
+                      4
+                    }
+                    value={
+                      form.seoDescription
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setForm(
+                        (
+                          current,
+                        ) => ({
+                          ...current,
+
+                          seoDescription:
+                            event
+                              .target
+                              .value,
+                        }),
+                      )
+                    }
+                  />
+                </label>
+              </section>
+            </div>
+
+            <footer
+              className={
+                styles.editorFooter
+              }
+            >
+              <button
+                type="button"
+                className={
+                  styles.secondaryButton
                 }
-              </option>
-            ),
-          )}
-        </select>
-      </Field>
-
-            <Field label="Size Guide">
-        <select
-          value={
-            form.sizeChartId
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                sizeChartId:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        >
-          <option value="">
-            No Size Guide
-          </option>
-
-          {sizeCharts.map(
-            (
-              chart,
-            ) => (
-              <option
-                key={
-                  chart.id
-                }
-                value={
-                  chart.id
+                onClick={
+                  closeEditor
                 }
                 disabled={
-                  !chart.active &&
-                  chart.id !==
-                    form.sizeChartId
+                  saving ||
+                  uploading
                 }
               >
-                {chart.name}
-                {!chart.active
-                  ? " (Archived)"
-                  : ""}
-              </option>
-            ),
-          )}
-        </select>
+                Cancel
+              </button>
 
-        <small
-          style={{
-            color:
-              "#8b908c",
-
-            fontSize:
-              8,
-
-            lineHeight:
-              1.5,
-          }}
-        >
-          Reusable size
-          chart shown on the
-          product details
-          page.{" "}
-
-          <a
-            href="/admin/size-charts"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color:
-                "#f15a24",
-
-              fontWeight:
-                800,
-            }}
-          >
-            Manage Size Charts
-          </a>
-        </small>
-      </Field>
-
-      <Field label="Short Description">
-        <textarea
-          rows={3}
-          value={
-            form.shortDescription
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                shortDescription:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        />
-      </Field>
-
-      <Field label="Full Description">
-        <textarea
-          rows={8}
-          value={
-            form.description
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                description:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        />
-      </Field>
-
-      <Field label="Status">
-        <select
-          value={
-            form.status
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                status:
-                  event.target
-                    .value as
-                    ProductFormState["status"],
-              }),
-            )
-          }
-        >
-          <option value="DRAFT">
-            Draft
-          </option>
-
-          <option value="ACTIVE">
-            Active
-          </option>
-
-          <option value="INACTIVE">
-            Inactive
-          </option>
-
-          <option value="ARCHIVED">
-            Archived
-          </option>
-        </select>
-      </Field>
-
-      <div className={styles.checkGrid}>
-        <CheckField
-          label="Featured"
-          checked={
-            form.featured
-          }
-          change={(
-            value,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-                featured:
-                  value,
-              }),
-            )
-          }
-        />
-
-        <CheckField
-          label="New Arrival"
-          checked={
-            form.newArrival
-          }
-          change={(
-            value,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-                newArrival:
-                  value,
-              }),
-            )
-          }
-        />
-
-        <CheckField
-          label="Trending"
-          checked={
-            form.trending
-          }
-          change={(
-            value,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-                trending:
-                  value,
-              }),
-            )
-          }
-        />
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   IMAGES TAB
-   ========================================================= */
-
-function ImagesTab({
-  form,
-  uploading,
-  uploadImages,
-  makePrimary,
-  removeImage,
-  moveImage,
-  setForm,
-}: {
-  form:
-    ProductFormState;
-
-  uploading:
-    boolean;
-
-  uploadImages:
-    (
-      event:
-        ChangeEvent<HTMLInputElement>,
-    ) => Promise<void>;
-
-  makePrimary:
-    (
-      id:
-        string,
-    ) => void;
-
-  removeImage:
-    (
-      id:
-        string,
-    ) => void;
-
-  moveImage:
-    (
-      index:
-        number,
-      direction:
-        -1 | 1,
-    ) => void;
-
-  setForm:
-    React.Dispatch<
-      React.SetStateAction<ProductFormState>
-    >;
-}) {
-  const imageColorOptions =
-    [
-      ...new Set(
-        form.variants
-          .map(
-            (
-              variant,
-            ) =>
-              variant.color.trim(),
-          )
-          .filter(
-            Boolean,
-          ),
-      ),
-    ];
-
-  return (
-    <div className={styles.formStack}>
-      <div className={styles.sectionHeading}>
-        <h3>
-          Product Images
-        </h3>
-
-        <p>
-          Upload up to 12 images.
-          Choose the primary
-          storefront image and
-          arrange gallery order.
-        </p>
-      </div>
-
-      <label className={styles.uploadBox}>
-        {uploading ? (
-          <Loader2
-            className={styles.spin}
-            size={24}
-          />
-        ) : (
-          <Upload
-            size={24}
-          />
-        )}
-
-        <strong>
-          {uploading
-            ? "Uploading..."
-            : "Upload Images"}
-        </strong>
-
-        <span>
-          JPG, PNG, WEBP or AVIF ·
-          maximum 8MB each
-        </span>
-
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
-          multiple
-          disabled={
-            uploading
-          }
-          onChange={
-            uploadImages
-          }
-        />
-      </label>
-
-      {form.images.length ===
-      0 ? (
-        <div className={styles.imageEmpty}>
-          <ImageIcon
-            size={24}
-          />
-
-          No product images
-          uploaded yet.
-        </div>
-      ) : (
-        <div className={styles.imageGrid}>
-          {form.images.map(
-            (
-              image,
-              index,
-            ) => (
-              <div
-                key={
-                  image.clientId
+              <button
+                type="submit"
+                className={
+                  styles.primaryButton
                 }
-                className={`${styles.imageCard} ${
-                  image.primary
-                    ? styles.primaryImageCard
-                    : ""
-                }`}
+                disabled={
+                  saving ||
+                  uploading
+                }
               >
-                <div className={styles.imagePreview}>
-                  <Image
-                    src={
-                      image.url
+                {saving ? (
+                  <Loader2
+                    size={
+                      15
                     }
-                    alt={
-                      image.alt ||
-                      form.name ||
-                      "Product image"
+                    className={
+                      styles.spin
                     }
-                    fill
-                    sizes="180px"
                   />
-
-                  {image.primary ? (
-                    <span className={styles.primaryChip}>
-                      Primary
-                    </span>
-                  ) : null}
-                </div>
-
-                <input
-                  value={
-                    image.alt
-                  }
-                  placeholder="Alt text"
-                  onChange={(
-                    event,
-                  ) =>
-                    setForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-
-                        images:
-                          current.images.map(
-                            (
-                              item,
-                            ) =>
-                              item.clientId ===
-                              image.clientId
-                                ? {
-                                    ...item,
-
-                                    alt:
-                                      event.target
-                                        .value,
-                                  }
-                                : item,
-                          ),
-                      }),
-                    )
-                  }
-                />
-
-                <select
-                  value={
-                    image.color ??
-                    ""
-                  }
-                  aria-label="Assign image color"
-                  onChange={(
-                    event,
-                  ) =>
-                    setForm(
-                      (
-                        current,
-                      ) => ({
-                        ...current,
-
-                        images:
-                          current.images.map(
-                            (
-                              item,
-                            ) =>
-                              item.clientId ===
-                              image.clientId
-                                ? {
-                                    ...item,
-
-                                    color:
-                                      event.target
-                                        .value,
-                                  }
-                                : item,
-                          ),
-                      }),
-                    )
-                  }
-                >
-                  <option value="">
-                    Generic / All Colors
-                  </option>
-
-                  {imageColorOptions.map(
-                    (
-                      imageColor,
-                    ) => (
-                      <option
-                        key={
-                          imageColor
-                        }
-                        value={
-                          imageColor
-                        }
-                      >
-                        {
-                          imageColor
-                        }
-                      </option>
-                    ),
-                  )}
-                </select>
-
-                <div className={styles.imageActions}>
-                  <button
-                    type="button"
-                    disabled={
-                      index ===
-                      0
+                ) : (
+                  <Package
+                    size={
+                      15
                     }
-                    onClick={() =>
-                      moveImage(
-                        index,
-                        -1,
-                      )
-                    }
-                  >
-                    <ChevronLeft
-                      size={14}
-                    />
-                  </button>
+                  />
+                )}
 
-                  <button
-                    type="button"
-                    disabled={
-                      index ===
-                      form.images.length -
-                        1
-                    }
-                    onClick={() =>
-                      moveImage(
-                        index,
-                        1,
-                      )
-                    }
-                  >
-                    <ChevronRight
-                      size={14}
-                    />
-                  </button>
-
-                  {!image.primary ? (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        makePrimary(
-                          image.clientId,
-                        )
-                      }
-                    >
-                      Set Primary
-                    </button>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    className={styles.dangerText}
-                    onClick={() =>
-                      removeImage(
-                        image.clientId,
-                      )
-                    }
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ),
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* =========================================================
-   PRICING
-   ========================================================= */
-
-function PricingTab({
-  form,
-  setForm,
-}: {
-  form:
-    ProductFormState;
-
-  setForm:
-    React.Dispatch<
-      React.SetStateAction<ProductFormState>
-    >;
-}) {
-  const discount =
-    form.salePrice &&
-    Number(
-      form.regularPrice,
-    ) >
-      0
-      ? Math.round(
-          (
-            1 -
-            Number(
-              form.salePrice,
-            ) /
-              Number(
-                form.regularPrice,
-              )
-          ) *
-            100,
-        )
-      : 0;
-
-  return (
-    <div className={styles.formStack}>
-      <div className={styles.sectionHeading}>
-        <h3>
-          Pricing
-        </h3>
-
-        <p>
-          Product-level price is
-          used unless a variant has
-          its own price override.
-        </p>
-      </div>
-
-      <div className={styles.twoColumns}>
-        <Field
-          label="Regular Price"
-          required
-        >
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={
-              form.regularPrice
-            }
-            onChange={(
-              event,
-            ) =>
-              setForm(
-                (
-                  current,
-                ) => ({
-                  ...current,
-
-                  regularPrice:
-                    event.target
-                      .value,
-                }),
-              )
-            }
-          />
-        </Field>
-
-        <Field label="Sale Price">
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={
-              form.salePrice
-            }
-            onChange={(
-              event,
-            ) =>
-              setForm(
-                (
-                  current,
-                ) => ({
-                  ...current,
-
-                  salePrice:
-                    event.target
-                      .value,
-                }),
-              )
-            }
-          />
-        </Field>
-      </div>
-
-      {discount >
-      0 ? (
-        <div className={styles.discountPreview}>
-          Customer saves{" "}
-          <strong>
-            {discount}%
-          </strong>
+                {
+                  editingProduct
+                    ? "Save Changes"
+                    : "Create Product"
+                }
+              </button>
+            </footer>
+          </form>
         </div>
       ) : null}
     </div>
   );
 }
-function VariantsTab({
-  variants,
-  updateVariant,
-  removeVariant,
-  addVariant,
-  setForm,
-}: {
-  variants:
-    EditorVariant[];
-
-  updateVariant:
-    (
-      clientId:
-        string,
-      patch:
-        Partial<EditorVariant>,
-    ) => void;
-
-  removeVariant:
-    (
-      clientId:
-        string,
-    ) => void;
-
-  addVariant:
-    () => void;
-
-  setForm:
-    React.Dispatch<
-      React.SetStateAction<ProductFormState>
-    >;
-}) {
-  const [
-    generatorSizes,
-    setGeneratorSizes,
-  ] =
-    useState("");
-
-  const [
-    generatorColors,
-    setGeneratorColors,
-  ] =
-    useState("");
-
-  const [
-    generatorMessage,
-    setGeneratorMessage,
-  ] =
-    useState("");
-
-  /* =======================================================
-     GENERATE SIZE × COLOR COMBINATIONS
-     ======================================================= */
-
-  function generateVariants() {
-    const sizes =
-      parseGeneratorValues(
-        generatorSizes,
-      );
-
-    const colors =
-      parseGeneratorValues(
-        generatorColors,
-      );
-
-    if (
-      sizes.length ===
-      0
-    ) {
-      setGeneratorMessage(
-        "Add at least one size.",
-      );
-
-      return;
-    }
-
-    if (
-      colors.length ===
-      0
-    ) {
-      setGeneratorMessage(
-        "Add at least one colour.",
-      );
-
-      return;
-    }
-
-    setForm(
-      (
-        current,
-      ) => {
-        /*
-         * Existing matching variants are
-         * preserved so editing a product
-         * never destroys current stock,
-         * IDs or price overrides.
-         */
-        const existingByCombination =
-          new Map<
-            string,
-            EditorVariant
-          >();
-
-        current.variants.forEach(
-          (
-            variant,
-          ) => {
-            const meaningful =
-              variant.color.trim() ||
-              variant.size.trim() ||
-              variant.sku.trim();
-
-            if (
-              !meaningful
-            ) {
-              return;
-            }
-
-            existingByCombination.set(
-              variantKey(
-                variant.color,
-                variant.size,
-              ),
-
-              variant,
-            );
-          },
-        );
-
-        const generated:
-          EditorVariant[] =
-          [];
-
-        const generatedKeys =
-          new Set<
-            string
-          >();
-
-        colors.forEach(
-          (
-            color,
-          ) => {
-            sizes.forEach(
-              (
-                size,
-              ) => {
-                const key =
-                  variantKey(
-                    color,
-                    size,
-                  );
-
-                generatedKeys.add(
-                  key,
-                );
-
-                const existing =
-                  existingByCombination.get(
-                    key,
-                  );
-
-                if (
-                  existing
-                ) {
-                  generated.push({
-                    ...existing,
-
-                    sku:
-                      existing.sku.trim() ||
-                      buildVariantSku(
-                        current.slug,
-                        color,
-                        size,
-                      ),
-                  });
-
-                  return;
-                }
-
-                generated.push({
-                  ...emptyVariant(),
-
-                  color,
-
-                  size,
-
-                  colorHex:
-                    guessColorHex(
-                      color,
-                    ),
-
-                  sku:
-                    buildVariantSku(
-                      current.slug,
-                      color,
-                      size,
-                    ),
-                });
-              },
-            );
-          },
-        );
-
-        /*
-         * Keep older/custom combinations
-         * that are not part of the new
-         * generator selection.
-         */
-        const preserved =
-          current.variants.filter(
-            (
-              variant,
-            ) => {
-              const meaningful =
-                variant.color.trim() ||
-                variant.size.trim() ||
-                variant.sku.trim();
-
-              if (
-                !meaningful
-              ) {
-                return false;
-              }
-
-              return !generatedKeys.has(
-                variantKey(
-                  variant.color,
-                  variant.size,
-                ),
-              );
-            },
-          );
-
-        return {
-          ...current,
-
-          variants: [
-            ...generated,
-            ...preserved,
-          ],
-        };
-      },
-    );
-
-    setGeneratorMessage(
-      `${colors.length * sizes.length} variant combination${
-        colors.length *
-          sizes.length ===
-        1
-          ? ""
-          : "s"
-      } prepared. Matching existing variants were preserved.`,
-    );
-  }
-
-  /* =======================================================
-     REGENERATE SKUS
-     ======================================================= */
-
-  function regenerateSkus() {
-    setForm(
-      (
-        current,
-      ) => {
-        const used =
-          new Map<
-            string,
-            number
-          >();
-
-        const nextVariants =
-          current.variants.map(
-            (
-              variant,
-            ) => {
-              const base =
-                buildVariantSku(
-                  current.slug,
-                  variant.color,
-                  variant.size,
-                );
-
-              const count =
-                used.get(
-                  base,
-                ) ??
-                0;
-
-              used.set(
-                base,
-                count +
-                  1,
-              );
-
-              return {
-                ...variant,
-
-                sku:
-                  count ===
-                  0
-                    ? base
-                    : `${base}-${count + 1}`,
-              };
-            },
-          );
-
-        return {
-          ...current,
-
-          variants:
-            nextVariants,
-        };
-      },
-    );
-
-    setGeneratorMessage(
-      "Variant SKUs regenerated from the product, colour and size.",
-    );
-  }
-
-  return (
-    <div className={styles.formStack}>
-      {/* ===================================================
-          HEADING
-          =================================================== */}
-
-      <div className={styles.sectionHeadingRow}>
-        <div>
-          <h3>
-            Size & Colour Variants
-          </h3>
-
-          <p>
-            Generate all
-            purchasable size and
-            colour combinations
-            automatically. SKUs are
-            generated for you but
-            can still be edited
-            manually.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={
-            addVariant
-          }
-        >
-          <Plus
-            size={14}
-          />
-
-          Add Manually
-        </button>
-      </div>
-
-      {/* ===================================================
-          VARIANT GENERATOR
-          =================================================== */}
-
-      <section className={styles.variantGenerator}>
-        <div className={styles.variantGeneratorHeader}>
-          <div>
-            <span>
-              Automatic Generator
-            </span>
-
-            <h4>
-              Build Variants
-            </h4>
-
-            <p>
-              Enter sizes and
-              colours separated by
-              commas. Every
-              colour × size
-              combination will be
-              created automatically.
-            </p>
-          </div>
-
-          <strong>
-            {
-              variants.length
-            }{" "}
-            current
-          </strong>
-        </div>
-
-        <div className={styles.variantGeneratorGrid}>
-          <label className={styles.generatorField}>
-            <span>
-              Sizes
-            </span>
-
-            <input
-              value={
-                generatorSizes
-              }
-              placeholder="S, M, L, XL, 2XL"
-              onChange={(
-                event,
-              ) =>
-                setGeneratorSizes(
-                  event.target
-                    .value,
-                )
-              }
-            />
-
-            <small>
-              Example:
-              S, M, L, XL
-            </small>
-          </label>
-
-          <label className={styles.generatorField}>
-            <span>
-              Colours
-            </span>
-
-            <input
-              value={
-                generatorColors
-              }
-              placeholder="Black, Green, Yellow"
-              onChange={(
-                event,
-              ) =>
-                setGeneratorColors(
-                  event.target
-                    .value,
-                )
-              }
-            />
-
-            <small>
-              Use the same colour
-              names used for
-              product images.
-            </small>
-          </label>
-        </div>
-
-        <div className={styles.generatorActions}>
-          <button
-            type="button"
-            className={styles.generateButton}
-            onClick={
-              generateVariants
-            }
-          >
-            <Plus
-              size={15}
-            />
-
-            Generate Variants
-          </button>
-
-          <button
-            type="button"
-            className={styles.regenerateButton}
-            onClick={
-              regenerateSkus
-            }
-          >
-            Regenerate SKUs
-          </button>
-        </div>
-
-        {generatorMessage ? (
-          <div className={styles.generatorMessage}>
-            {
-              generatorMessage
-            }
-          </div>
-        ) : null}
-      </section>
-
-      {/* ===================================================
-          VARIANT TABLE
-          =================================================== */}
-
-      <div className={styles.variantTableWrap}>
-        <table className={styles.variantTable}>
-          <thead>
-            <tr>
-              <th>
-                Colour
-              </th>
-
-              <th>
-                HEX
-              </th>
-
-              <th>
-                Size
-              </th>
-
-              <th>
-                SKU
-              </th>
-
-              <th>
-                Price Override
-              </th>
-
-              <th>
-                Active
-              </th>
-
-              <th>
-                Action
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {variants.map(
-              (
-                variant,
-              ) => (
-                <tr
-                  key={
-                    variant.clientId
-                  }
-                >
-                  <td>
-                    <input
-                      value={
-                        variant.color
-                      }
-                      placeholder="Black"
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            color:
-                              event.target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <div className={styles.colorField}>
-                      <input
-                        type="color"
-                        value={
-                          /^#[0-9a-fA-F]{6}$/.test(
-                            variant.colorHex,
-                          )
-                            ? variant.colorHex
-                            : "#111111"
-                        }
-                        title="Choose colour"
-                        onChange={(
-                          event,
-                        ) =>
-                          updateVariant(
-                            variant.clientId,
-                            {
-                              colorHex:
-                                event.target
-                                  .value,
-                            },
-                          )
-                        }
-                      />
-
-                      <input
-                        value={
-                          variant.colorHex
-                        }
-                        placeholder="#111111"
-                        onChange={(
-                          event,
-                        ) =>
-                          updateVariant(
-                            variant.clientId,
-                            {
-                              colorHex:
-                                event.target
-                                  .value,
-                            },
-                          )
-                        }
-                      />
-                    </div>
-                  </td>
-
-                  <td>
-                    <input
-                      value={
-                        variant.size
-                      }
-                      placeholder="M"
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            size:
-                              event.target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      value={
-                        variant.sku
-                      }
-                      placeholder="Auto-generated if blank"
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            sku:
-                              event.target
-                                .value,
-                          },
-                        )
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={
-                        variant.priceOverride ??
-                        ""
-                      }
-                      placeholder="Default"
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            priceOverride:
-                              event.target
-                                .value
-                                ? Number(
-                                    event.target
-                                      .value,
-                                  )
-                                : null,
-                          },
-                        )
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <label className={styles.variantActiveToggle}>
-                      <input
-                        type="checkbox"
-                        checked={
-                          variant.active
-                        }
-                        onChange={(
-                          event,
-                        ) =>
-                          updateVariant(
-                            variant.clientId,
-                            {
-                              active:
-                                event.target
-                                  .checked,
-                            },
-                          )
-                        }
-                      />
-
-                      <span>
-                        {variant.active
-                          ? "Active"
-                          : "Off"}
-                      </span>
-                    </label>
-                  </td>
-
-                  <td>
-                    <button
-                      type="button"
-                      disabled={
-                        variants.length ===
-                        1
-                      }
-                      className={styles.variantDelete}
-                      onClick={() =>
-                        removeVariant(
-                          variant.clientId,
-                        )
-                      }
-                      aria-label="Remove variant"
-                      title="Remove variant"
-                    >
-                      <Trash2
-                        size={14}
-                      />
-                    </button>
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-/* =========================================================
-   INVENTORY
-   ========================================================= */
-
-function InventoryTab({
-  variants,
-  updateVariant,
-}: {
-  variants:
-    EditorVariant[];
-
-  updateVariant:
-    (
-      clientId:
-        string,
-      patch:
-        Partial<EditorVariant>,
-    ) => void;
-}) {
-  const total =
-    variants
-      .filter(
-        (
-          variant,
-        ) =>
-          variant.active,
-      )
-      .reduce(
-        (
-          sum,
-          variant,
-        ) =>
-          sum +
-          Number(
-            variant.stock,
-          ),
-
-        0,
-      );
-
-  return (
-    <div className={styles.formStack}>
-      <div className={styles.inventorySummary}>
-        <span>
-          Total Available Stock
-        </span>
-
-        <strong>
-          {total}
-        </strong>
-      </div>
-
-      <div className={styles.variantTableWrap}>
-        <table className={styles.variantTable}>
-          <thead>
-            <tr>
-              <th>
-                Variant
-              </th>
-
-              <th>
-                SKU
-              </th>
-
-              <th>
-                Stock
-              </th>
-
-              <th>
-                Low Stock Alert
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {variants.map(
-              (
-                variant,
-              ) => (
-                <tr
-                  key={
-                    variant.clientId
-                  }
-                >
-                  <td>
-                    <strong>
-                      {
-                        variant.color ||
-                        "Default"
-                      }
-                    </strong>
-
-                    <small>
-                      {
-                        variant.size ||
-                        "One Size"
-                      }
-                    </small>
-                  </td>
-
-                  <td className={styles.mono}>
-                    {
-                      variant.sku ||
-                      "—"
-                    }
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={
-                        variant.stock
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            stock:
-                              Math.max(
-                                0,
-                                Number(
-                                  event.target
-                                    .value,
-                                ),
-                              ),
-                          },
-                        )
-                      }
-                    />
-                  </td>
-
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={
-                        variant.lowStockThreshold
-                      }
-                      onChange={(
-                        event,
-                      ) =>
-                        updateVariant(
-                          variant.clientId,
-                          {
-                            lowStockThreshold:
-                              Math.max(
-                                0,
-                                Number(
-                                  event.target
-                                    .value,
-                                ),
-                              ),
-                          },
-                        )
-                      }
-                    />
-                  </td>
-                </tr>
-              ),
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   SEO
-   ========================================================= */
-
-function SeoTab({
-  form,
-  setForm,
-}: {
-  form:
-    ProductFormState;
-
-  setForm:
-    React.Dispatch<
-      React.SetStateAction<ProductFormState>
-    >;
-}) {
-  return (
-    <div className={styles.formStack}>
-      <div className={styles.sectionHeading}>
-        <h3>
-          Search Engine
-          Optimization
-        </h3>
-
-        <p>
-          Optional metadata for
-          search engines and social
-          previews.
-        </p>
-      </div>
-
-      <Field label="SEO Title">
-        <input
-          value={
-            form.seoTitle
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                seoTitle:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        />
-      </Field>
-
-      <Field label="SEO Description">
-        <textarea
-          rows={5}
-          value={
-            form.seoDescription
-          }
-          onChange={(
-            event,
-          ) =>
-            setForm(
-              (
-                current,
-              ) => ({
-                ...current,
-
-                seoDescription:
-                  event.target
-                    .value,
-              }),
-            )
-          }
-        />
-      </Field>
-
-      <div className={styles.seoPreview}>
-        <span>
-          gameongarb.com/product/
-          {form.slug ||
-            "product-slug"}
-        </span>
-
-        <strong>
-          {form.seoTitle ||
-            form.name ||
-            "Product title"}
-        </strong>
-
-        <p>
-          {form.seoDescription ||
-            form.shortDescription ||
-            "Product description will appear here."}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   SMALL COMPONENTS
-   ========================================================= */
 
 function Metric({
   label,
   value,
-  tone,
 }: {
-  label: string;
-  value: number;
+  label:
+    string;
 
-  tone?:
-    | "green"
-    | "orange"
-    | "red";
+  value:
+    number;
 }) {
   return (
-    <div
-      className={`${styles.metric} ${
-        tone
-          ? styles[
-              `metric${tone[0].toUpperCase()}${tone.slice(
-                1,
-              )}`
-            ]
-          : ""
-      }`}
+    <article
+      className={
+        styles.metric
+      }
     >
       <span>
         {label}
@@ -4468,38 +3577,7 @@ function Metric({
       <strong>
         {value}
       </strong>
-    </div>
-  );
-}
-
-function StatusBadge({
-  status,
-}: {
-  status:
-    AdminProductRecord["status"];
-}) {
-  return (
-    <span
-      className={`${styles.statusBadge} ${
-        status ===
-        "ACTIVE"
-          ? styles.statusActive
-          : status ===
-              "DRAFT"
-            ? styles.statusDraft
-            : styles.statusInactive
-      }`}
-    >
-      {status
-        .toLowerCase()
-        .replace(
-          /^./,
-          (
-            value,
-          ) =>
-            value.toUpperCase(),
-        )}
-    </span>
+    </article>
   );
 }
 
@@ -4509,101 +3587,41 @@ function StockBadge({
   product:
     AdminProductRecord;
 }) {
-  return (
-    <div>
-      <strong>
-        {
-          product.stock
-        }
-      </strong>
-
+  if (
+    product.outOfStock
+  ) {
+    return (
       <span
-        className={`${styles.stockState} ${
-          product.outOfStock
-            ? styles.stockRed
-            : product.lowStock
-              ? styles.stockOrange
-              : styles.stockGreen
-        }`}
+        className={
+          styles.stockOut
+        }
       >
-        {product.outOfStock
-          ? "Out of Stock"
-          : product.lowStock
-            ? "Low Stock"
-            : "In Stock"}
+        Out of Stock
       </span>
-    </div>
-  );
-}
+    );
+  }
 
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label:
-    string;
-
-  required?:
-    boolean;
-
-  children:
-    React.ReactNode;
-}) {
-  return (
-    <label className={styles.field}>
-      <span>
-        {label}
-
-        {required ? (
-          <b>
-            *
-          </b>
-        ) : null}
-      </span>
-
-      {children}
-    </label>
-  );
-}
-
-function CheckField({
-  label,
-  checked,
-  change,
-}: {
-  label:
-    string;
-
-  checked:
-    boolean;
-
-  change:
-    (
-      value:
-        boolean,
-    ) => void;
-}) {
-  return (
-    <label className={styles.checkField}>
-      <input
-        type="checkbox"
-        checked={
-          checked
+  if (
+    product.lowStock
+  ) {
+    return (
+      <span
+        className={
+          styles.stockLow
         }
-        onChange={(
-          event,
-        ) =>
-          change(
-            event.target
-              .checked,
-          )
-        }
-      />
-
-      <span>
-        {label}
+      >
+        {product.stock} Low
       </span>
-    </label>
+    );
+  }
+
+  return (
+    <span
+      className={
+        styles.stockGood
+      }
+    >
+      {product.stock} In Stock
+    </span>
   );
 }

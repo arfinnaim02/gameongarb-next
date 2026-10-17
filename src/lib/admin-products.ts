@@ -513,7 +513,6 @@ export function normalizeProductImages(
 /* =========================================================
    SERIALIZER
    ========================================================= */
-
 export function serializeAdminProduct(
   product:
     AdminProductDatabaseRecord,
@@ -539,15 +538,13 @@ export function serializeAdminProduct(
       ) =>
         total +
         variant.stock,
-
       0,
     );
 
   const lowStock =
     activeVariants.some(
       (variant) =>
-        variant.stock >
-          0 &&
+        variant.stock > 0 &&
         variant.stock <=
           variant.lowStockThreshold,
     );
@@ -557,8 +554,7 @@ export function serializeAdminProduct(
       0 ||
     activeVariants.every(
       (variant) =>
-        variant.stock <=
-        0,
+        variant.stock <= 0,
     );
 
   const primaryImage =
@@ -632,6 +628,26 @@ export function serializeAdminProduct(
         ?.category
         .name ??
       "Uncategorized",
+
+    categoryIds:
+      product.categories.map(
+        (item) =>
+          item.categoryId,
+      ),
+
+    categories:
+      product.categories.map(
+        (item) => ({
+          id:
+            item.categoryId,
+
+          name:
+            item.category.name,
+
+          primary:
+            item.primary,
+        }),
+      ),
 
     sizeChartId:
       product.sizeChartId ??

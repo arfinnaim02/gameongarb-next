@@ -1,34 +1,20 @@
-import {
-  notFound,
-} from "next/navigation";
+import { notFound } from "next/navigation";
 
-import {
-  ProductManager,
-} from "@/components/admin/product-manager";
+import { ProductManager } from "@/components/admin/product-manager";
 
 import {
   adminProductInclude,
   serializeAdminProduct,
 } from "@/lib/admin-products";
 
-import {
-  hasPermission,
-} from "@/lib/business";
+import { hasPermission } from "@/lib/business";
+import { db } from "@/lib/db";
+import { requireAdmin } from "@/lib/session";
 
-import {
-  db,
-} from "@/lib/db";
-
-import {
-  requireAdmin,
-} from "@/lib/session";
-
-export const dynamic =
-  "force-dynamic";
+export const dynamic = "force-dynamic";
 
 export default async function ProductsAdminPage() {
-  const admin =
-    await requireAdmin();
+  const admin = await requireAdmin();
 
   if (
     !hasPermission(
@@ -43,74 +29,58 @@ export default async function ProductsAdminPage() {
     products,
     categories,
     sizeCharts,
-  ] =
-    await Promise.all([
-      db.product.findMany({
-        include:
-          adminProductInclude,
+  ] = await Promise.all([
+    db.product.findMany({
+      include:
+        adminProductInclude,
 
-        orderBy: {
-          updatedAt:
-            "desc",
-        },
-      }),
+      orderBy: {
+        updatedAt:
+          "desc",
+      },
+    }),
 
-      db.category.findMany({
-        where: {
-          active:
-            true,
-        },
+    db.category.findMany({
+      where: {
+        active: true,
+      },
 
-        orderBy: [
-          {
-            parentId:
-              "asc",
-          },
-
-          {
-            sortOrder:
-              "asc",
-          },
-
-          {
-            name:
-              "asc",
-          },
-        ],
-
-        select: {
-          id:
-            true,
-
-          name:
-            true,
-
+      orderBy: [
+        {
           parentId:
-            true,
+            "asc",
         },
-      }),
-
-      db.sizeChart.findMany({
-        orderBy: {
+        {
+          sortOrder:
+            "asc",
+        },
+        {
           name:
             "asc",
         },
+      ],
 
-        select: {
-          id:
-            true,
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+        sortOrder: true,
+      },
+    }),
 
-          name:
-            true,
+    db.sizeChart.findMany({
+      orderBy: {
+        name: "asc",
+      },
 
-          unit:
-            true,
-
-          active:
-            true,
-        },
-      }),
-    ]);
+      select: {
+        id: true,
+        name: true,
+        unit: true,
+        active: true,
+      },
+    }),
+  ]);
 
   return (
     <ProductManager
