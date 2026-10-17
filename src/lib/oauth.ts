@@ -990,27 +990,168 @@ export async function finishOAuth(
      * account. That must be explicitly
      * linked later from account settings.
      */
-    const existingUser =
-      await db.user.findUnique({
-        where: {
-          email:
-            profile.email,
-        },
+const existingUser =
+  await db.user.findUnique({
+    where: {
+      email:
+        profile.email,
+    },
 
-        select: {
-          id:
-            true,
-        },
-      });
+    include: {
+      customer:
+        true,
+    },
+  });
 
+if (
+  existingUser
+) {
+  /*
+   * Never automatically attach
+   * social login to admin/staff
+   * accounts.
+   */
+  if (
+    existingUser.role !==
+      "CUSTOMER" ||
+    existingUser.status !==
+      "ACTIVE" ||
+    !existingUser.customer
+  ) {
+    return oauthErrorRedirect(
+      request,
+      provider,
+      "account_unavailable",
+    );
+  }
+
+  /*
+   * Google returns a verified
+   * email address, so an existing
+   * customer with the exact same
+   * email can safely connect their
+   * Google identity.
+   *
+   * Facebook will remain separate
+   * until we finalize its account
+   * verification policy.
+   */
     if (
-      existingUser
+        provider !==
+        "GOOGLE"
     ) {
-      return oauthErrorRedirect(
+        return oauthErrorRedirect(
         request,
         provider,
         "existing_email",
-      );
+        );
+    }
+
+    await db.oAuthAccount.create({
+        data: {
+        userId:
+            existingUser.id,
+
+        provider:
+            "GOOGLE",
+
+        providerAccountId:
+            profile.providerAccountId,
+
+        email:
+            profile.email,
+        },
+    });
+
+    const previousToken =
+        readSessionCookieFromRequest(
+        request,
+        );
+
+    if (
+        previousToken
+    ) {
+        await revokeSessionToken(
+        previousToken,
+        ).catch(
+        () => undefined,
+        );
+    }
+
+    const sessionToken =
+        await createSessionToken({
+        sub:
+            existingUser.id,
+
+        role:
+            existingUser.role,
+
+        name:
+            existingUser.name,
+        });
+
+    await db.activityLog
+        .create({
+        data: {
+            actorId:
+            existingUser.id,
+
+            action:
+            "SOCIAL_ACCOUNT_LINKED",
+
+            entityType:
+            "User",
+
+            entityId:
+            existingUser.id,
+
+            metadata: {
+            provider:
+                "GOOGLE",
+            },
+        },
+        })
+        .catch(
+        () => undefined,
+        );
+
+    const response =
+        NextResponse.redirect(
+        new URL(
+            "/account",
+            getAppOrigin(
+            request,
+            ),
+        ),
+        );
+
+    response.cookies.set(
+        SESSION_COOKIE_NAME,
+        sessionToken,
+        {
+        httpOnly:
+            true,
+
+        secure:
+            isSecureCookie(),
+
+        sameSite:
+            "lax",
+
+        path:
+            "/",
+
+        maxAge:
+            SESSION_MAX_AGE_SECONDS,
+        },
+    );
+
+    clearOAuthTemporaryCookies(
+        response,
+        provider,
+    );
+
+    return response;
     }
 
     /*
