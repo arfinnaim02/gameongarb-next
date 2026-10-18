@@ -72,6 +72,10 @@ import {
   sendOrderToTelegram,
 } from "@/lib/telegram";
 
+import {
+  queueOrderPlacedNotifications,
+} from "@/lib/notifications/events";
+
 
 /* =========================================================
 
@@ -2042,12 +2046,44 @@ export async function POST(
 
     /* =====================================================
 
-       TELEGRAM ORDER NOTIFICATION
+       POST-CHECKOUT NOTIFICATIONS
+
+       Customer notification queue and Telegram operations
+       must never make checkout fail.
 
        ===================================================== */
 
     after(
       async () => {
+        /* =================================================
+           CUSTOMER EMAIL + SMS OUTBOX
+           ================================================= */
+
+        try {
+          await queueOrderPlacedNotifications(
+            order.id,
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            "Order placed notification queue failed:",
+            {
+              orderId:
+                order.id,
+
+              orderNumber:
+                order.number,
+
+              error,
+            },
+          );
+        }
+
+        /* =================================================
+           INTERNAL TELEGRAM NOTIFICATION
+           ================================================= */
+
         try {
           await sendOrderToTelegram(
             order.id,
@@ -2055,10 +2091,6 @@ export async function POST(
         } catch (
           error
         ) {
-          /*
-           * Telegram must never
-           * make checkout fail.
-           */
           console.error(
             "Telegram order notification failed:",
             error,
