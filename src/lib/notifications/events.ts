@@ -377,9 +377,15 @@ export async function queueOrderNotifications({
 
   /* =======================================================
      SMS
+
+     SMS queue creation remains disabled until the real
+     production SMS provider is connected.
      ======================================================= */
 
   if (
+    process.env
+      .SMS_NOTIFICATIONS_ENABLED ===
+      "true" &&
     order.phone.trim()
   ) {
     deliveries.push(
