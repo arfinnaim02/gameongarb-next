@@ -2061,70 +2061,104 @@ export async function POST(
       );
 
     /* =====================================================
+       CUSTOMER ORDER EMAIL
 
-       POST-CHECKOUT NOTIFICATIONS
+       The order transaction has already committed.
 
-       Customer notification queue and Telegram operations
-       must never make checkout fail.
+       We create the persistent notification first and then
+       immediately attempt delivery through Resend.
 
+       Email failure must NEVER make the successful order fail.
+       Failed deliveries remain in NotificationDelivery for
+       the retry worker / cron to process later.
+       ===================================================== */
+
+    if (
+      notificationEmail
+    ) {
+      try {
+        const deliveries =
+          await queueOrderPlacedNotifications(
+            order.id,
+          );
+
+        const providers =
+          getNotificationProviders();
+
+        const emailDeliveries =
+          deliveries.filter(
+            (
+              delivery,
+            ) =>
+              delivery.channel ===
+              "EMAIL",
+          );
+
+        for (
+          const delivery
+          of emailDeliveries
+        ) {
+          const result =
+            await processNotificationDelivery(
+              delivery.id,
+              providers,
+            );
+
+          if (
+            result?.status ===
+            "FAILED"
+          ) {
+            console.error(
+              "Immediate order email failed; worker will retry:",
+              {
+                orderId:
+                  order.id,
+
+                orderNumber:
+                  order.number,
+
+                notificationId:
+                  delivery.id,
+
+                recipient:
+                  delivery.recipient,
+
+                error:
+                  result.lastError,
+              },
+            );
+          }
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          "Order notification creation/delivery failed:",
+          {
+            orderId:
+              order.id,
+
+            orderNumber:
+              order.number,
+
+            recipient:
+              notificationEmail,
+
+            error,
+          },
+        );
+      }
+    }
+
+    /* =====================================================
+       INTERNAL TELEGRAM
+
+       Telegram is non-customer-critical and can continue
+       running after the response.
        ===================================================== */
 
     after(
       async () => {
-        /* =================================================
-           CUSTOMER EMAIL + SMS OUTBOX
-           ================================================= */
-
-        try {
-          const deliveries =
-            await queueOrderPlacedNotifications(
-              order.id,
-            );
-
-          const providers =
-            getNotificationProviders();
-
-          const emailDeliveries =
-            deliveries.filter(
-              (
-                delivery,
-              ) =>
-                delivery.channel ===
-                "EMAIL",
-            );
-
-          await Promise.all(
-            emailDeliveries.map(
-              (
-                delivery,
-              ) =>
-                processNotificationDelivery(
-                  delivery.id,
-                  providers,
-                ),
-            ),
-          );
-        } catch (
-          error
-        ) {
-          console.error(
-            "Order placed notification failed:",
-            {
-              orderId:
-                order.id,
-
-              orderNumber:
-                order.number,
-
-              error,
-            },
-          );
-        }
-
-        /* =================================================
-           INTERNAL TELEGRAM NOTIFICATION
-           ================================================= */
-
         try {
           await sendOrderToTelegram(
             order.id,
@@ -2134,7 +2168,15 @@ export async function POST(
         ) {
           console.error(
             "Telegram order notification failed:",
-            error,
+            {
+              orderId:
+                order.id,
+
+              orderNumber:
+                order.number,
+
+              error,
+            },
           );
         }
       },
