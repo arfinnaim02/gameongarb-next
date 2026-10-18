@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import {
   ArrowRight,
+  BellRing,
   ImageIcon,
   Images,
   Layers3,
@@ -14,6 +15,20 @@ export const dynamic =
   "force-dynamic";
 
 const sections = [
+  {
+    title:
+      "Announcement Bar",
+
+    description:
+      "Manage the global moving notification strip shown above the header across every storefront page.",
+
+    href:
+      "/admin/homepage/announcement-bar",
+
+    icon:
+      BellRing,
+  },
+
   {
     title:
       "Hero Slides",
@@ -140,6 +155,7 @@ export default function HomepageBuilderPage() {
         </strong>
 
         <span>
+          Announcement Bar,
           Hero, Sports, Polo,
           Category Images,
           Experience The Thrill

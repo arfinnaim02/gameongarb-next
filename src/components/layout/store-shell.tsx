@@ -27,6 +27,10 @@ import {
 } from "@/components/layout/store-header";
 
 import {
+  AnnouncementBar,
+} from "@/components/layout/announcement-bar";
+
+import {
   ShoppingBag,
 } from "lucide-react";
 
