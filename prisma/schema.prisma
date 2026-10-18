@@ -99,6 +99,39 @@ enum LogStatus {
   PENDING
 }
 
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum NotificationEvent {
+  ACCOUNT_CREATED
+  PASSWORD_RESET
+
+  ORDER_PLACED
+  ORDER_CONFIRMED
+  ORDER_READY_TO_SHIP
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  ORDER_FAILED_DELIVERY
+
+  PAYMENT_SUCCEEDED
+  PAYMENT_FAILED
+
+  RETURN_REQUESTED
+  RETURN_APPROVED
+  RETURN_COMPLETED
+}
+
 enum HomepageSectionType {
   HERO
   NEW_ARRIVALS
@@ -123,6 +156,7 @@ model User {
   passwordResetTokens   PasswordResetToken[]
   activityLogs          ActivityLog[]
   inventoryTransactions InventoryTransaction[]
+  notifications         NotificationDelivery[]
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 }
@@ -394,10 +428,10 @@ model CartItem {
 }
 
 model Order {
-  id                String               @id @default(cuid())
-  number            String               @unique
+  id                String                 @id @default(cuid())
+  number            String                 @unique
   customerId        String?
-  customer          Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customer          Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName      String
   phone             String
   email             String?
@@ -405,13 +439,13 @@ model Order {
   district          String
   thana             String
   shippingAddress   String
-  subtotal          Decimal              @db.Decimal(12, 2)
-  discount          Decimal              @default(0) @db.Decimal(12, 2)
-  deliveryCharge    Decimal              @db.Decimal(12, 2)
-  total             Decimal              @db.Decimal(12, 2)
+  subtotal          Decimal                @db.Decimal(12, 2)
+  discount          Decimal                @default(0) @db.Decimal(12, 2)
+  deliveryCharge    Decimal                @db.Decimal(12, 2)
+  total             Decimal                @db.Decimal(12, 2)
   paymentMethod     PaymentMethod
-  paymentStatus     PaymentStatus        @default(PENDING)
-  status            OrderStatus          @default(NEW)
+  paymentStatus     PaymentStatus          @default(PENDING)
+  status            OrderStatus            @default(NEW)
   couponCode        String?
   internalNotes     String?
   telegramChatId    String?
@@ -422,8 +456,9 @@ model Order {
   couponUsage       CouponUsage?
   shipment          CourierShipment?
   returns           Return[]
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  notifications     NotificationDelivery[]
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
 
   @@index([phone, createdAt])
   @@index([status, createdAt])
@@ -662,6 +697,47 @@ model StoreSetting {
   value     Json
   isSecret  Boolean  @default(false)
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+model NotificationDelivery {
+  id      String              @id @default(cuid())
+  event   NotificationEvent
+  channel NotificationChannel
+  status  NotificationStatus  @default(PENDING)
+
+  recipient String
+  subject   String?
+
+  orderId String?
+  userId  String?
+
+  idempotencyKey String @unique
+
+  provider          String?
+  providerMessageId String?
+
+  payload Json?
+
+  attempts    Int @default(0)
+  maxAttempts Int @default(3)
+
+  lastError     String?
+  lastAttemptAt DateTime?
+  nextAttemptAt DateTime?
+
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, nextAttemptAt])
+  @@index([event, createdAt])
+  @@index([channel, status])
+  @@index([orderId, createdAt])
+  @@index([userId, createdAt])
+  @@index([providerMessageId])
 }
 
 model Integration {
