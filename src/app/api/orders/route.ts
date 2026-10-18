@@ -284,7 +284,7 @@ export async function POST(
       );
 
 
-          const notificationEmail =
+    const notificationEmail =
       (
         input.email?.trim() ||
         sessionUser?.email?.trim() ||

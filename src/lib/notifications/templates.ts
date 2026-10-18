@@ -8,6 +8,20 @@ import type {
 } from "@/lib/notifications/types";
 
 /* =========================================================
+   TYPES
+   ========================================================= */
+
+type OrderItemPayload = {
+  name?: string;
+  sku?: string;
+  size?: string | null;
+  color?: string | null;
+  quantity?: number;
+  unitPrice?: number;
+  lineTotal?: number;
+};
+
+/* =========================================================
    HELPERS
    ========================================================= */
 
@@ -38,6 +52,7 @@ function payloadRecord(
 function textValue(
   value:
     unknown,
+
   fallback =
     "",
 ) {
@@ -45,6 +60,64 @@ function textValue(
     "string"
     ? value
     : fallback;
+}
+
+function numberValue(
+  value:
+    unknown,
+) {
+  return typeof value ===
+      "number" &&
+    Number.isFinite(
+      value,
+    )
+    ? value
+    : 0;
+}
+
+function formatMoney(
+  value:
+    unknown,
+) {
+  return `৳${numberValue(
+    value,
+  ).toLocaleString(
+    "en-BD",
+    {
+      minimumFractionDigits:
+        0,
+
+      maximumFractionDigits:
+        2,
+    },
+  )}`;
+}
+
+function escapeHtml(
+  value:
+    string,
+) {
+  return value
+    .replaceAll(
+      "&",
+      "&amp;",
+    )
+    .replaceAll(
+      "<",
+      "&lt;",
+    )
+    .replaceAll(
+      ">",
+      "&gt;",
+    )
+    .replaceAll(
+      '"',
+      "&quot;",
+    )
+    .replaceAll(
+      "'",
+      "&#039;",
+    );
 }
 
 /* =========================================================
@@ -78,6 +151,50 @@ export function renderNotificationEmail(
       "You have a new update from Game On Garb.",
     );
 
+  const paymentMethod =
+    textValue(
+      payload.paymentMethod,
+    );
+
+  const paymentStatus =
+    textValue(
+      payload.paymentStatus,
+    );
+
+  const shippingAddress =
+    textValue(
+      payload.shippingAddress,
+    );
+
+  const subtotal =
+    numberValue(
+      payload.subtotal,
+    );
+
+  const discount =
+    numberValue(
+      payload.discount,
+    );
+
+  const deliveryCharge =
+    numberValue(
+      payload.deliveryCharge,
+    );
+
+  const total =
+    numberValue(
+      payload.total,
+    );
+
+  const items =
+    Array.isArray(
+      payload.items,
+    )
+      ? (
+          payload.items as OrderItemPayload[]
+        )
+      : [];
+
   const subject =
     delivery.subject ??
     (
@@ -86,12 +203,147 @@ export function renderNotificationEmail(
         : "Game On Garb Notification"
     );
 
+  const itemRows =
+    items
+      .map(
+        (
+          item,
+        ) => {
+          const name =
+            textValue(
+              item.name,
+              "Product",
+            );
+
+          const meta =
+            [
+              item.color,
+              item.size,
+              item.sku,
+            ]
+              .filter(
+                Boolean,
+              )
+              .map(
+                (
+                  value,
+                ) =>
+                  escapeHtml(
+                    String(
+                      value,
+                    ),
+                  ),
+              )
+              .join(
+                " · ",
+              );
+
+          const quantity =
+            numberValue(
+              item.quantity,
+            );
+
+          const lineTotal =
+            numberValue(
+              item.lineTotal,
+            );
+
+          return `
+            <tr>
+              <td style="padding:14px 0;border-bottom:1px solid #eceee9;">
+                <div style="font-size:14px;font-weight:700;color:#161918;">
+                  ${escapeHtml(
+                    name,
+                  )}
+                </div>
+
+                ${
+                  meta
+                    ? `
+                      <div style="margin-top:5px;font-size:12px;color:#777c77;">
+                        ${meta}
+                      </div>
+                    `
+                    : ""
+                }
+
+                <div style="margin-top:5px;font-size:12px;color:#777c77;">
+                  Qty: ${quantity}
+                  ·
+                  ${formatMoney(
+                    item.unitPrice,
+                  )} each
+                </div>
+              </td>
+
+              <td align="right" style="padding:14px 0;border-bottom:1px solid #eceee9;font-size:14px;font-weight:700;color:#161918;white-space:nowrap;">
+                ${formatMoney(
+                  lineTotal,
+                )}
+              </td>
+            </tr>
+          `;
+        },
+      )
+      .join(
+        "",
+      );
+
+  const textItems =
+    items
+      .map(
+        (
+          item,
+        ) =>
+          `${textValue(
+            item.name,
+            "Product",
+          )} × ${numberValue(
+            item.quantity,
+          )} — ${formatMoney(
+            item.lineTotal,
+          )}`,
+      )
+      .join(
+        "\n",
+      );
+
   const text = [
     `Hi ${customerName},`,
     "",
     message,
+    "",
     orderNumber
       ? `Order: ${orderNumber}`
+      : "",
+    "",
+    textItems,
+    "",
+    `Subtotal: ${formatMoney(
+      subtotal,
+    )}`,
+    discount >
+    0
+      ? `Discount: -${formatMoney(
+          discount,
+        )}`
+      : "",
+    `Delivery: ${formatMoney(
+      deliveryCharge,
+    )}`,
+    `Total: ${formatMoney(
+      total,
+    )}`,
+    "",
+    paymentMethod
+      ? `Payment method: ${paymentMethod}`
+      : "",
+    paymentStatus
+      ? `Payment status: ${paymentStatus}`
+      : "",
+    "",
+    shippingAddress
+      ? `Delivery address: ${shippingAddress}`
       : "",
     "",
     "Game On Garb",
@@ -104,61 +356,208 @@ export function renderNotificationEmail(
       "\n",
     );
 
-  const html =
-    `
-      <!doctype html>
-      <html>
-        <body style="margin:0;padding:0;background:#f4f4f1;font-family:Arial,Helvetica,sans-serif;color:#161918;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f4f4f1;padding:32px 16px;">
-            <tr>
-              <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:620px;background:#ffffff;border:1px solid #e7e8e4;">
-                  <tr>
-                    <td style="padding:24px 28px;background:#111412;color:#ffffff;font-size:18px;font-weight:800;">
+  const html = `
+    <!doctype html>
+
+    <html>
+      <body style="margin:0;padding:0;background:#f3f4f1;font-family:Arial,Helvetica,sans-serif;color:#161918;">
+
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f3f4f1;padding:32px 14px;">
+          <tr>
+            <td align="center">
+
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:640px;background:#ffffff;border:1px solid #e5e7e2;border-radius:12px;overflow:hidden;">
+
+                <tr>
+                  <td style="padding:26px 30px;background:#111412;color:#ffffff;">
+                    <div style="font-size:20px;font-weight:900;letter-spacing:1px;">
                       GAME ON GARB
-                    </td>
-                  </tr>
+                    </div>
 
-                  <tr>
-                    <td style="padding:32px 28px;">
-                      <p style="margin:0 0 16px;font-size:16px;">
-                        Hi ${escapeHtml(
-                          customerName,
-                        )},
-                      </p>
+                    <div style="margin-top:5px;font-size:11px;color:#b8bdb9;text-transform:uppercase;letter-spacing:1.4px;">
+                      Experience The Thrill
+                    </div>
+                  </td>
+                </tr>
 
-                      <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#4d524e;">
-                        ${escapeHtml(
-                          message,
-                        )}
-                      </p>
+                <tr>
+                  <td style="padding:32px 30px;">
+
+                    <div style="font-size:14px;color:#777c77;">
+                      Hi ${escapeHtml(
+                        customerName,
+                      )},
+                    </div>
+
+                    <h1 style="margin:10px 0 8px;font-size:24px;line-height:1.25;color:#161918;">
+                      ${escapeHtml(
+                        message,
+                      )}
+                    </h1>
+
+                    ${
+                      orderNumber
+                        ? `
+                          <div style="margin-top:18px;padding:15px 17px;background:#fff3ed;border-left:4px solid #ff5a16;border-radius:6px;">
+                            <div style="font-size:11px;color:#8b5d48;text-transform:uppercase;letter-spacing:1px;">
+                              Order Number
+                            </div>
+
+                            <div style="margin-top:4px;font-size:18px;font-weight:800;color:#161918;">
+                              ${escapeHtml(
+                                orderNumber,
+                              )}
+                            </div>
+                          </div>
+                        `
+                        : ""
+                    }
+
+                    ${
+                      items.length
+                        ? `
+                          <div style="margin-top:30px;">
+                            <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#555b56;">
+                              Order Summary
+                            </div>
+
+                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:10px;">
+                              ${itemRows}
+                            </table>
+                          </div>
+                        `
+                        : ""
+                    }
+
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:24px;font-size:14px;">
+
+                      <tr>
+                        <td style="padding:6px 0;color:#686d69;">
+                          Subtotal
+                        </td>
+
+                        <td align="right" style="padding:6px 0;font-weight:600;">
+                          ${formatMoney(
+                            subtotal,
+                          )}
+                        </td>
+                      </tr>
 
                       ${
-                        orderNumber
+                        discount >
+                        0
                           ? `
-                            <div style="padding:14px 16px;background:#f7f7f4;border-left:3px solid #ff5a16;">
-                              <strong>Order ${escapeHtml(
-                                orderNumber,
-                              )}</strong>
-                            </div>
+                            <tr>
+                              <td style="padding:6px 0;color:#686d69;">
+                                Discount
+                              </td>
+
+                              <td align="right" style="padding:6px 0;font-weight:600;">
+                                -${formatMoney(
+                                  discount,
+                                )}
+                              </td>
+                            </tr>
                           `
                           : ""
                       }
-                    </td>
-                  </tr>
 
-                  <tr>
-                    <td style="padding:18px 28px;background:#f7f7f4;color:#777c77;font-size:12px;">
-                      Game On Garb · Experience The Thrill
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-      </html>
-    `;
+                      <tr>
+                        <td style="padding:6px 0;color:#686d69;">
+                          Delivery
+                        </td>
+
+                        <td align="right" style="padding:6px 0;font-weight:600;">
+                          ${formatMoney(
+                            deliveryCharge,
+                          )}
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td style="padding:15px 0 4px;border-top:1px solid #e4e6e2;font-size:16px;font-weight:800;">
+                          Total
+                        </td>
+
+                        <td align="right" style="padding:15px 0 4px;border-top:1px solid #e4e6e2;font-size:19px;font-weight:900;color:#ff5a16;">
+                          ${formatMoney(
+                            total,
+                          )}
+                        </td>
+                      </tr>
+
+                    </table>
+
+                    ${
+                      paymentMethod ||
+                      shippingAddress
+                        ? `
+                          <div style="margin-top:28px;padding:18px;background:#f7f8f5;border-radius:8px;">
+
+                            ${
+                              paymentMethod
+                                ? `
+                                  <div style="font-size:12px;color:#7b807c;text-transform:uppercase;letter-spacing:.7px;">
+                                    Payment
+                                  </div>
+
+                                  <div style="margin-top:4px;font-size:14px;font-weight:700;">
+                                    ${escapeHtml(
+                                      paymentMethod,
+                                    )}
+                                    ${
+                                      paymentStatus
+                                        ? ` · ${escapeHtml(
+                                            paymentStatus,
+                                          )}`
+                                        : ""
+                                    }
+                                  </div>
+                                `
+                                : ""
+                            }
+
+                            ${
+                              shippingAddress
+                                ? `
+                                  <div style="margin-top:${paymentMethod ? "18px" : "0"};font-size:12px;color:#7b807c;text-transform:uppercase;letter-spacing:.7px;">
+                                    Delivery Address
+                                  </div>
+
+                                  <div style="margin-top:5px;font-size:14px;line-height:1.6;color:#333834;">
+                                    ${escapeHtml(
+                                      shippingAddress,
+                                    )}
+                                  </div>
+                                `
+                                : ""
+                            }
+
+                          </div>
+                        `
+                        : ""
+                    }
+
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:20px 30px;background:#f7f8f5;color:#777c77;font-size:12px;line-height:1.6;">
+                    Game On Garb · Experience The Thrill
+                    <br>
+                    This is an automated transactional email regarding your order.
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+    </html>
+  `;
 
   return {
     to:
@@ -205,6 +604,7 @@ export function renderNotificationSms(
       [
         "Game On Garb:",
         message,
+
         orderNumber
           ? `Order ${orderNumber}.`
           : "",
@@ -216,35 +616,4 @@ export function renderNotificationSms(
           " ",
         ),
   };
-}
-
-/* =========================================================
-   HTML SAFETY
-   ========================================================= */
-
-function escapeHtml(
-  value:
-    string,
-) {
-  return value
-    .replaceAll(
-      "&",
-      "&amp;",
-    )
-    .replaceAll(
-      "<",
-      "&lt;",
-    )
-    .replaceAll(
-      ">",
-      "&gt;",
-    )
-    .replaceAll(
-      '"',
-      "&quot;",
-    )
-    .replaceAll(
-      "'",
-      "&#039;",
-    );
 }
