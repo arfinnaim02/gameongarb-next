@@ -1,4 +1,5 @@
 import {
+  NotificationChannel,
   NotificationStatus,
 } from "@prisma/client";
 
@@ -145,13 +146,47 @@ async function recoverStaleProcessingJobs() {
 async function findDueNotificationIds(
   batchSize:
     number,
+
+  providers:
+    NotificationProviders,
 ) {
   const now =
     new Date();
 
+  const channels: NotificationChannel[] =
+    [];
+
+  if (
+    providers.email
+  ) {
+    channels.push(
+      NotificationChannel.EMAIL,
+    );
+  }
+
+  if (
+    providers.sms
+  ) {
+    channels.push(
+      NotificationChannel.SMS,
+    );
+  }
+
+  if (
+    channels.length ===
+    0
+  ) {
+    return [];
+  }
+
   const rows =
     await db.notificationDelivery.findMany({
       where: {
+        channel: {
+          in:
+            channels,
+        },
+
         attempts: {
           lt:
             10,
@@ -249,6 +284,7 @@ export async function processNotificationBatch({
   const ids =
     await findDueNotificationIds(
       safeBatchSize,
+      providers,
     );
 
   let processed =
