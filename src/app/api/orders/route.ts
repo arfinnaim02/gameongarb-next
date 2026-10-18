@@ -284,6 +284,15 @@ export async function POST(
       );
 
 
+          const notificationEmail =
+      (
+        input.email?.trim() ||
+        sessionUser?.email?.trim() ||
+        sessionUser?.customer
+          ?.email?.trim() ||
+        ""
+      )
+        .toLowerCase();
 
     /* =====================================================
 
@@ -1701,9 +1710,8 @@ export async function POST(
 
 
               email:
-
-                input.email,
-
+                notificationEmail ||
+                null,
 
 
               /*
