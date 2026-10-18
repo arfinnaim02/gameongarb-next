@@ -10,6 +10,11 @@ import {
   db,
 } from "@/lib/db";
 
+import {
+  notificationEventForOrderStatus,
+  queueOrderNotifications,
+} from "@/lib/notifications/events";
+
 type ChangeOrderStatusInput = {
   orderId:
     string;
@@ -43,10 +48,11 @@ export async function changeOrderStatus({
   source,
   note = null,
 }: ChangeOrderStatusInput) {
-  return db.$transaction(
-    async (
-      tx,
-    ) => {
+  const result =
+    await db.$transaction(
+      async (
+        tx,
+      ) => {
       const order =
         await tx.order.findUniqueOrThrow({
           where: {
@@ -297,44 +303,61 @@ export async function changeOrderStatus({
       }
 
       /* ===================================================
-         STATUS + HISTORY
+         STATUS HISTORY
          =================================================== */
 
-      return tx.order.update({
-        where: {
-          id:
-            order.id,
-        },
+      const history =
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId:
+              order.id,
 
-        data: {
-          status:
-            nextStatus,
+            oldStatus:
+              order.status,
 
-          history: {
-            create: {
-              oldStatus:
-                order.status,
+            newStatus:
+              nextStatus,
 
-              newStatus:
-                nextStatus,
+            changedBy,
 
-              changedBy,
+            source,
 
-              source,
-
-              note,
-            },
+            note,
           },
-        },
+        });
 
-        include: {
-          items:
-            true,
+      /* ===================================================
+         UPDATE ORDER
+         =================================================== */
 
-          shipment:
-            true,
-        },
-      });
+      const updatedOrder =
+        await tx.order.update({
+          where: {
+            id:
+              order.id,
+          },
+
+          data: {
+            status:
+              nextStatus,
+          },
+
+          include: {
+            items:
+              true,
+
+            shipment:
+              true,
+          },
+        });
+
+      return {
+        order:
+          updatedOrder,
+
+        historyId:
+          history.id,
+      };
     },
     {
       maxWait:
@@ -344,4 +367,55 @@ export async function changeOrderStatus({
         20_000,
     },
   );
+
+  /* =======================================================
+     CUSTOMER NOTIFICATION OUTBOX
+
+     Runs only after the order transaction has committed.
+
+     A notification failure must never roll back
+     inventory or the order status change.
+     ======================================================= */
+
+  const notificationEvent =
+    notificationEventForOrderStatus(
+      nextStatus,
+    );
+
+  if (
+    notificationEvent
+  ) {
+    try {
+      await queueOrderNotifications({
+        orderId:
+          result.order.id,
+
+        event:
+          notificationEvent,
+
+        occurrenceKey:
+          result.historyId,
+      });
+    } catch (
+      error
+    ) {
+      console.error(
+        "Order notification queue failed:",
+        {
+          orderId:
+            result.order.id,
+
+          status:
+            nextStatus,
+
+          historyId:
+            result.historyId,
+
+          error,
+        },
+      );
+    }
+  }
+
+  return result.order;
 }
