@@ -95,25 +95,6 @@ export function SocialAuthButtons({
           </span>
         </Link>
 
-        <Link
-          href={`/api/auth/oauth/facebook?mode=${mode}`}
-          className={
-            styles.facebookButton
-          }
-        >
-          <span
-            className={
-              styles.facebookIcon
-            }
-            aria-hidden="true"
-          >
-            f
-          </span>
-
-          <span>
-            Continue with Facebook
-          </span>
-        </Link>
       </div>
 
       <div
