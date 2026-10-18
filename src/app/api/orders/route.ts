@@ -76,6 +76,14 @@ import {
   queueOrderPlacedNotifications,
 } from "@/lib/notifications/events";
 
+import {
+  getNotificationProviders,
+} from "@/lib/notifications/runtime";
+
+import {
+  processNotificationDelivery,
+} from "@/lib/notifications/service";
+
 
 /* =========================================================
 
@@ -2068,14 +2076,39 @@ export async function POST(
            ================================================= */
 
         try {
-          await queueOrderPlacedNotifications(
-            order.id,
+          const deliveries =
+            await queueOrderPlacedNotifications(
+              order.id,
+            );
+
+          const providers =
+            getNotificationProviders();
+
+          const emailDeliveries =
+            deliveries.filter(
+              (
+                delivery,
+              ) =>
+                delivery.channel ===
+                "EMAIL",
+            );
+
+          await Promise.all(
+            emailDeliveries.map(
+              (
+                delivery,
+              ) =>
+                processNotificationDelivery(
+                  delivery.id,
+                  providers,
+                ),
+            ),
           );
         } catch (
           error
         ) {
           console.error(
-            "Order placed notification queue failed:",
+            "Order placed notification failed:",
             {
               orderId:
                 order.id,
