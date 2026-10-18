@@ -126,6 +126,17 @@ export function StoreShell({
   return (
     <>
       {/* =====================================================
+          GLOBAL ANNOUNCEMENT BAR
+          ===================================================== */}
+
+      <AnnouncementBar
+        value={
+          settings
+            .global_announcement_bar
+        }
+      />
+
+      {/* =====================================================
           GLOBAL STORE HEADER
           ===================================================== */}
 
