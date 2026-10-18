@@ -1086,23 +1086,29 @@
 }
 
 .socialButtons {
+  width:
+    100%;
+
   display:
-    grid;
+    flex;
 
-  grid-template-columns:
-    1fr 1fr;
+  align-items:
+    center;
 
-  gap:
-    10px;
+  justify-content:
+    center;
 }
 
 .googleButton,
 .facebookButton {
+  position:
+    relative;
+
   min-height:
-    48px;
+    54px;
 
   padding:
-    0 14px;
+    0 22px;
 
   border:
     1px solid
@@ -1118,40 +1124,80 @@
     center;
 
   gap:
-    9px;
+    13px;
+
+  border-radius:
+    12px;
 
   font-size:
-    11px;
+    12px;
 
   font-weight:
     850;
 
+  text-decoration:
+    none;
+
   transition:
     border-color
-      160ms ease,
+      180ms ease,
     background-color
-      160ms ease,
+      180ms ease,
     transform
-      160ms ease;
+      180ms ease,
+    box-shadow
+      180ms ease;
 }
 
 .googleButton {
+  width:
+    min(
+      100%,
+      420px
+    );
+
+  overflow:
+    hidden;
+
+  border-color:
+    #dfe3df;
+
   background:
-    #fff;
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #fbfcfb 100%
+    );
 
   color:
-    #252925;
+    #1e221f;
+
+  box-shadow:
+    0 8px 22px
+    rgb(
+      20 24 21 /
+      7%
+    );
 }
 
 .googleButton:hover {
   border-color:
-    #aeb4af;
+    #c3c8c4;
 
   background:
-    #fafbfa;
+    #fff;
 
   transform:
-    translateY(-1px);
+    translateY(
+      -2px
+    );
+
+  box-shadow:
+    0 14px 30px
+    rgb(
+      20 24 21 /
+      11%
+    );
 }
 
 .facebookButton {
