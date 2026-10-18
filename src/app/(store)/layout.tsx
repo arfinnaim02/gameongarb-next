@@ -42,6 +42,7 @@ export default async function StoreLayout({
                 "contact",
                 "social",
                 "tracking",
+                "global_announcement_bar",
               ],
             },
           },
