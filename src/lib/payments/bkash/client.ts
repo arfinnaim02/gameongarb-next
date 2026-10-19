@@ -1,5 +1,6 @@
 import {
   BkashApiError,
+  getBkashErrorCategory,
   getBkashErrorMessage,
 } from "@/lib/payments/bkash/errors";
 
@@ -165,21 +166,35 @@ async function requestGrantToken() {
           BkashApiErrorPayload |
           null;
 
+      const code =
+        errorPayload
+          ?.errorCode ??
+        errorPayload
+          ?.statusCode ??
+        null;
+
+      const message =
+        getBkashErrorMessage(
+          errorPayload,
+        );
+
       throw new BkashApiError({
         status:
           response.status,
 
-        code:
-          errorPayload
-            ?.errorCode ??
-          errorPayload
-            ?.statusCode ??
-          null,
+        code,
 
-        message:
-          getBkashErrorMessage(
-            errorPayload,
-          ),
+        message,
+
+        category:
+          getBkashErrorCategory({
+            status:
+              response.status,
+
+            code,
+
+            message,
+          }),
 
         payload:
           errorPayload,

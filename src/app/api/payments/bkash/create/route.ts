@@ -26,6 +26,10 @@ import type {
   BkashCreatePaymentResponse,
 } from "@/lib/payments/bkash/types";
 
+import {
+  getBkashCustomerMessage,
+} from "@/lib/payments/bkash/errors";
+
 export const dynamic =
   "force-dynamic";
 
@@ -441,10 +445,9 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          error instanceof
-            Error
-            ? error.message
-            : "Unable to start bKash payment.",
+          getBkashCustomerMessage(
+            error,
+          ),
       },
       {
         status:
