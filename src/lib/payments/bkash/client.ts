@@ -7,6 +7,10 @@ import {
   getBkashConfig,
 } from "@/lib/payments/bkash/config";
 
+import {
+  getSharedBkashAccessToken,
+} from "@/lib/payments/bkash/token-cache";
+
 import type {
   BkashAccessToken,
   BkashApiErrorPayload,
@@ -16,14 +20,17 @@ import type {
 /* =========================================================
    TOKEN CACHE
 
-   Important:
-   Do not request a new Grant Token for every payment.
+   Memory cache:
+   Fast path inside the current Node/Vercel process.
+
+   Shared Neon cache:
+   Used across all serverless instances.
+
+   PostgreSQL advisory locking prevents multiple instances
+   from requesting Grant Token simultaneously.
 
    bKash specifically warned that Grant Token may only be
    called twice per hour.
-
-   This cache prevents repeated calls inside the same
-   server process.
    ========================================================= */
 
 let cachedToken:
@@ -208,7 +215,8 @@ async function requestGrantToken() {
         ? payload.expires_in
         : 3600;
 
-    cachedToken = {
+    const accessToken:
+      BkashAccessToken = {
       token,
 
       expiresAt:
@@ -217,7 +225,7 @@ async function requestGrantToken() {
           1000,
     };
 
-    return token;
+    return accessToken;
   } catch (
     error
   ) {
@@ -259,6 +267,10 @@ async function requestGrantToken() {
    ========================================================= */
 
 export async function getBkashAccessToken() {
+  /*
+   * Fastest path:
+   * use the current process memory cache.
+   */
   if (
     tokenStillValid() &&
     cachedToken
@@ -267,8 +279,8 @@ export async function getBkashAccessToken() {
   }
 
   /*
-   * Multiple requests reaching the same process at once
-   * should share the same Grant Token request.
+   * Requests arriving simultaneously inside the same
+   * process share one promise.
    */
   if (
     tokenPromise
@@ -277,7 +289,24 @@ export async function getBkashAccessToken() {
   }
 
   tokenPromise =
-    requestGrantToken();
+    (
+      async () => {
+        /*
+         * Across different Vercel instances, Neon +
+         * PostgreSQL advisory locking becomes the shared
+         * source of truth.
+         */
+        const accessToken =
+          await getSharedBkashAccessToken(
+            requestGrantToken,
+          );
+
+        cachedToken =
+          accessToken;
+
+        return accessToken.token;
+      }
+    )();
 
   try {
     return await tokenPromise;
