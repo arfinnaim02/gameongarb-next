@@ -4,6 +4,7 @@ const REQUIRED_KEYS = [
   "BKASH_APP_SECRET",
   "BKASH_USERNAME",
   "BKASH_PASSWORD",
+  "BKASH_CALLBACK_URL",
 ] as const;
 
 type RequiredKey =
@@ -90,6 +91,11 @@ export function getBkashConfig() {
     password:
       requiredEnv(
         "BKASH_PASSWORD",
+      ),
+
+    callbackUrl:
+      requiredEnv(
+        "BKASH_CALLBACK_URL",
       ),
 
     timeoutMs:

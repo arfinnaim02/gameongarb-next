@@ -104,7 +104,7 @@ async function requestGrantToken() {
     const response =
       await fetch(
         buildUrl(
-        "/tokenized-checkout/auth/grant-token",
+          "/tokenized-checkout/auth/grant-token",
         ),
         {
           method:
@@ -348,7 +348,7 @@ export async function bkashRequest<T>({
               "application/json",
 
             authorization:
-            `Bearer ${token}`,
+              `Bearer ${token}`,
 
             "x-app-key":
               config.appKey,

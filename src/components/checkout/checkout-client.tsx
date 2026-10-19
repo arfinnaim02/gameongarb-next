@@ -94,6 +94,14 @@ type CheckoutResponse = {
   >;
 };
 
+type BkashCreateResponse = {
+  ok?: boolean;
+  orderNumber?: string;
+  paymentId?: string;
+  bkashURL?: string;
+  error?: string;
+};
+
 type CouponResponse = {
   code?: string | null;
   couponId?: string;
@@ -1168,13 +1176,77 @@ export function CheckoutClient() {
         return;
       }
 
-      clear();
-
-      router.push(
+      if (
         data.paymentMode ===
-          "cod"
-          ? `/checkout/success/${data.orderNumber}`
-          : `/payment/bkash/${data.orderNumber}`,
+        "cod"
+      ) {
+        clear();
+
+        router.push(
+          `/checkout/success/${data.orderNumber}`,
+        );
+
+        return;
+      }
+
+      /* ===============================================
+         BKASH CREATE PAYMENT
+         =============================================== */
+
+      const bkashResponse =
+        await fetch(
+          "/api/payments/bkash/create",
+          {
+            method:
+              "POST",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                orderNumber:
+                  data.orderNumber,
+              }),
+          },
+        );
+
+      const bkashData =
+        (await bkashResponse
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Unable to start bKash payment.",
+            }),
+          )) as
+          BkashCreateResponse;
+
+      if (
+        !bkashResponse.ok
+      ) {
+        setError(
+          bkashData.error ??
+            "Unable to start bKash payment.",
+        );
+
+        return;
+      }
+
+      if (
+        !bkashData.bkashURL
+      ) {
+        setError(
+          "bKash payment URL was not received.",
+        );
+
+        return;
+      }
+
+      window.location.assign(
+        bkashData.bkashURL,
       );
     } catch {
       setError(
