@@ -166,3 +166,59 @@ export type BkashPaymentResult = {
   [key: string]:
     unknown;
 };
+
+export type BkashSearchTransactionResponse = {
+  trxId?:
+    string;
+
+  initiationTime?:
+    string;
+
+  completedTime?:
+    string;
+
+  transactionType?:
+    string;
+
+  payerAccount?:
+    string;
+
+  transactionStatus?:
+    string;
+
+  amount?:
+    string;
+
+  currency?:
+    string;
+
+  organizationAccount?:
+    string;
+
+  serviceFee?:
+    string;
+
+  payerType?:
+    string;
+
+  creditedAmount?:
+    string;
+
+  maxRefundableAmount?:
+    string;
+
+  statusCode?:
+    string;
+
+  statusMessage?:
+    string;
+
+  errorCode?:
+    string;
+
+  errorMessage?:
+    string;
+
+  [key: string]:
+    unknown;
+};

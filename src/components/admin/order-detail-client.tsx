@@ -118,12 +118,82 @@ type PaymentData = {
     string |
     null;
 
+  transactionId:
+    string |
+    null;
+
   createdAt:
     string;
 
   updatedAt:
     string;
 };
+
+type BkashVerificationResult = {
+  verified:
+    boolean;
+
+  checkedAt:
+    string;
+
+  trxId:
+    string;
+
+  transactionStatus:
+    string |
+    null;
+
+  amount:
+    number |
+    null;
+
+  currency:
+    string |
+    null;
+
+  payerAccount:
+    string |
+    null;
+
+  organizationAccount:
+    string |
+    null;
+
+  initiationTime:
+    string |
+    null;
+
+  completedTime:
+    string |
+    null;
+
+  serviceFee:
+    string |
+    null;
+
+  creditedAmount:
+    string |
+    null;
+
+  maxRefundableAmount:
+    string |
+    null;
+
+  checks: {
+    trxMatches:
+      boolean;
+
+    statusCompleted:
+      boolean;
+
+    amountMatches:
+      boolean;
+
+    currencyMatches:
+      boolean;
+  };
+};
+
 
 type ShipmentData = {
   id:
@@ -649,6 +719,25 @@ export function OrderDetailClient({
       null,
     );
 
+      const [
+    bkashVerifyBusy,
+    setBkashVerifyBusy,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    bkashVerification,
+    setBkashVerification,
+  ] =
+    useState<
+      BkashVerificationResult |
+      null
+    >(
+      null,
+    );
+
   const transitions =
     TRANSITIONS[
       data.order.status
@@ -840,6 +929,91 @@ export function OrderDetailClient({
       );
     }
   }
+  async function verifyBkashTransaction() {
+    if (
+      bkashVerifyBusy
+    ) {
+      return;
+    }
+
+    setBkashVerifyBusy(
+      true,
+    );
+
+    setMessage(
+      "",
+    );
+
+    setError(
+      "",
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${data.order.id}/bkash/verify`,
+          {
+            method:
+              "POST",
+
+            cache:
+              "no-store",
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Invalid verification response.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to verify bKash transaction.",
+        );
+      }
+
+      if (
+        !result.result
+      ) {
+        throw new Error(
+          "bKash verification result was not returned.",
+        );
+      }
+
+      setBkashVerification(
+        result.result as
+          BkashVerificationResult,
+      );
+
+      setMessage(
+        result.message ??
+          "bKash verification completed.",
+      );
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to verify bKash transaction.",
+      );
+    } finally {
+      setBkashVerifyBusy(
+        false,
+      );
+    }
+  }
+
+
 
   async function updateStatus(
     nextStatus:
@@ -2699,6 +2873,24 @@ export function OrderDetailClient({
                         payment.createdAt,
                       )}
                     </span>
+
+                    {payment.providerReference ? (
+                      <span>
+                        Payment ID:{" "}
+                        {
+                          payment.providerReference
+                        }
+                      </span>
+                    ) : null}
+
+                    {payment.transactionId ? (
+                      <span>
+                        trxID:{" "}
+                        {
+                          payment.transactionId
+                        }
+                      </span>
+                    ) : null}
                   </div>
 
                   <strong>
@@ -2709,6 +2901,144 @@ export function OrderDetailClient({
                 </div>
               ),
             )}
+
+            {data.order
+              .paymentMethod ===
+              "BKASH" ? (
+              <div
+                className={
+                  styles.bkashVerification
+                }
+              >
+                <button
+                  type="button"
+                  className={
+                    styles.courierPrimaryButton
+                  }
+                  disabled={
+                    bkashVerifyBusy
+                  }
+                  onClick={() =>
+                    void verifyBkashTransaction()
+                  }
+                >
+                  <RefreshCw
+                    size={
+                      14
+                    }
+                    className={
+                      bkashVerifyBusy
+                        ? styles.fraudSpinner
+                        : ""
+                    }
+                  />
+
+                  {bkashVerifyBusy
+                    ? "Verifying..."
+                    : "Verify with bKash"}
+                </button>
+
+                {bkashVerification ? (
+                  <div
+                    className={
+                      bkashVerification
+                        .verified
+                        ? styles.bkashVerified
+                        : styles.bkashMismatch
+                    }
+                  >
+                    <strong>
+                      {bkashVerification
+                        .verified
+                        ? "Verified"
+                        : "Mismatch Detected"}
+                    </strong>
+
+                    <div>
+                      <span>
+                        trxID
+                      </span>
+
+                      <b>
+                        {
+                          bkashVerification
+                            .trxId
+                        }
+                      </b>
+                    </div>
+
+                    <div>
+                      <span>
+                        bKash Status
+                      </span>
+
+                      <b>
+                        {
+                          bkashVerification
+                            .transactionStatus ??
+                          "Unknown"
+                        }
+                      </b>
+                    </div>
+
+                    <div>
+                      <span>
+                        Amount
+                      </span>
+
+                      <b>
+                        {bkashVerification
+                          .amount !==
+                        null
+                          ? formatBDT(
+                              bkashVerification
+                                .amount,
+                            )
+                          : "Unknown"}
+                      </b>
+                    </div>
+
+                    <div>
+                      <span>
+                        Currency
+                      </span>
+
+                      <b>
+                        {
+                          bkashVerification
+                            .currency ??
+                          "Unknown"
+                        }
+                      </b>
+                    </div>
+
+                    {bkashVerification
+                      .payerAccount ? (
+                      <div>
+                        <span>
+                          Payer
+                        </span>
+
+                        <b>
+                          {
+                            bkashVerification
+                              .payerAccount
+                          }
+                        </b>
+                      </div>
+                    ) : null}
+
+                    <small>
+                      Checked{" "}
+                      {formatDate(
+                        bkashVerification
+                          .checkedAt,
+                      )}
+                    </small>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </section>
 
           <section

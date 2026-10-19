@@ -67,6 +67,15 @@ export default async function AdminOrderDetail({
             createdAt:
               "desc",
           },
+
+          include: {
+            transactions: {
+              orderBy: {
+                createdAt:
+                  "desc",
+              },
+            },
+          },
         },
 
 shipment: {
@@ -348,6 +357,22 @@ shipment: {
 
           providerReference:
             payment.providerReference,
+
+          transactionId:
+            payment.transactions.find(
+              (
+                transaction,
+              ) =>
+                transaction.status ===
+                  "PAID" &&
+                transaction.type !==
+                  "CREATE" &&
+                Boolean(
+                  transaction.externalId,
+                ),
+            )
+              ?.externalId ??
+            null,
 
           createdAt:
             payment.createdAt.toISOString(),
