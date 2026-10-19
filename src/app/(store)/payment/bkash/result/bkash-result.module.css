@@ -1,0 +1,723 @@
+.page {
+  min-height:
+    76vh;
+
+  padding:
+    clamp(
+      42px,
+      6vw,
+      80px
+    )
+    0
+    clamp(
+      70px,
+      9vw,
+      110px
+    );
+
+  background:
+    linear-gradient(
+      180deg,
+      #fafbf9
+        0%,
+      #f4f5f2
+        100%
+    );
+
+  color:
+    #171a18;
+}
+
+.container {
+  width:
+    min(
+      780px,
+      calc(
+        100% - 32px
+      )
+    );
+
+  margin-inline:
+    auto;
+}
+
+.card {
+  position:
+    relative;
+
+  overflow:
+    hidden;
+
+  padding:
+    clamp(
+      28px,
+      5vw,
+      54px
+    );
+
+  border:
+    1px solid
+    rgba(
+      23,
+      26,
+      24,
+      0.09
+    );
+
+  border-radius:
+    30px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    );
+
+  box-shadow:
+    0 24px 80px
+    rgba(
+      17,
+      20,
+      18,
+      0.08
+    );
+
+  text-align:
+    center;
+}
+
+.card::before {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  inset:
+    0 0 auto;
+
+  height:
+    4px;
+
+  background:
+    #171a18;
+}
+
+.success::before {
+  background:
+    #1b7a4b;
+}
+
+.failed::before {
+  background:
+    #b53232;
+}
+
+.cancelled::before {
+  background:
+    #79736b;
+}
+
+.pending::before {
+  background:
+    #b87919;
+}
+
+.visual {
+  position:
+    relative;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  width:
+    108px;
+
+  height:
+    108px;
+
+  margin:
+    0 auto 24px;
+}
+
+.ringOne,
+.ringTwo {
+  position:
+    absolute;
+
+  border:
+    1px solid
+    currentColor;
+
+  border-radius:
+    999px;
+
+  opacity:
+    0.12;
+}
+
+.ringOne {
+  width:
+    88px;
+
+  height:
+    88px;
+}
+
+.ringTwo {
+  width:
+    108px;
+
+  height:
+    108px;
+}
+
+.iconCircle {
+  position:
+    relative;
+
+  z-index:
+    2;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  width:
+    68px;
+
+  height:
+    68px;
+
+  border-radius:
+    50%;
+
+  background:
+    #171a18;
+
+  color:
+    #fff;
+
+  box-shadow:
+    0 12px 28px
+    rgba(
+      23,
+      26,
+      24,
+      0.18
+    );
+}
+
+.success .iconCircle {
+  background:
+    #1b7a4b;
+}
+
+.failed .iconCircle {
+  background:
+    #b53232;
+}
+
+.cancelled .iconCircle {
+  background:
+    #69645e;
+}
+
+.pending .iconCircle {
+  background:
+    #b87919;
+}
+
+.eyebrow {
+  display:
+    block;
+
+  margin-bottom:
+    10px;
+
+  font-size:
+    11px;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    0.18em;
+
+  text-transform:
+    uppercase;
+
+  color:
+    #777c77;
+}
+
+.title {
+  margin:
+    0;
+
+  font-size:
+    clamp(
+      30px,
+      5vw,
+      46px
+    );
+
+  line-height:
+    1.06;
+
+  letter-spacing:
+    -0.035em;
+}
+
+.description {
+  max-width:
+    590px;
+
+  margin:
+    18px auto 0;
+
+  color:
+    #656a66;
+
+  font-size:
+    15px;
+
+  line-height:
+    1.75;
+}
+
+.paymentBrand {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  margin-top:
+    22px;
+
+  padding:
+    9px 14px;
+
+  border:
+    1px solid
+    rgba(
+      216,
+      43,
+      104,
+      0.18
+    );
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(
+      216,
+      43,
+      104,
+      0.06
+    );
+
+  color:
+    #c51f5d;
+
+  font-size:
+    12px;
+
+  font-weight:
+    800;
+}
+
+.orderPanel {
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    1px;
+
+  margin-top:
+    30px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    #e6e8e5;
+
+  border-radius:
+    18px;
+
+  background:
+    #e6e8e5;
+}
+
+.orderNumber,
+.amount {
+  padding:
+    18px;
+
+  background:
+    #f8f9f7;
+}
+
+.orderNumber span,
+.amount span {
+  display:
+    block;
+
+  margin-bottom:
+    5px;
+
+  color:
+    #7a7f7b;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.12em;
+
+  text-transform:
+    uppercase;
+}
+
+.orderNumber strong,
+.amount strong {
+  font-size:
+    17px;
+
+  color:
+    #171a18;
+}
+
+.details {
+  margin-top:
+    24px;
+
+  padding:
+    4px 0;
+
+  border-top:
+    1px solid
+    #e9ebe8;
+
+  border-bottom:
+    1px solid
+    #e9ebe8;
+}
+
+.detailRow {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    20px;
+
+  padding:
+    13px 2px;
+
+  text-align:
+    left;
+}
+
+.detailRow + .detailRow {
+  border-top:
+    1px solid
+    #f0f1ef;
+}
+
+.detailRow span {
+  color:
+    #777c78;
+
+  font-size:
+    13px;
+}
+
+.detailRow strong {
+  overflow-wrap:
+    anywhere;
+
+  text-align:
+    right;
+
+  font-size:
+    13px;
+
+  color:
+    #202421;
+}
+
+.notice {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  gap:
+    12px;
+
+  margin-top:
+    24px;
+
+  padding:
+    15px 17px;
+
+  border:
+    1px solid
+    #e6e8e4;
+
+  border-radius:
+    15px;
+
+  background:
+    #f7f8f5;
+
+  text-align:
+    left;
+}
+
+.notice svg {
+  flex:
+    0 0 auto;
+
+  margin-top:
+    2px;
+}
+
+.notice strong,
+.notice span {
+  display:
+    block;
+}
+
+.notice strong {
+  margin-bottom:
+    3px;
+
+  font-size:
+    13px;
+}
+
+.notice span {
+  color:
+    #707570;
+
+  font-size:
+    12px;
+
+  line-height:
+    1.55;
+}
+
+.actions {
+  display:
+    flex;
+
+  justify-content:
+    center;
+
+  gap:
+    10px;
+
+  margin-top:
+    30px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    8px;
+
+  min-height:
+    46px;
+
+  padding:
+    0 21px;
+
+  border-radius:
+    999px;
+
+  font-size:
+    12px;
+
+  font-weight:
+    800;
+
+  text-decoration:
+    none;
+
+  transition:
+    transform
+      160ms ease,
+    background
+      160ms ease,
+    border-color
+      160ms ease;
+}
+
+.primaryAction {
+  border:
+    1px solid
+    #171a18;
+
+  background:
+    #171a18;
+
+  color:
+    #fff;
+}
+
+.secondaryAction {
+  border:
+    1px solid
+    #d8dbd7;
+
+  background:
+    #fff;
+
+  color:
+    #171a18;
+}
+
+.primaryAction:hover,
+.secondaryAction:hover {
+  transform:
+    translateY(
+      -2px
+    );
+}
+
+.secondaryAction:hover {
+  border-color:
+    #171a18;
+}
+
+.help {
+  margin-top:
+    18px;
+
+  padding:
+    18px 22px;
+
+  text-align:
+    center;
+
+  color:
+    #717672;
+}
+
+.help span {
+  display:
+    block;
+
+  margin-bottom:
+    4px;
+
+  color:
+    #303431;
+
+  font-size:
+    12px;
+
+  font-weight:
+    800;
+}
+
+.help p {
+  margin:
+    0;
+
+  font-size:
+    12px;
+
+  line-height:
+    1.6;
+}
+
+@media (
+  max-width:
+    620px
+) {
+  .page {
+    padding:
+      28px
+      0
+      84px;
+  }
+
+  .card {
+    padding:
+      28px
+      18px;
+
+    border-radius:
+      22px;
+  }
+
+  .orderPanel {
+    grid-template-columns:
+      1fr;
+  }
+
+  .actions {
+    flex-direction:
+      column;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    width:
+      100%;
+  }
+
+  .detailRow {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+
+    gap:
+      5px;
+  }
+
+  .detailRow strong {
+    text-align:
+      left;
+  }
+}

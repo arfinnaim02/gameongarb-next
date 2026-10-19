@@ -113,3 +113,56 @@ export type BkashCreatePaymentResponse = {
   [key: string]:
     unknown;
 };
+
+export type BkashPaymentResult = {
+  paymentId?:
+    string;
+
+  paymentID?:
+    string;
+
+  trxId?:
+    string;
+
+  trxID?:
+    string;
+
+  transactionStatus?:
+    string;
+
+  amount?:
+    string;
+
+  currency?:
+    string;
+
+  intent?:
+    string;
+
+  paymentExecuteTime?:
+    string;
+
+  merchantInvoiceNumber?:
+    string;
+
+  payerReference?:
+    string;
+
+  payerAccount?:
+    string;
+
+  statusCode?:
+    string;
+
+  statusMessage?:
+    string;
+
+  errorCode?:
+    string;
+
+  errorMessage?:
+    string;
+
+  [key: string]:
+    unknown;
+};
