@@ -45,6 +45,10 @@ import {
 
 } from "@/lib/db";
 
+import {
+  isBkashAllowedForPhone,
+} from "@/lib/payments/bkash/access";
+
 
 
 
@@ -502,6 +506,14 @@ export async function POST(
 
 
 
+    const bkashAllowed =
+      payments.bkashEnabled &&
+      isBkashAllowedForPhone(
+        input.phone,
+      );
+
+
+
     if (
 
       (
@@ -520,7 +532,7 @@ export async function POST(
 
           "BKASH" &&
 
-        !payments.bkashEnabled
+        !bkashAllowed
 
       )
 

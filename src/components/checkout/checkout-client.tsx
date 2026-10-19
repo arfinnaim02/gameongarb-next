@@ -54,11 +54,22 @@ import styles from "./checkout-client.module.css";
    ========================================================= */
 
 type PublicSettings = {
-  insideDhaka: number;
-  outsideDhaka: number;
+  insideDhaka:
+    number;
 
-  codEnabled: boolean;
-  bkashEnabled: boolean;
+  outsideDhaka:
+    number;
+
+  codEnabled:
+    boolean;
+
+  bkashEnabled:
+    boolean;
+
+  bkashAccessMode?:
+    "DISABLED" |
+    "UAT" |
+    "PUBLIC";
 };
 
 type PaymentMethod =
@@ -230,59 +241,115 @@ export function CheckoutClient() {
     let cancelled =
       false;
 
-    fetch(
-      "/api/settings/public",
-      {
-        cache:
-          "no-store",
-      },
-    )
-      .then(
-        async (
-          response,
-        ) => {
+    const timer =
+      window.setTimeout(
+        () => {
+          const params =
+            new URLSearchParams();
+
+          const phone =
+            form.phone
+              .trim();
+
           if (
-            !response.ok
+            /^01\d{9}$/.test(
+              phone,
+            )
           ) {
-            throw new Error(
-              "Unable to load checkout settings.",
+            params.set(
+              "phone",
+              phone,
             );
           }
 
-          return response.json();
-        },
-      )
-      .then(
-        (
-          result:
-            PublicSettings,
-        ) => {
-          if (
-            !cancelled
-          ) {
-            setSettings(
-              result,
+          const query =
+            params.toString();
+
+          fetch(
+            `/api/settings/public${
+              query
+                ? `?${query}`
+                : ""
+            }`,
+            {
+              cache:
+                "no-store",
+            },
+          )
+            .then(
+              async (
+                response,
+              ) => {
+                if (
+                  !response.ok
+                ) {
+                  throw new Error(
+                    "Unable to load checkout settings.",
+                  );
+                }
+
+                return response.json();
+              },
+            )
+            .then(
+              (
+                result:
+                  PublicSettings,
+              ) => {
+                if (
+                  cancelled
+                ) {
+                  return;
+                }
+
+                setSettings(
+                  result,
+                );
+
+                /*
+                 * If bKash disappears because the customer
+                 * is not UAT-authorized, never leave the
+                 * checkout internally selected as BKASH.
+                 */
+                if (
+                  !result.bkashEnabled &&
+                  result.codEnabled
+                ) {
+                  setPayment(
+                    "COD",
+                  );
+                }
+              },
+            )
+            .catch(
+              () => {
+                if (
+                  cancelled
+                ) {
+                  return;
+                }
+
+                setError(
+                  "Unable to load delivery and payment settings. Please refresh the page.",
+                );
+              },
             );
-          }
         },
-      )
-      .catch(
-        () => {
-          if (
-            !cancelled
-          ) {
-            setError(
-              "Unable to load delivery and payment settings. Please refresh the page.",
-            );
-          }
-        },
+
+        300,
       );
 
     return () => {
       cancelled =
         true;
+
+      window.clearTimeout(
+        timer,
+      );
     };
-  }, []);
+  }, [
+    form.phone,
+  ]);
 
   /* =======================================================
      PAYMENT FALLBACK

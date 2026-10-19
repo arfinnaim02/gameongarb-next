@@ -22,6 +22,10 @@ import {
   getBkashConfig,
 } from "@/lib/payments/bkash/config";
 
+import {
+  isBkashAllowedForPhone,
+} from "@/lib/payments/bkash/access";
+
 import type {
   BkashCreatePaymentResponse,
 } from "@/lib/payments/bkash/types";
@@ -207,6 +211,23 @@ export async function POST(
         {
           status:
             400,
+        },
+      );
+    }
+
+    if (
+      !isBkashAllowedForPhone(
+        order.phone,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "bKash payment is not currently available for this order.",
+        },
+        {
+          status:
+            403,
         },
       );
     }
