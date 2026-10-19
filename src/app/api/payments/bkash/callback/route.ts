@@ -57,6 +57,18 @@ function isCompleted(
   );
 }
 
+function isPending(
+  result:
+    BkashPaymentResult,
+) {
+  return (
+    result.transactionStatus ===
+      "Initiated" ||
+    result.transactionStatus ===
+      "Processing"
+  );
+}
+
 function isExecuteTimeout(
   error:
     unknown,
@@ -137,6 +149,426 @@ async function queryBkashPayment(
       paymentId,
     },
   });
+}
+
+/* =========================================================
+   FAIL PAYMENT + RESTORE STOCK
+
+   This runs only for a definitive bKash cancel/failure.
+
+   The CANCELLATION_RESTORE inventory transaction acts as
+   our restoration marker.
+
+   Serializable isolation + retry prevents concurrent
+   duplicate callbacks from restoring stock twice.
+   ========================================================= */
+
+async function failPaymentAndRestoreStock({
+  paymentRecordId,
+  orderId,
+  orderNumber,
+  providerPaymentId,
+  transactionType,
+  callbackStatus,
+}: {
+  paymentRecordId:
+    string;
+
+  orderId:
+    string;
+
+  orderNumber:
+    string;
+
+  providerPaymentId:
+    string;
+
+  transactionType:
+    string;
+
+  callbackStatus:
+    string;
+}) {
+  const maxAttempts =
+    3;
+
+  for (
+    let attempt =
+      1;
+    attempt <=
+      maxAttempts;
+    attempt +=
+      1
+  ) {
+    try {
+      return await db.$transaction(
+        async (
+          tx,
+        ) => {
+          const freshPayment =
+            await tx.payment.findUnique({
+              where: {
+                id:
+                  paymentRecordId,
+              },
+            });
+
+          if (
+            !freshPayment
+          ) {
+            throw new Error(
+              "Payment record was not found during failure processing.",
+            );
+          }
+
+          /*
+           * A successful payment can never be
+           * overwritten by a delayed cancel/failure
+           * callback.
+           */
+          if (
+            freshPayment.status ===
+            "PAID"
+          ) {
+            return {
+              paid:
+                true,
+
+              restored:
+                false,
+            };
+          }
+
+          const freshOrder =
+            await tx.order.findUnique({
+              where: {
+                id:
+                  orderId,
+              },
+
+              include: {
+                items: {
+                  select: {
+                    variantId:
+                      true,
+
+                    quantity:
+                      true,
+                  },
+                },
+              },
+            });
+
+          if (
+            !freshOrder
+          ) {
+            throw new Error(
+              "Order was not found during stock restoration.",
+            );
+          }
+
+          /*
+           * If a restoration transaction already exists
+           * for this order, another callback must not
+           * increment stock again.
+           */
+          const existingRestore =
+            await tx.inventoryTransaction.findFirst({
+              where: {
+                reference:
+                  orderNumber,
+
+                type:
+                  "CANCELLATION_RESTORE",
+              },
+
+              select: {
+                id:
+                  true,
+              },
+            });
+
+          if (
+            !existingRestore
+          ) {
+            /*
+             * Aggregate by variant so the same variant
+             * can never be incremented twice inside one
+             * restoration transaction.
+             */
+            const quantities =
+              new Map<
+                string,
+                number
+              >();
+
+            for (
+              const item
+              of freshOrder.items
+            ) {
+              if (
+                !item.variantId
+              ) {
+                continue;
+              }
+
+              quantities.set(
+                item.variantId,
+                (
+                  quantities.get(
+                    item.variantId,
+                  ) ??
+                  0
+                ) +
+                  item.quantity,
+              );
+            }
+
+            for (
+              const [
+                variantId,
+                quantity,
+              ]
+              of quantities
+            ) {
+              const variant =
+                await tx.productVariant.findUnique({
+                  where: {
+                    id:
+                      variantId,
+                  },
+
+                  select: {
+                    stock:
+                      true,
+                  },
+                });
+
+              if (
+                !variant
+              ) {
+                throw new Error(
+                  `Variant ${variantId} was not found during stock restoration.`,
+                );
+              }
+
+              const beforeQuantity =
+                variant.stock;
+
+              const afterQuantity =
+                beforeQuantity +
+                quantity;
+
+              await tx.productVariant.update({
+                where: {
+                  id:
+                    variantId,
+                },
+
+                data: {
+                  stock: {
+                    increment:
+                      quantity,
+                  },
+                },
+              });
+
+              await tx.inventoryTransaction.create({
+                data: {
+                  variantId,
+
+                  quantityChange:
+                    quantity,
+
+                  beforeQuantity,
+
+                  afterQuantity,
+
+                  type:
+                    "CANCELLATION_RESTORE",
+
+                  reference:
+                    orderNumber,
+
+                  reason:
+                    "bKash payment cancelled or failed",
+                },
+              });
+            }
+          }
+
+          await tx.payment.update({
+            where: {
+              id:
+                paymentRecordId,
+            },
+
+            data: {
+              status:
+                "FAILED",
+            },
+          });
+
+          await tx.order.update({
+            where: {
+              id:
+                orderId,
+            },
+
+            data: {
+              paymentStatus:
+                "FAILED",
+
+              status:
+                "CANCELLED",
+            },
+          });
+
+          const existingPaymentEvent =
+            await tx.paymentTransaction.findFirst({
+              where: {
+                paymentId:
+                  paymentRecordId,
+
+                type:
+                  transactionType,
+              },
+
+              select: {
+                id:
+                  true,
+              },
+            });
+
+          if (
+            !existingPaymentEvent
+          ) {
+            await tx.paymentTransaction.create({
+              data: {
+                paymentId:
+                  paymentRecordId,
+
+                type:
+                  transactionType,
+
+                amount:
+                  freshPayment.amount,
+
+                status:
+                  "FAILED",
+
+                safePayload: {
+                  paymentId:
+                    providerPaymentId,
+
+                  callbackStatus,
+
+                  stockRestored:
+                    !existingRestore,
+                },
+              },
+            });
+          }
+
+          const existingHistory =
+            await tx.orderStatusHistory.findFirst({
+              where: {
+                orderId,
+
+                newStatus:
+                  "CANCELLED",
+
+                source:
+                  "BKASH",
+              },
+
+              select: {
+                id:
+                  true,
+              },
+            });
+
+          if (
+            !existingHistory
+          ) {
+            await tx.orderStatusHistory.create({
+              data: {
+                orderId,
+
+                oldStatus:
+                  freshOrder.status,
+
+                newStatus:
+                  "CANCELLED",
+
+                note:
+                  "Order cancelled because bKash payment was cancelled or failed.",
+
+                source:
+                  "BKASH",
+              },
+            });
+          }
+
+          return {
+            paid:
+              false,
+
+            restored:
+              !existingRestore,
+          };
+        },
+
+        {
+          isolationLevel:
+            "Serializable",
+
+          maxWait:
+            10_000,
+
+          timeout:
+            20_000,
+        },
+      );
+    } catch (
+      error
+    ) {
+      const prismaError =
+        error &&
+        typeof error ===
+          "object" &&
+        "code" in error
+          ? (
+              error as {
+                code?:
+                  string;
+              }
+            )
+          : null;
+
+      /*
+       * Serializable transactions can intentionally
+       * reject one of two concurrent callbacks.
+       *
+       * Retry that transaction rather than allowing
+       * duplicate inventory restoration.
+       */
+      if (
+        prismaError?.code ===
+          "P2034" &&
+        attempt <
+          maxAttempts
+      ) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error(
+    "Unable to finalize failed bKash payment.",
+  );
 }
 
 /* =========================================================
@@ -271,58 +703,47 @@ export async function GET(
     callbackStatus ===
       "cancel"
   ) {
-    await db.$transaction(
-      async (
-        tx,
-      ) => {
-        await tx.payment.update({
-          where: {
-            id:
-              payment.id,
-          },
+    const failureResult =
+      await failPaymentAndRestoreStock({
+        paymentRecordId:
+          payment.id,
 
-          data: {
+        orderId:
+          order.id,
+
+        orderNumber:
+          order.number,
+
+        providerPaymentId:
+          paymentId,
+
+        transactionType:
+          "CANCEL",
+
+        callbackStatus:
+          "cancel",
+      });
+
+    /*
+     * A delayed cancel callback must never override
+     * an already verified successful payment.
+     */
+    if (
+      failureResult.paid
+    ) {
+      return NextResponse.redirect(
+        resultUrl(
+          req,
+          {
             status:
-              "FAILED",
+              "success",
+
+            order:
+              order.number,
           },
-        });
-
-        await tx.order.update({
-          where: {
-            id:
-              order.id,
-          },
-
-          data: {
-            paymentStatus:
-              "FAILED",
-          },
-        });
-
-        await tx.paymentTransaction.create({
-          data: {
-            paymentId:
-              payment.id,
-
-            type:
-              "CANCEL",
-
-            amount:
-              payment.amount,
-
-            status:
-              "FAILED",
-
-            safePayload: {
-              paymentId,
-
-              callbackStatus:
-                "cancel",
-            },
-          },
-        });
-      },
-    );
+        ),
+      );
+    }
 
     return NextResponse.redirect(
       resultUrl(
@@ -349,58 +770,43 @@ export async function GET(
     callbackStatus ===
       "failure"
   ) {
-    await db.$transaction(
-      async (
-        tx,
-      ) => {
-        await tx.payment.update({
-          where: {
-            id:
-              payment.id,
-          },
+    const failureResult =
+      await failPaymentAndRestoreStock({
+        paymentRecordId:
+          payment.id,
 
-          data: {
+        orderId:
+          order.id,
+
+        orderNumber:
+          order.number,
+
+        providerPaymentId:
+          paymentId,
+
+        transactionType:
+          "FAILURE_CALLBACK",
+
+        callbackStatus:
+          "failure",
+      });
+
+    if (
+      failureResult.paid
+    ) {
+      return NextResponse.redirect(
+        resultUrl(
+          req,
+          {
             status:
-              "FAILED",
+              "success",
+
+            order:
+              order.number,
           },
-        });
-
-        await tx.order.update({
-          where: {
-            id:
-              order.id,
-          },
-
-          data: {
-            paymentStatus:
-              "FAILED",
-          },
-        });
-
-        await tx.paymentTransaction.create({
-          data: {
-            paymentId:
-              payment.id,
-
-            type:
-              "FAILURE_CALLBACK",
-
-            amount:
-              payment.amount,
-
-            status:
-              "FAILED",
-
-            safePayload: {
-              paymentId,
-
-              callbackStatus:
-                "failure",
-            },
-          },
-        });
-      },
-    );
+        ),
+      );
+    }
 
     return NextResponse.redirect(
       resultUrl(
@@ -574,18 +980,126 @@ export async function GET(
             req,
             {
               status:
-                "failed",
+                "pending",
 
               order:
                 order.number,
 
               message:
-                "Unable to verify bKash payment.",
+                "Payment verification is still pending.",
             },
           ),
         );
       }
     }
+  }
+
+  /* =======================================================
+     PENDING / INITIATED RESULT
+
+     Initiated is not a payment failure.
+
+     Keep both local payment states PROCESSING and do
+     not restore stock.
+     ======================================================= */
+
+  if (
+    isPending(
+      result,
+    )
+  ) {
+    await db.$transaction(
+      async (
+        tx,
+      ) => {
+        await tx.payment.update({
+          where: {
+            id:
+              payment.id,
+          },
+
+          data: {
+            status:
+              "PROCESSING",
+          },
+        });
+
+        await tx.order.update({
+          where: {
+            id:
+              order.id,
+          },
+
+          data: {
+            paymentStatus:
+              "PROCESSING",
+          },
+        });
+
+        const existingPending =
+          await tx.paymentTransaction.findFirst({
+            where: {
+              paymentId:
+                payment.id,
+
+              type:
+                "QUERY_PENDING",
+            },
+
+            select: {
+              id:
+                true,
+            },
+          });
+
+        if (
+          !existingPending
+        ) {
+          await tx.paymentTransaction.create({
+            data: {
+              paymentId:
+                payment.id,
+
+              type:
+                "QUERY_PENDING",
+
+              amount:
+                payment.amount,
+
+              status:
+                "PROCESSING",
+
+              safePayload: {
+                paymentId,
+
+                transactionStatus:
+                  result.transactionStatus ??
+                  null,
+
+                verificationSource:
+                  source,
+              },
+            },
+          });
+        }
+      },
+    );
+
+    return NextResponse.redirect(
+      resultUrl(
+        req,
+        {
+          status:
+            "pending",
+
+          order:
+            order.number,
+
+          message:
+            "Payment verification is still pending.",
+        },
+      ),
+    );
   }
 
   /* =======================================================
@@ -688,7 +1202,7 @@ export async function GET(
 
           data: {
             status:
-              "FAILED",
+              "PROCESSING",
           },
         });
 
@@ -700,49 +1214,72 @@ export async function GET(
 
           data: {
             paymentStatus:
-              "FAILED",
+              "PROCESSING",
           },
         });
 
-        await tx.paymentTransaction.create({
-          data: {
-            paymentId:
-              payment.id,
+        const existingReview =
+          await tx.paymentTransaction.findFirst({
+            where: {
+              paymentId:
+                payment.id,
 
-            type:
-              `${source}_VERIFICATION_FAILED`,
+              type:
+                `${source}_VERIFICATION_REVIEW`,
+            },
 
-            amount:
-              payment.amount,
+            select: {
+              id:
+                true,
+            },
+          });
 
-            status:
-              "FAILED",
+        if (
+          !existingReview
+        ) {
+          await tx.paymentTransaction.create({
+            data: {
+              paymentId:
+                payment.id,
 
-            safePayload: {
-              paymentId,
-
-              resultPaymentId,
-
-              trxId,
-
-              transactionStatus:
-                result.transactionStatus ??
-                null,
+              type:
+                `${source}_VERIFICATION_REVIEW`,
 
               amount:
-                result.amount ??
-                null,
+                payment.amount,
 
-              currency:
-                result.currency ??
-                null,
+              status:
+                "PROCESSING",
 
-              merchantInvoiceNumber:
-                result.merchantInvoiceNumber ??
-                null,
+              safePayload: {
+                paymentId,
+
+                resultPaymentId,
+
+                trxId,
+
+                transactionStatus:
+                  result.transactionStatus ??
+                  null,
+
+                amount:
+                  result.amount ??
+                  null,
+
+                currency:
+                  result.currency ??
+                  null,
+
+                merchantInvoiceNumber:
+                  result.merchantInvoiceNumber ??
+                  null,
+
+                verificationSource:
+                  source,
+              },
             },
-          },
-        });
+          });
+        }
       },
     );
 
@@ -751,13 +1288,13 @@ export async function GET(
         req,
         {
           status:
-            "failed",
+            "pending",
 
           order:
             order.number,
 
           message:
-            "Payment could not be verified.",
+            "Payment requires additional verification.",
         },
       ),
     );
