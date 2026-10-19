@@ -433,28 +433,51 @@ export default async function BkashResultPage({
                   size={16}
                 />
               </Link>
-            ) : (
+            ) : pending ? (
               <Link
-                href="/shop"
+                href={`/track-order?order=${order.number}`}
                 className={styles.primaryAction}
               >
-                <ShoppingBag
+                <Clock3
                   size={16}
                 />
 
-                Continue Shopping
+                Check Order
+              </Link>
+            ) : (
+              <Link
+                href="/checkout"
+                className={styles.primaryAction}
+              >
+                <CreditCard
+                  size={16}
+                />
+
+                Try Payment Again
               </Link>
             )}
 
             <Link
-              href="/"
+              href={
+                verifiedSuccess
+                  ? "/shop"
+                  : "/"
+              }
               className={styles.secondaryAction}
             >
-              <Home
-                size={16}
-              />
+              {verifiedSuccess ? (
+                <ShoppingBag
+                  size={16}
+                />
+              ) : (
+                <Home
+                  size={16}
+                />
+              )}
 
-              Back to Home
+              {verifiedSuccess
+                ? "Continue Shopping"
+                : "Back to Home"}
             </Link>
           </div>
         </section>
