@@ -17291,11 +17291,6 @@ body.promotion-popup-open {
     transform;
 }
 
-.announcement-bar:hover
-.announcement-bar-track {
-  animation-play-state:
-    paused;
-}
 
 .announcement-bar-item {
   position:
@@ -17561,18 +17556,3 @@ body.promotion-popup-open {
   }
 }
 
-@media (
-  prefers-reduced-motion:
-    reduce
-) {
-  .announcement-bar-track {
-    animation:
-      none;
-
-    width:
-      100%;
-
-    overflow-x:
-      auto;
-  }
-}
