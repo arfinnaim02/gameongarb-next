@@ -6,8 +6,8 @@ import { StoreProvider } from "@/components/shared/store-provider";
 
 export const metadata: Metadata = {
   title: {
-    default: "Game On Garb | Experience the Thrill",
-    template: "%s | Game On Garb",
+    default: "GameOn Garb | Experience the Thrill",
+    template: "%s | GameOn Garb",
   },
 
   description:
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   ),
 
   openGraph: {
-    title: "Game On Garb",
+    title: "GameOn Garb",
     description: "Game on. Every day.",
     type: "website",
   },

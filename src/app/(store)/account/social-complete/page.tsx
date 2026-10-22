@@ -51,7 +51,7 @@ export default async function SocialCompletePage() {
               has been verified.
               Add your phone number
               to finish creating
-              your Game On Garb
+              your GameOn Garb
               account.
             </p>
           </div>

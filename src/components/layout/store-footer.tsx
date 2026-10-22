@@ -538,7 +538,7 @@ export function StoreFooter({
             New drops,
             members-only offers
             and the latest from
-            Game On Garb.
+            GameOn Garb.
           </p>
 
           <form
@@ -650,7 +650,7 @@ export function StoreFooter({
       <div className="store-footer-credit">
         <div className="container">
           <span>
-            © 2026 Game On Garb.
+            © 2026 GameOn Garb.
             All rights reserved.
           </span>
         </div>

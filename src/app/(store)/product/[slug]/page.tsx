@@ -57,7 +57,7 @@ export async function generateMetadata({
   if (!result) {
     return {
       title:
-        "Product | Game On Garb",
+        "Product | GameOn Garb",
     };
   }
 
@@ -76,7 +76,7 @@ export async function generateMetadata({
   return {
     title:
       raw.seoTitle ??
-      `${product.name} | Game On Garb`,
+      `${product.name} | GameOn Garb`,
 
     description,
 
@@ -286,7 +286,7 @@ export default async function ProductPage({
 
       name:
         raw.brand ??
-        "Game On Garb",
+        "GameOn Garb",
     },
 
     ...(product.reviewCount &&

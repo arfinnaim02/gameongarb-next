@@ -448,7 +448,7 @@ export function StoreHeader({
 
             <div className="mobile-menu-footer">
               <p>
-                Game On Garb
+                GameOn Garb
               </p>
 
               <span>

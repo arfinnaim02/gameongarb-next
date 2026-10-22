@@ -2045,7 +2045,7 @@ function LivePreview({
           }
         >
           <span>
-            Game On Garb
+            GameOn Garb
           </span>
 
           <h3>

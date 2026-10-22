@@ -257,7 +257,7 @@ export default async function BkashResultPage({
 
   const description =
     verifiedSuccess
-      ? "Your bKash payment has been securely verified and your Game On Garb order is confirmed."
+      ? "Your bKash payment has been securely verified and your GameOn Garb order is confirmed."
       : cancelled
         ? "No successful bKash payment was recorded for this attempt. You can return to the shop and try again when you’re ready."
         : pending
@@ -493,7 +493,7 @@ export default async function BkashResultPage({
               {" "}
               #{order.number}
             </strong>{" "}
-            when contacting Game On Garb support.
+            when contacting GameOn Garb support.
           </p>
         </section>
       </div>

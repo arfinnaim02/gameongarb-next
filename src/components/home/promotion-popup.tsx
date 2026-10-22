@@ -243,7 +243,7 @@ export function PromotionPopup({
       }
       role="dialog"
       aria-modal="true"
-      aria-label="Game On Garb promotion"
+      aria-label="GameOn Garb promotion"
       onMouseDown={(
         event,
       ) => {
@@ -296,7 +296,7 @@ export function PromotionPopup({
             src={
               image
             }
-            alt="Game On Garb promotion"
+            alt="GameOn Garb promotion"
             draggable={
               false
             }

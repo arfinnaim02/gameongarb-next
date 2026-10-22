@@ -194,7 +194,7 @@ export async function POST(
         result.skipped
           ? "Courier status was synced less than 60 seconds ago."
           : result.autoDelivered
-            ? "Steadfast confirmed final delivery. Game On Garb order was automatically marked Delivered."
+            ? "Steadfast confirmed final delivery. GameOn Garb order was automatically marked Delivered."
             : result.changed
               ? `Steadfast status updated to ${result.status}.`
               : result.trackingEventsAdded >

@@ -37,7 +37,7 @@ export default function RegisterPage() {
             }
           >
             <span>
-              Game On Garb
+              GameOn Garb
             </span>
 
             <h2>

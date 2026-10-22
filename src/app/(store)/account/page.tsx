@@ -200,7 +200,7 @@ export default async function Account() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <span>
-            Game On Garb Account
+            GameOn Garb Account
           </span>
 
           <h2>

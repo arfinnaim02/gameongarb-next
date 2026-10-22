@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export const metadata = {
   title:
-    "Terms & Conditions | Game On Garb",
+    "Terms & Conditions | GameOn Garb",
 
   description:
-    "Read the Game On Garb terms and conditions for accounts, orders, payments, delivery, returns, exchanges, and website use.",
+    "Read the GameOn Garb terms and conditions for accounts, orders, payments, delivery, returns, exchanges, and website use.",
 };
 
 export default function TermsPage() {
@@ -14,7 +14,7 @@ export default function TermsPage() {
       <div className="container legal-page-inner">
         <div className="legal-page-heading">
           <span className="eyebrow">
-            Game On Garb
+            GameOn Garb
           </span>
 
           <h1 className="display">
@@ -34,7 +34,7 @@ export default function TermsPage() {
 
             <p>
               These Terms & Conditions govern your use of the
-              Game On Garb website and your purchase of products
+              GameOn Garb website and your purchase of products
               from us.
             </p>
 
@@ -198,7 +198,7 @@ export default function TermsPage() {
             <p>
               Return and exchange eligibility depends on the
               condition of the product, the nature of the issue,
-              and the applicable Game On Garb return or exchange
+              and the applicable GameOn Garb return or exchange
               policy available at the time of purchase.
             </p>
 
@@ -253,7 +253,7 @@ export default function TermsPage() {
             </h2>
 
             <p>
-              The Game On Garb name, branding, website content,
+              The GameOn Garb name, branding, website content,
               graphics, photographs, product presentation, and
               other original content may not be copied,
               reproduced, or commercially reused without
@@ -317,7 +317,7 @@ export default function TermsPage() {
 
           <div className="legal-back">
             <Link href="/">
-              Back to Game On Garb
+              Back to GameOn Garb
             </Link>
           </div>
         </div>

@@ -29,7 +29,7 @@ export const metadata:
     "Shop",
 
   description:
-    "Shop premium Game On Garb sports and lifestyle fashion.",
+    "Shop premium GameOn Garb sports and lifestyle fashion.",
 };
 
 export const dynamic =

@@ -775,7 +775,7 @@ export function BrandStoryManager() {
           >
             <div>
               <span>
-                Game On Garb
+                GameOn Garb
               </span>
 
               <h2>

@@ -353,7 +353,7 @@ export function LoginForm({
             }
           >
             <span>
-              New to Game On Garb?
+              New to GameOn Garb?
             </span>
           </div>
 

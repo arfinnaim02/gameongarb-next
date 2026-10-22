@@ -797,7 +797,7 @@ async function buildOrderMessage(
     );
 
   return [
-    "🛍 <b>GAME ON GARB — ORDER</b>",
+    "🛍 <b>GameOn Garb — ORDER</b>",
     "",
     `🧾 <b>${escapeHtml(
       order.number,

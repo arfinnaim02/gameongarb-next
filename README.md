@@ -1,6 +1,6 @@
-# Game On Garb
+# GameOn Garb
 
-Production-structured full-stack ecommerce foundation for **GAME ON GARB — EXPERIENCE THE THRILL**, designed for the Bangladesh market and implemented from the supplied approved PDF.
+Production-structured full-stack ecommerce foundation for **GameOn Garb — EXPERIENCE THE THRILL**, designed for the Bangladesh market and implemented from the supplied approved PDF.
 
 ## Technology
 

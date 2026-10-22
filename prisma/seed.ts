@@ -161,7 +161,7 @@ async function main() {
         featured: true,
         newArrival: true,
         trending: true,
-        shortDescription: "Premium Game On Garb everyday performance style.",
+        shortDescription: "Premium GameOn Garb everyday performance style.",
         images: {
           create: {
             url: `/images/products/${slug.includes("jersey") ? "jersey" : slug.includes("polo") ? "polo" : slug.includes("shorts") ? "shorts" : slug.includes("sneaker") ? "shoe" : slug.includes("hoodie") ? "hoodie" : slug.includes("cap") ? "cap" : slug.includes("backpack") ? "backpack" : "tshirt"}.svg`,
@@ -237,7 +237,7 @@ async function main() {
     create: {
       key: "general",
       value: {
-        storeName: "Game On Garb",
+        storeName: "GameOn Garb",
         currency: "BDT",
         timezone: "Asia/Dhaka",
         storeLive: true,

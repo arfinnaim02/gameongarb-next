@@ -8,7 +8,7 @@ type OrderNumberRow = {
 };
 
 /**
- * Generate the next Game On Garb order number.
+ * Generate the next GameOn Garb order number.
  *
  * Format:
  * GOG-20260001

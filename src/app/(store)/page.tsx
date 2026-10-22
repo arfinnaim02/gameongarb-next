@@ -909,7 +909,7 @@ function BrandStory({
       <div className="container home-brand-story-inner">
         <div className="home-brand-story-copy">
           <div className="eyebrow">
-            Game On Garb
+            GameOn Garb
           </div>
 
           <h2 className="display">

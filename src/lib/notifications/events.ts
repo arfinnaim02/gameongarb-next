@@ -89,7 +89,7 @@ function getOrderNotificationCopy(
           `Order delivered — ${orderNumber}`,
 
         message:
-          "Your order has been delivered successfully. Thank you for shopping with Game On Garb.",
+          "Your order has been delivered successfully. Thank you for shopping with GameOn Garb.",
       };
 
     case NotificationEvent.ORDER_CANCELLED:
@@ -107,7 +107,7 @@ function getOrderNotificationCopy(
           `Delivery update — ${orderNumber}`,
 
         message:
-          "The courier could not complete your delivery. Please contact Game On Garb if you need assistance.",
+          "The courier could not complete your delivery. Please contact GameOn Garb if you need assistance.",
       };
   }
 }

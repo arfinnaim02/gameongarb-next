@@ -366,7 +366,7 @@ export async function POST(
 
                 brand:
                   input.brand ||
-                  "Game On Garb",
+                  "GameOn Garb",
 
                 regularPrice:
                   input.regularPrice,

@@ -131,7 +131,7 @@ export default function HomepageBuilderPage() {
             Manage the major
             visual campaigns and
             category artwork of
-            the Game On Garb
+            the GameOn Garb
             storefront.
           </p>
         </div>

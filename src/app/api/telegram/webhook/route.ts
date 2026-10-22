@@ -341,7 +341,7 @@ export async function POST(
 
         text:
           [
-            "🛍 <b>GAME ON GARB — ORDER CONTROL</b>",
+            "🛍 <b>GameOn Garb — ORDER CONTROL</b>",
             "",
             "📋 <b>ORDER LISTS</b>",
             "",

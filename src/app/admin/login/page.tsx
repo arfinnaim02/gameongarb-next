@@ -117,7 +117,7 @@ export default async function AdminLoginPage() {
             }}
           >
             Protected access
-            for Game On Garb
+            for GameOn Garb
             store operations.
           </p>
         </div>

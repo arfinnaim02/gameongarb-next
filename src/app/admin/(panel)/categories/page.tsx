@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title:
-    "Categories | Game On Garb Admin",
+    "Categories | GameOn Garb Admin",
 };
 
 export const dynamic =

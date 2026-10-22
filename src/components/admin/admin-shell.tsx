@@ -222,7 +222,7 @@ export function AdminShell({
             </strong>
 
             <span>
-              Game On Garb
+              GameOn Garb
             </span>
           </div>
         </div>
@@ -368,7 +368,7 @@ export function AdminShell({
 
             <div>
               <span className="admin-header-eyebrow">
-                Game On Garb
+                GameOn Garb
               </span>
 
               <strong className="admin-header-page-title">

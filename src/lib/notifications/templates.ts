@@ -148,7 +148,7 @@ export function renderNotificationEmail(
   const message =
     textValue(
       payload.message,
-      "You have a new update from Game On Garb.",
+      "You have a new update from GameOn Garb.",
     );
 
   const paymentMethod =
@@ -199,8 +199,8 @@ export function renderNotificationEmail(
     delivery.subject ??
     (
       orderNumber
-        ? `Game On Garb — ${orderNumber}`
-        : "Game On Garb Notification"
+        ? `GameOn Garb — ${orderNumber}`
+        : "GameOn Garb Notification"
     );
 
   const itemRows =
@@ -346,7 +346,7 @@ export function renderNotificationEmail(
       ? `Delivery address: ${shippingAddress}`
       : "",
     "",
-    "Game On Garb",
+    "GameOn Garb",
     "Experience The Thrill",
   ]
     .filter(
@@ -371,7 +371,7 @@ export function renderNotificationEmail(
                 <tr>
                   <td style="padding:26px 30px;background:#111412;color:#ffffff;">
                     <div style="font-size:20px;font-weight:900;letter-spacing:1px;">
-                      GAME ON GARB
+                      GameOn Garb
                     </div>
 
                     <div style="margin-top:5px;font-size:11px;color:#b8bdb9;text-transform:uppercase;letter-spacing:1.4px;">
@@ -543,7 +543,7 @@ export function renderNotificationEmail(
 
                 <tr>
                   <td style="padding:20px 30px;background:#f7f8f5;color:#777c77;font-size:12px;line-height:1.6;">
-                    Game On Garb · Experience The Thrill
+                    GameOn Garb · Experience The Thrill
                     <br>
                     This is an automated transactional email regarding your order.
                   </td>
@@ -602,7 +602,7 @@ export function renderNotificationSms(
 
     message:
       [
-        "Game On Garb:",
+        "GameOn Garb:",
         message,
 
         orderNumber

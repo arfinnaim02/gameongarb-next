@@ -448,7 +448,7 @@ export default async function AccountSection({
           </h1>
 
           <p>
-            Active Game On Garb
+            Active GameOn Garb
             coupon codes and
             automatic promotions
             currently available for

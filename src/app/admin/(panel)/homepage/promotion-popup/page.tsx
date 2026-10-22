@@ -8,7 +8,7 @@ import {
 
 export const metadata: Metadata = {
   title:
-    "Promotion Popup | Game On Garb Admin",
+    "Promotion Popup | GameOn Garb Admin",
 };
 
 export const dynamic =

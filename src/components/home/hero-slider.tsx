@@ -546,7 +546,7 @@ export function HeroSlider({
     <section
       className="premium-hero"
       aria-roledescription="carousel"
-      aria-label="Game On Garb featured banners"
+      aria-label="GameOn Garb featured banners"
       style={
         heroStyle
       }
@@ -648,7 +648,7 @@ export function HeroSlider({
           <div className="premium-hero-eyebrow">
             <span />
 
-            Game On Garb
+            GameOn Garb
           </div>
 
           <h1 className="premium-hero-title">

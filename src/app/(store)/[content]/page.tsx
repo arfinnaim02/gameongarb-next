@@ -14,7 +14,7 @@ const pages: Record<
     sections: [
       {
         heading: "Built in Bangladesh",
-        body: "Game On Garb brings together sports, fashion and everyday style for people who live with passion.",
+        body: "GameOn Garb brings together sports, fashion and everyday style for people who live with passion.",
       },
       {
         heading: "Experience the Thrill",
@@ -34,7 +34,7 @@ const pages: Record<
   },
   "size-guide": {
     title: "Size Guide",
-    intro: "Find your Game On Garb fit.",
+    intro: "Find your GameOn Garb fit.",
     sections: [
       {
         heading: "How to measure",
@@ -78,7 +78,7 @@ const pages: Record<
   },
   terms: {
     title: "Terms & Conditions",
-    intro: "Terms for using Game On Garb.",
+    intro: "Terms for using GameOn Garb.",
     sections: [
       {
         heading: "Orders",
@@ -107,7 +107,7 @@ export async function generateMetadata({
   params: Promise<{ content: string }>;
 }): Promise<Metadata> {
   const { content } = await params;
-  return { title: pages[content]?.title ?? "Game On Garb" };
+  return { title: pages[content]?.title ?? "GameOn Garb" };
 }
 export default async function Content({
   params,
@@ -122,7 +122,7 @@ export default async function Content({
       className="container"
       style={{ padding: "60px 0 80px", maxWidth: 850 }}
     >
-      <span className="eyebrow">Game On Garb</span>
+      <span className="eyebrow">GameOn Garb</span>
       <h1
         className="display"
         style={{ fontSize: "clamp(3rem,7vw,5rem)", margin: "12px 0" }}

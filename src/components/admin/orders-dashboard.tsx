@@ -1570,7 +1570,7 @@ if (
           <p>
             Review, confirm,
             fulfil and monitor
-            every Game On Garb
+            every GameOn Garb
             order from one
             workspace.
           </p>

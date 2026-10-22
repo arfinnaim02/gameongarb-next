@@ -2000,7 +2000,7 @@ export function ShopHeroManager() {
                     }
                   >
                     <span>
-                      Game On Garb
+                      GameOn Garb
                     </span>
 
                     <h3>

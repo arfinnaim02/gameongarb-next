@@ -250,7 +250,7 @@ export async function PATCH(
 
               brand:
                 input.brand ||
-                "Game On Garb",
+                "GameOn Garb",
 
               regularPrice:
                 input.regularPrice,

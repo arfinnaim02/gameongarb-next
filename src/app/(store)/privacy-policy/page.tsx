@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export const metadata = {
   title:
-    "Privacy Policy | Game On Garb",
+    "Privacy Policy | GameOn Garb",
 
   description:
-    "Read the Game On Garb privacy policy to understand how we collect, use, protect, and manage customer information.",
+    "Read the GameOn Garb privacy policy to understand how we collect, use, protect, and manage customer information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <div className="container legal-page-inner">
         <div className="legal-page-heading">
           <span className="eyebrow">
-            Game On Garb
+            GameOn Garb
           </span>
 
           <h1 className="display">
@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
             </h2>
 
             <p>
-              Game On Garb respects your privacy and is committed
+              GameOn Garb respects your privacy and is committed
               to protecting the personal information you provide
               when using our website, creating an account, placing
               an order, contacting us, or interacting with our
@@ -109,7 +109,7 @@ export default function PrivacyPolicyPage() {
 
             <p>
               We use this information only to authenticate your
-              account, create or manage your Game On Garb
+              account, create or manage your GameOn Garb
               customer account, and provide our services.
             </p>
 
@@ -169,7 +169,7 @@ export default function PrivacyPolicyPage() {
             </h2>
 
             <p>
-              Game On Garb may support payment methods including
+              GameOn Garb may support payment methods including
               Cash on Delivery and bKash.
             </p>
 
@@ -303,7 +303,7 @@ export default function PrivacyPolicyPage() {
             </h2>
 
             <p>
-              Game On Garb services are intended for general
+              GameOn Garb services are intended for general
               customers and are not designed to knowingly collect
               personal information from children in violation of
               applicable law.
@@ -333,7 +333,7 @@ export default function PrivacyPolicyPage() {
 
             <p>
               If you have questions about this Privacy Policy or
-              your personal information, contact Game On Garb at:
+              your personal information, contact GameOn Garb at:
             </p>
 
             <p>
@@ -352,7 +352,7 @@ export default function PrivacyPolicyPage() {
 
           <div className="legal-back">
             <Link href="/">
-              Back to Game On Garb
+              Back to GameOn Garb
             </Link>
           </div>
         </div>

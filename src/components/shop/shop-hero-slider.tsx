@@ -554,7 +554,7 @@ export function ShopHeroSlider({
           <div className="shop-hero-eyebrow">
             <span />
 
-            Game On Garb
+            GameOn Garb
           </div>
 
           <h1>

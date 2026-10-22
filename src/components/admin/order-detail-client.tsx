@@ -2752,7 +2752,7 @@ export function OrderDetailClient({
                 }
               >
                 New customer — no previous
-                Game On Garb orders.
+                GameOn Garb orders.
               </div>
             )}
           </section>
