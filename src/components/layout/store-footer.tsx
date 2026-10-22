@@ -65,10 +65,10 @@ const STORE_CONTACT_EMAIL =
   "gameongarb@gmail.com";
 
 const OFFICIAL_SOCIAL_LINKS = [
-  [
-    "whatsapp",
-    "https://api.whatsapp.com/message/7AEZ2OXYD2QZE1",
-  ],
+[
+  "whatsapp",
+  "https://wa.me/8801711992409",
+],
 
   [
     "facebook",
