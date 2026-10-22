@@ -17,6 +17,7 @@ import {
   Package,
   Ruler,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   Tags,
   TicketPercent,
@@ -26,24 +27,37 @@ import {
 
 import { Logo } from "@/components/shared/logo";
 
+import {
+  hasPermission,
+} from "@/lib/business";
+
+import type {
+  AdminRole,
+} from "@/lib/roles";
 type AdminShellProps = {
   children: React.ReactNode;
 
   user?: {
     name?: string | null;
     email?: string | null;
-    role?: string | null;
+    role?: AdminRole | null;
   } | null;
 };
 
 type NavigationItem = {
   label: string;
+
   href: string;
-  icon: React.ComponentType<{
-    size?: number;
-    strokeWidth?: number;
-    className?: string;
-  }>;
+
+  permission?:
+    string;
+
+  icon:
+    React.ComponentType<{
+      size?: number;
+      strokeWidth?: number;
+      className?: string;
+    }>;
 };
 
 type NavigationGroup = {
@@ -138,21 +152,47 @@ const navigationGroups: NavigationGroup[] = [
     ],
   },
 
-  {
-    title: "System",
-    items: [
-      {
-        label: "Activity Logs",
-        href: "/admin/activity",
-        icon: Activity,
-      },
-      {
-        label: "Settings",
-        href: "/admin/settings",
-        icon: Settings,
-      },
-    ],
-  },
+{
+  title: "System",
+
+  items: [
+    {
+      label:
+        "Admin Users",
+
+      href:
+        "/admin/users",
+
+      permission:
+        "users",
+
+      icon:
+        ShieldCheck,
+    },
+
+    {
+      label:
+        "Activity Logs",
+
+      href:
+        "/admin/activity",
+
+      icon:
+        Activity,
+    },
+
+    {
+      label:
+        "Settings",
+
+      href:
+        "/admin/settings",
+
+      icon:
+        Settings,
+    },
+  ],
+},
 ];
 
 export function AdminShell({
@@ -244,8 +284,22 @@ export function AdminShell({
                 </div>
 
                 <div className="admin-nav-group-links">
-                  {group.items.map(
-                    (item) => {
+                  {group.items
+                    .filter(
+                      (
+                        item,
+                      ) =>
+                        !item.permission ||
+                        (
+                          user?.role &&
+                          hasPermission(
+                            user.role,
+                            item.permission,
+                          )
+                        ),
+                    )
+                    .map(
+                      (item) => {
                       const Icon =
                         item.icon;
 

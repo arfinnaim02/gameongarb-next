@@ -17,3 +17,55 @@ export function isAdminRole(
 ): role is AdminRole {
   return role !== "CUSTOMER";
 }
+
+export function canAssignAdminRole(
+  actorRole: AdminRole,
+  targetRole: AdminRole,
+) {
+  if (
+    actorRole ===
+    "SUPER_ADMIN"
+  ) {
+    return true;
+  }
+
+  if (
+    actorRole ===
+    "ADMIN"
+  ) {
+    return (
+      targetRole ===
+        "MANAGER" ||
+      targetRole ===
+        "STAFF"
+    );
+  }
+
+  return false;
+}
+
+export function canManageAdminRole(
+  actorRole: AdminRole,
+  targetRole: AdminRole,
+) {
+  if (
+    actorRole ===
+    "SUPER_ADMIN"
+  ) {
+    return true;
+  }
+
+  if (
+    actorRole ===
+    "ADMIN"
+  ) {
+    return (
+      targetRole ===
+        "MANAGER" ||
+      targetRole ===
+        "STAFF"
+    );
+  }
+
+  return false;
+}
