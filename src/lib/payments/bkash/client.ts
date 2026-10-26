@@ -97,6 +97,56 @@ async function requestGrantToken() {
   const config =
     getBkashConfig();
 
+  const grantTokenUrl =
+    buildUrl(
+      "/tokenized/checkout/token/grant",
+    );
+
+  console.info(
+    "BKASH_PRODUCTION_DIAGNOSTIC",
+    {
+      mode:
+        config.mode,
+
+      baseUrl:
+        config.baseUrl,
+
+      grantTokenUrl,
+
+      usernamePresent:
+        Boolean(
+          config.username,
+        ),
+
+      usernameLength:
+        config.username.length,
+
+      passwordPresent:
+        Boolean(
+          config.password,
+        ),
+
+      passwordLength:
+        config.password.length,
+
+      appKeyPresent:
+        Boolean(
+          config.appKey,
+        ),
+
+      appKeyLength:
+        config.appKey.length,
+
+      appSecretPresent:
+        Boolean(
+          config.appSecret,
+        ),
+
+      appSecretLength:
+        config.appSecret.length,
+    },
+  );
+
   const controller =
     new AbortController();
 
@@ -109,11 +159,9 @@ async function requestGrantToken() {
     );
 
   try {
-    const response =
-      await fetch(
-        buildUrl(
-          "/tokenized/checkout/token/grant",
-        ),
+  const response =
+    await fetch(
+      grantTokenUrl,
         {
           method:
             "POST",
@@ -149,18 +197,33 @@ async function requestGrantToken() {
         },
       );
 
-    const payload =
-      (
-        await parseJsonSafe(
-          response,
-        )
-      ) as
-        BkashGrantTokenResponse |
-        null;
+      const payload =
+        (
+          await parseJsonSafe(
+            response,
+          )
+        ) as
+          BkashGrantTokenResponse |
+          null;
 
-    if (
-      !response.ok
-    ) {
+      if (
+        !response.ok
+      ) {
+        console.error(
+          "BKASH_GRANT_TOKEN_REJECTED",
+          {
+            url:
+              grantTokenUrl,
+
+            status:
+              response.status,
+
+            statusText:
+              response.statusText,
+
+            payload,
+          },
+        );
       const errorPayload =
         payload as
           BkashApiErrorPayload |
