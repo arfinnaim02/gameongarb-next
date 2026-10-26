@@ -298,7 +298,7 @@ export async function POST(
     const result =
       await bkashRequest<BkashCreatePaymentResponse>({
         path:
-          "/tokenized-checkout/payment/create",
+        "/tokenized/checkout/create",
 
         body: {
           mode:

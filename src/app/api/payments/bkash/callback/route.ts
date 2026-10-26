@@ -143,7 +143,7 @@ async function queryBkashPayment(
 ) {
   return bkashRequest<BkashPaymentResult>({
     path:
-      "/tokenized-checkout/payment/status",
+      "/tokenized/checkout/payment/status",
 
     body: {
       paymentId,
@@ -866,7 +866,7 @@ export async function GET(
     const executeResult =
       await bkashRequest<BkashPaymentResult>({
         path:
-          "/tokenized-checkout/payment/execute",
+          "/tokenized/checkout/execute",
 
         body: {
           paymentId,
