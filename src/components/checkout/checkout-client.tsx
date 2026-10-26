@@ -8,7 +8,6 @@ import {
   Banknote,
   Check,
   CircleAlert,
-  CreditCard,
   Loader2,
   LockKeyhole,
   MapPin,
@@ -1800,10 +1799,10 @@ export function CheckoutClient() {
 
                 {settings?.bkashEnabled ? (
                   <label
-                    className={`${styles.paymentOption} ${
+                    className={`${styles.paymentOption} ${styles.bkashPaymentOption} ${
                       payment ===
                       "BKASH"
-                        ? styles.paymentSelected
+                        ? `${styles.paymentSelected} ${styles.bkashPaymentSelected}`
                         : ""
                     }`}
                   >
@@ -1822,24 +1821,24 @@ export function CheckoutClient() {
                       }
                     />
 
-                    <span className={styles.paymentIcon}>
-                      <CreditCard
-                        size={21}
-                        strokeWidth={
-                          1.5
-                        }
+                    <span className={styles.bkashLogoWrap}>
+                      <Image
+                        src="/images/payments/bkash.png"
+                        alt="bKash"
+                        width={74}
+                        height={34}
+                        className={styles.bkashLogo}
                       />
                     </span>
 
                     <span className={styles.paymentCopy}>
                       <strong>
-                        bKash
+                        Pay with bKash
                       </strong>
 
                       <small>
-                        Continue to
-                        secure bKash
-                        payment.
+                        Fast and secure payment
+                        through bKash.
                       </small>
                     </span>
 
@@ -2166,7 +2165,12 @@ export function CheckoutClient() {
 
             <button
               type="submit"
-              className={styles.placeOrder}
+              className={`${styles.placeOrder} ${
+                payment ===
+                "BKASH"
+                  ? styles.bkashPlaceOrder
+                  : ""
+              }`}
               disabled={
                 saving ||
                 !settings ||
@@ -2174,23 +2178,36 @@ export function CheckoutClient() {
                 !cart.length
               }
             >
-              {saving ? (
-                <Loader2
-                  size={17}
-                  className={styles.spin}
+            {saving ? (
+              <Loader2
+                size={17}
+                className={styles.spin}
+              />
+            ) : payment ===
+                "BKASH" ? (
+              <span className={styles.bkashButtonLogo}>
+                <Image
+                  src="/images/payments/bkash.png"
+                  alt=""
+                  width={46}
+                  height={22}
                 />
-              ) : (
-                <LockKeyhole
-                  size={17}
-                />
-              )}
+              </span>
+            ) : (
+              <LockKeyhole
+                size={17}
+              />
+            )}
 
               <span>
                 {saving
-                  ? "Placing Order…"
+                  ? payment ===
+                      "BKASH"
+                    ? "Connecting to bKash…"
+                    : "Placing Order…"
                   : payment ===
                       "BKASH"
-                    ? "Continue to bKash"
+                    ? "Pay Securely"
                     : "Place Order"}
               </span>
 
