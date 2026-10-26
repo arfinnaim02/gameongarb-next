@@ -145,6 +145,9 @@ export type BkashPaymentResult = {
   merchantInvoiceNumber?:
     string;
 
+  merchantInvoice?:
+    string;
+
   payerReference?:
     string;
 

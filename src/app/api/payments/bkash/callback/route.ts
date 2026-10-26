@@ -146,7 +146,8 @@ async function queryBkashPayment(
       "/tokenized/checkout/payment/status",
 
     body: {
-      paymentId,
+      paymentID:
+        paymentId,
     },
   });
 }
@@ -863,15 +864,61 @@ export async function GET(
       "EXECUTE";
 
   try {
-    const executeResult =
-      await bkashRequest<BkashPaymentResult>({
-        path:
-          "/tokenized/checkout/execute",
+const executeResult =
+  await bkashRequest<BkashPaymentResult>({
+    path:
+      "/tokenized/checkout/execute",
 
-        body: {
-          paymentId,
-        },
-      });
+    body: {
+      paymentID:
+        paymentId,
+    },
+  });
+
+console.info(
+  "BKASH_EXECUTE_RESULT",
+  {
+    paymentId,
+
+    resultPaymentId:
+      getPaymentId(
+        executeResult,
+      ),
+
+    trxId:
+      getTrxId(
+        executeResult,
+      ),
+
+    transactionStatus:
+      executeResult.transactionStatus ??
+      null,
+
+    statusCode:
+      executeResult.statusCode ??
+      null,
+
+    statusMessage:
+      executeResult.statusMessage ??
+      null,
+
+    errorCode:
+      executeResult.errorCode ??
+      null,
+
+    errorMessage:
+      executeResult.errorMessage ??
+      null,
+
+    amount:
+      executeResult.amount ??
+      null,
+
+    currency:
+      executeResult.currency ??
+      null,
+  },
+);
 
     /*
      * If Execute returns an uncertain result,
@@ -1126,10 +1173,15 @@ export async function GET(
       order.total,
     );
 
-  const invoiceMatches =
-    !result.merchantInvoiceNumber ||
-    result.merchantInvoiceNumber ===
-      order.number;
+const resultInvoice =
+  result.merchantInvoiceNumber ??
+  result.merchantInvoice ??
+  null;
+
+const invoiceMatches =
+  !resultInvoice ||
+  resultInvoice ===
+    order.number;
 
   const paymentIdMatches =
     resultPaymentId ===
@@ -1183,8 +1235,8 @@ export async function GET(
         currency:
           result.currency,
 
-        merchantInvoiceNumber:
-          result.merchantInvoiceNumber,
+        merchantInvoice:
+          resultInvoice,
 
         source,
       },
@@ -1271,8 +1323,7 @@ export async function GET(
                   null,
 
                 merchantInvoiceNumber:
-                  result.merchantInvoiceNumber ??
-                  null,
+                  resultInvoice,
 
                 verificationSource:
                   source,
@@ -1382,7 +1433,7 @@ export async function GET(
               result.currency,
 
             merchantInvoiceNumber:
-              result.merchantInvoiceNumber ??
+              resultInvoice ??
               order.number,
 
             paymentExecuteTime:
