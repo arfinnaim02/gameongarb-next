@@ -7,6 +7,10 @@ import {
 } from "@/lib/db";
 
 import {
+  refreshTelegramOrderMessage,
+} from "@/lib/telegram";
+
+import {
   bkashRequest,
 } from "@/lib/payments/bkash/client";
 
@@ -725,6 +729,19 @@ export async function GET(
           "cancel",
       });
 
+    await refreshTelegramOrderMessage(
+      order.id,
+    ).catch(
+      (
+        error,
+      ) => {
+        console.error(
+          "Telegram refresh after bKash cancellation failed:",
+          error,
+        );
+      },
+    );
+
     /*
      * A delayed cancel callback must never override
      * an already verified successful payment.
@@ -791,6 +808,19 @@ export async function GET(
         callbackStatus:
           "failure",
       });
+
+    await refreshTelegramOrderMessage(
+      order.id,
+    ).catch(
+      (
+        error,
+      ) => {
+        console.error(
+          "Telegram refresh after bKash failure failed:",
+          error,
+        );
+      },
+    );
 
     if (
       failureResult.paid
@@ -1132,6 +1162,19 @@ console.info(
       },
     );
 
+    await refreshTelegramOrderMessage(
+      order.id,
+    ).catch(
+      (
+        error,
+      ) => {
+        console.error(
+          "Telegram refresh after pending bKash verification failed:",
+          error,
+        );
+      },
+    );
+
     return NextResponse.redirect(
       resultUrl(
         req,
@@ -1456,10 +1499,22 @@ const invoiceMatches =
     },
   );
 
+  await refreshTelegramOrderMessage(
+    order.id,
+  ).catch(
+    (
+      error,
+    ) => {
+      console.error(
+        "Telegram refresh after bKash payment success failed:",
+        error,
+      );
+    },
+  );
+
   /* =======================================================
      SUCCESS
      ======================================================= */
-
   return NextResponse.redirect(
     resultUrl(
       req,

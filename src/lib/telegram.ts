@@ -536,6 +536,33 @@ async function loadOrder(
       items:
         true,
 
+      payments: {
+        where: {
+          method:
+            "BKASH",
+        },
+
+        orderBy: {
+          createdAt:
+            "desc",
+        },
+
+        take:
+          1,
+
+        include: {
+          transactions: {
+            orderBy: {
+              createdAt:
+                "desc",
+            },
+
+            take:
+              20,
+          },
+        },
+      },
+
       shipment: {
         include: {
           events: {
@@ -719,6 +746,31 @@ async function buildOrderMessage(
   order:
     TelegramOrder,
 ) {
+  const bkashPayment =
+    order.paymentMethod ===
+      "BKASH"
+      ? order.payments[0] ??
+        null
+      : null;
+
+  const bkashPaidTransaction =
+    bkashPayment?.transactions.find(
+      (
+        transaction,
+      ) =>
+        transaction.status ===
+          "PAID" &&
+        Boolean(
+          transaction.externalId,
+        ),
+    ) ??
+    null;
+
+  const bkashTrxId =
+    bkashPaidTransaction
+      ?.externalId ??
+    null;
+
   const visibleItems =
     order.items.slice(
       0,
@@ -876,6 +928,25 @@ async function buildOrderMessage(
     `Payment Status: <b>${statusLabel(
       order.paymentStatus,
     )}</b>`,
+
+    order.paymentMethod ===
+      "BKASH" &&
+    bkashPayment
+      ?.providerReference
+      ? `Payment ID: <code>${escapeHtml(
+          bkashPayment.providerReference,
+        )}</code>`
+      : "",
+
+    order.paymentMethod ===
+      "BKASH" &&
+    order.paymentStatus ===
+      "PAID" &&
+    bkashTrxId
+      ? `✅ TrxID: <code>${escapeHtml(
+          bkashTrxId,
+        )}</code>`
+      : "",
 
     order.shipment
       ? ""
