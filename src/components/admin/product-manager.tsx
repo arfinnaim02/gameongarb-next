@@ -27,6 +27,10 @@ import {
 
 import { formatBDT } from "@/lib/money";
 
+import {
+  RichTextEditor,
+} from "@/components/admin/rich-text-editor";
+
 import type {
   AdminCategoryOption,
   AdminProductImage,

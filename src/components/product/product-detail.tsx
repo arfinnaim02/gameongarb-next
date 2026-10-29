@@ -75,6 +75,48 @@ type ProductDetailProps = {
   sizeChart?:
     PublicSizeChart | null;
 };
+
+
+function richTextToPlainText(
+  value:
+    string |
+    undefined,
+) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .replace(
+      /<br\s*\/?>/gi,
+      " ",
+    )
+    .replace(
+      /<\/p>/gi,
+      " ",
+    )
+    .replace(
+      /<[^>]*>/g,
+      " ",
+    )
+    .replaceAll(
+      "&nbsp;",
+      " ",
+    )
+    .replaceAll(
+      "&amp;",
+      "&",
+    )
+    .replaceAll(
+      "&quot;",
+      "\"",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+}
 /* =========================================================
    PRODUCT DETAIL
    ========================================================= */
@@ -756,7 +798,9 @@ export function ProductDetail({
 
   const productIntro =
     shortDescription?.trim() ||
-    description?.trim() ||
+    richTextToPlainText(
+      description,
+    ) ||
     "Product information is being updated.";
 
   const fullProductDetails =
@@ -1442,11 +1486,13 @@ export function ProductDetail({
                 About This Product
               </h2>
 
-              <div className="product-detail-copy">
-                {
-                  fullProductDetails
-                }
-              </div>
+              <div
+                className="product-detail-copy product-rich-description"
+                dangerouslySetInnerHTML={{
+                  __html:
+                    fullProductDetails,
+                }}
+              />
             </section>
           </section>
         </div>

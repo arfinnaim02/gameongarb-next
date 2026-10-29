@@ -17556,3 +17556,225 @@ body.promotion-popup-open {
   }
 }
 
+/* =========================================================
+   PRODUCT RICH DESCRIPTION
+   ========================================================= */
+
+.product-rich-description {
+  color:
+    #4d534e;
+
+  font-size:
+    14px;
+
+  line-height:
+    1.85;
+
+  letter-spacing:
+    0.005em;
+}
+
+.product-rich-description
+> *:first-child {
+  margin-top:
+    0;
+}
+
+.product-rich-description
+> *:last-child {
+  margin-bottom:
+    0;
+}
+
+.product-rich-description
+p {
+  margin:
+    0 0 15px;
+}
+
+.product-rich-description
+strong,
+.product-rich-description
+b {
+  color:
+    #222723;
+
+  font-weight:
+    800;
+}
+
+.product-rich-description
+em,
+.product-rich-description
+i {
+  font-style:
+    italic;
+}
+
+.product-rich-description
+u {
+  text-decoration-thickness:
+    1px;
+
+  text-underline-offset:
+    3px;
+}
+
+.product-rich-description
+h2 {
+  margin:
+    28px 0 12px;
+
+  color:
+    #171a18;
+
+  font-size:
+    clamp(
+      20px,
+      2vw,
+      25px
+    );
+
+  line-height:
+    1.25;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    -0.025em;
+}
+
+.product-rich-description
+h3 {
+  margin:
+    23px 0 9px;
+
+  color:
+    #242925;
+
+  font-size:
+    17px;
+
+  line-height:
+    1.35;
+
+  font-weight:
+    800;
+}
+
+.product-rich-description
+ul,
+.product-rich-description
+ol {
+  margin:
+    14px 0 20px;
+
+  padding-left:
+    23px;
+}
+
+.product-rich-description
+li {
+  margin:
+    7px 0;
+
+  padding-left:
+    3px;
+}
+
+.product-rich-description
+li::marker {
+  color:
+    var(--orange);
+
+  font-weight:
+    800;
+}
+
+.product-rich-description
+blockquote {
+  margin:
+    22px 0;
+
+  padding:
+    15px 18px;
+
+  border-left:
+    3px solid
+      var(--orange);
+
+  background:
+    linear-gradient(
+      90deg,
+      #fff7f1 0%,
+      #fff 100%
+    );
+
+  color:
+    #505651;
+
+  font-style:
+    italic;
+}
+
+.product-rich-description
+a {
+  color:
+    var(--orange);
+
+  font-weight:
+    700;
+
+  text-decoration:
+    underline;
+
+  text-decoration-thickness:
+    1px;
+
+  text-underline-offset:
+    3px;
+}
+
+.product-rich-description
+hr {
+  height:
+    1px;
+
+  margin:
+    26px 0;
+
+  border:
+    0;
+
+  background:
+    #ecefec;
+}
+
+@media (
+  max-width:
+    700px
+) {
+  .product-rich-description {
+    font-size:
+      13.5px;
+
+    line-height:
+      1.8;
+  }
+
+  .product-rich-description
+  h2 {
+    margin-top:
+      23px;
+
+    font-size:
+      20px;
+  }
+
+  .product-rich-description
+  h3 {
+    font-size:
+      16px;
+  }
+}

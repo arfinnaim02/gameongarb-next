@@ -10,6 +10,10 @@ import type {
   AdminProductRecord,
 } from "@/lib/admin-product-types";
 
+import {
+  sanitizeProductDescription,
+} from "@/lib/product-rich-text";
+
 /* =========================================================
    PRISMA INCLUDE
    ========================================================= */

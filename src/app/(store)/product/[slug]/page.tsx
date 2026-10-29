@@ -26,6 +26,10 @@ import {
 } from "@/lib/catalog";
 
 import {
+  toProductDescriptionHtml,
+} from "@/lib/product-rich-text";
+
+import {
   serializePublicSizeChart,
 } from "@/lib/size-charts";
 
@@ -351,6 +355,12 @@ export default async function ProductPage({
   /* =======================================================
      RENDER
      ======================================================= */
+  const richDescription =
+    toProductDescriptionHtml(
+      raw.description ??
+      raw.shortDescription ??
+      "",
+    );
 
   return (
     <>
@@ -370,7 +380,7 @@ export default async function ProductPage({
           undefined
         }
         description={
-          raw.description ??
+          richDescription ||
           undefined
         }
         sizeChart={
