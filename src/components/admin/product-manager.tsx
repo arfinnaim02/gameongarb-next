@@ -2704,7 +2704,7 @@ export function ProductManager({
                   />
                 </label>
 
-                <label
+                <div
                   className={
                     styles.field
                   }
@@ -2713,15 +2713,12 @@ export function ProductManager({
                     Description
                   </span>
 
-                  <textarea
-                    rows={
-                      6
-                    }
+                  <RichTextEditor
                     value={
                       form.description
                     }
                     onChange={(
-                      event,
+                      description,
                     ) =>
                       setForm(
                         (
@@ -2729,15 +2726,13 @@ export function ProductManager({
                         ) => ({
                           ...current,
 
-                          description:
-                            event
-                              .target
-                              .value,
+                          description,
                         }),
                       )
                     }
+                    placeholder="Describe the product, materials, fit, features and care instructions…"
                   />
-                </label>
+                </div>
 
                 <div
                   className={
