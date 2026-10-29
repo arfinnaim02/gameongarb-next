@@ -147,7 +147,10 @@ export function sanitizeProductDescription(
       allowedStyles: {
         span: {
           color: [
+            /^#[0-9a-fA-F]{3}$/,
             /^#[0-9a-fA-F]{6}$/,
+            /^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/,
+            /^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*(0|1|0?\.\d+)\s*\)$/,
           ],
         },
       },
