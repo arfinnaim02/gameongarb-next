@@ -789,13 +789,15 @@ export function OrderDetailClient({
     ] ??
     [];
 
-      const outsideDhakaCod =
-    data.order
-      .paymentMethod ===
-      "COD" &&
-    data.order
-      .deliveryCharge ===
-      150;
+const outsideDhakaCod =
+  data.order
+    .paymentMethod ===
+    "COD" &&
+  data.order
+    .district
+    .trim()
+    .toLowerCase() !==
+    "dhaka";
 
   const deliveryAdvanceLocked =
     Boolean(
