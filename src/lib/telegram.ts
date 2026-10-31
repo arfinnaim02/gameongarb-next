@@ -848,6 +848,20 @@ async function buildOrderMessage(
       order,
     );
 
+  const remainingCod =
+    order.paymentMethod ===
+      "COD"
+      ? Math.max(
+          0,
+          Number(
+            order.total,
+          ) -
+            Number(
+              order.deliveryAdvancePaid,
+            ),
+        )
+      : 0;
+
   return [
     "🛍 <b>GameOn Garb — ORDER</b>",
     "",
@@ -921,6 +935,26 @@ async function buildOrderMessage(
         order.total,
       ),
     )}</b>`,
+
+        order.paymentMethod ===
+      "COD" &&
+    Number(
+      order.deliveryAdvancePaid,
+    ) >
+      0
+      ? `✅ Advance Paid: <b>${formatBDT(
+          Number(
+            order.deliveryAdvancePaid,
+          ),
+        )}</b>`
+      : "",
+
+    order.paymentMethod ===
+      "COD"
+      ? `💵 COD to Collect: <b>${formatBDT(
+          remainingCod,
+        )}</b>`
+      : "",
 
     "",
     `💳 Payment: <b>${order.paymentMethod}</b>`,
@@ -1190,8 +1224,13 @@ export async function sendOrdersByStatus(
         total:
           true,
 
+        deliveryAdvancePaid:
+          true,
+
         paymentMethod:
           true,
+
+
 
         paymentStatus:
           true,

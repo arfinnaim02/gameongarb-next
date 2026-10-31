@@ -22,6 +22,10 @@ import {
   db,
 } from "@/lib/db";
 
+import {
+  refreshTelegramOrderMessage,
+} from "@/lib/telegram";
+
 export const dynamic =
   "force-dynamic";
 
@@ -147,6 +151,27 @@ export async function PATCH(
       );
     }
 
+    const isOutsideDhaka =
+      order.district
+        .trim()
+        .toLowerCase() !==
+      "dhaka";
+
+    if (
+      !isOutsideDhaka
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Delivery advance is only required for outside Dhaka COD orders.",
+        },
+        {
+          status:
+            409,
+        },
+      );
+    }
+
     if (
       order.shipment
         ?.consignmentId ||
@@ -183,6 +208,26 @@ export async function PATCH(
         {
           error:
             "Delivery advance cannot exceed the delivery charge.",
+        },
+        {
+          status:
+            400,
+        },
+      );
+    }
+
+    if (
+      input.amount >
+        0 &&
+      input.amount !==
+        deliveryCharge
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            `Outside Dhaka delivery advance must be exactly ৳${deliveryCharge.toFixed(
+              2,
+            )}.`,
         },
         {
           status:
@@ -291,6 +336,19 @@ export async function PATCH(
     revalidatePath(
       `/admin/orders/${id}`,
     );
+
+    try {
+      await refreshTelegramOrderMessage(
+        id,
+      );
+    } catch (
+      telegramError
+    ) {
+      console.error(
+        "Unable to refresh Telegram order after delivery advance update:",
+        telegramError,
+      );
+    }
 
     return NextResponse.json({
       message:
