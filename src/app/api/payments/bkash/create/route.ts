@@ -164,6 +164,23 @@ export async function POST(
 
             take:
               1,
+
+            include: {
+              transactions: {
+                where: {
+                  type:
+                    "CREATE",
+                },
+
+                orderBy: {
+                  createdAt:
+                    "desc",
+                },
+
+                take:
+                  1,
+              },
+            },
           },
         },
       });
@@ -269,10 +286,58 @@ export async function POST(
     if (
       payment.providerReference
     ) {
+      const createTransaction =
+        payment.transactions[0];
+
+      const payload =
+        createTransaction
+          ?.safePayload;
+
+      const savedBkashURL =
+        payload &&
+        typeof payload ===
+          "object" &&
+        !Array.isArray(
+          payload,
+        ) &&
+        typeof payload.bkashURL ===
+          "string"
+          ? payload.bkashURL
+          : null;
+
+      if (
+        payment.status ===
+          "PROCESSING" &&
+        savedBkashURL
+      ) {
+        return NextResponse.json(
+          {
+            ok:
+              true,
+
+            orderNumber:
+              order.number,
+
+            paymentId:
+              payment.providerReference,
+
+            bkashURL:
+              savedBkashURL,
+
+            resumed:
+              true,
+          },
+          {
+            status:
+              200,
+          },
+        );
+      }
+
       return NextResponse.json(
         {
           error:
-            "A bKash payment has already been initiated for this order.",
+            "A bKash payment has already been initiated for this order. Please check the payment status before trying again.",
         },
         {
           status:
@@ -427,6 +492,9 @@ export async function POST(
               paymentCreateTime:
                 result.paymentCreateTime ??
                 null,
+
+              bkashURL:
+                result.bkashURL,
             },
           },
         });
