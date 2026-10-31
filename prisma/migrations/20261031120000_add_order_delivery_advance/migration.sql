@@ -1,0 +1,4 @@
+ALTER TABLE "Order"
+ADD COLUMN IF NOT EXISTS "deliveryAdvancePaid" DECIMAL(12,2) NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "deliveryAdvanceReference" TEXT,
+ADD COLUMN IF NOT EXISTS "deliveryAdvancePaidAt" TIMESTAMP(3);
