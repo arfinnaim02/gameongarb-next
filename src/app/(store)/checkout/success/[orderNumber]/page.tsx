@@ -39,6 +39,10 @@ import {
   PurchaseTracker,
 } from "@/components/tracking/purchase-tracker";
 
+import {
+  DeliveryAdvanceBkashButton,
+} from "./delivery-advance-bkash-button";
+
 export const dynamic =
   "force-dynamic";
 
@@ -188,6 +192,9 @@ export default async function OrderSuccessPage({
         shippingAddress:
           true,
 
+        district:
+          true,
+
         subtotal:
           true,
 
@@ -197,8 +204,21 @@ export default async function OrderSuccessPage({
         deliveryCharge:
           true,
 
+        deliveryAdvancePaid:
+          true,
+
         total:
           true,
+
+        shipment: {
+          select: {
+            consignmentId:
+              true,
+
+            trackingId:
+              true,
+          },
+        },
 
         items: {
           select: {
@@ -283,6 +303,55 @@ export default async function OrderSuccessPage({
       order.createdAt,
     );
 
+  const isOutsideDhaka =
+    order.district
+      .trim()
+      .toLowerCase() !==
+    "dhaka";
+
+  const deliveryCharge =
+    Number(
+      order.deliveryCharge,
+    );
+
+  const deliveryAdvancePaid =
+    Number(
+      order.deliveryAdvancePaid,
+    );
+
+  const deliveryAdvanceComplete =
+    deliveryAdvancePaid >=
+    deliveryCharge;
+
+  const courierCreated =
+    Boolean(
+      order.shipment
+        ?.consignmentId ||
+      order.shipment
+        ?.trackingId,
+    );
+
+  const canPayDeliveryAdvance =
+    order.paymentMethod ===
+      "COD" &&
+    isOutsideDhaka &&
+    deliveryCharge >
+      0 &&
+    !deliveryAdvanceComplete &&
+    !courierCreated;
+
+  const remainingCod =
+    order.paymentMethod ===
+      "COD"
+      ? Math.max(
+          0,
+          Number(
+            order.total,
+          ) -
+            deliveryAdvancePaid,
+        )
+      : 0;
+
   const paymentLabel =
     order.paymentMethod ===
     "COD"
@@ -292,7 +361,15 @@ export default async function OrderSuccessPage({
   const paymentMessage =
     order.paymentMethod ===
     "COD"
-      ? "Pay when your order arrives."
+      ? isOutsideDhaka
+        ? deliveryAdvanceComplete
+          ? `Delivery charge paid. Remaining COD: ${formatBDT(
+              remainingCod,
+            )}.`
+          : `Pay the ${formatBDT(
+              deliveryCharge,
+            )} delivery charge in advance via bKash. The remaining amount will be Cash on Delivery.`
+        : "Pay when your order arrives."
       : order.paymentStatus ===
           "PAID"
         ? "Your bKash payment has been completed."
@@ -751,6 +828,17 @@ export default async function OrderSuccessPage({
                   }
                 </span>
               </div>
+
+              {canPayDeliveryAdvance ? (
+                <DeliveryAdvanceBkashButton
+                  orderNumber={
+                    order.number
+                  }
+                  amount={
+                    deliveryCharge
+                  }
+                />
+              ) : null}
             </section>
           </div>
         </div>
