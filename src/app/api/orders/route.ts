@@ -225,6 +225,14 @@ const schema =
 
 
 
+            variantId:
+
+              z
+                .string()
+                .optional(),
+
+
+
             size:
 
               z.string(),
@@ -658,96 +666,81 @@ export async function POST(
 
 
 
+    const variantIds =
+      input.items
+        .map(
+          (
+            item,
+          ) =>
+            item.variantId,
+        )
+        .filter(
+          (
+            value,
+          ): value is string =>
+            Boolean(
+              value,
+            ),
+        );
+
     const variants =
-
       await db.productVariant.findMany({
-
         where: {
+          active:
+            true,
 
-          OR:
+          OR: [
+            ...(variantIds.length >
+            0
+              ? [
+                  {
+                    id: {
+                      in:
+                        variantIds,
+                    },
+                  },
+                ]
+              : []),
 
-            input.items.map(
-
+            ...input.items.map(
               (
-
                 item,
-
               ) => ({
-
                 productId:
-
                   item.productId,
 
-
-
                 size:
-
                   item.size,
 
-
-
                 color:
-
                   item.color,
-
-
-
-                active:
-
-                  true,
-
               }),
-
             ),
-
+          ],
         },
-
-
 
         include: {
-
           product: {
-
             include: {
-
               images: {
-
                 orderBy: {
-
                   sortOrder:
-
                     "asc",
-
                 },
-
-
 
                 take:
-
                   1,
-
               },
-
-
 
               categories: {
-
                 select: {
-
                   categoryId:
-
                     true,
-
                 },
-
               },
-
             },
-
           },
-
         },
-
       });
 
 
@@ -762,52 +755,77 @@ export async function POST(
 
         ) => {
 
+          const normalizedSize =
+            item.size
+              .trim()
+              .toLowerCase();
+
+          const normalizedColor =
+            item.color
+              .trim()
+              .toLowerCase();
+
           const variant =
-
             variants.find(
-
               (
-
                 candidate,
-
               ) =>
-
+                Boolean(
+                  item.variantId,
+                ) &&
+                candidate.id ===
+                  item.variantId &&
                 candidate.productId ===
-
+                  item.productId,
+            ) ??
+            variants.find(
+              (
+                candidate,
+              ) =>
+                candidate.productId ===
                   item.productId &&
-
-                candidate.size ===
-
-                  item.size &&
-
-                candidate.color ===
-
-                  item.color,
-
+                (
+                  candidate.size ??
+                  "One Size"
+                )
+                  .trim()
+                  .toLowerCase() ===
+                  normalizedSize &&
+                (
+                  candidate.color ??
+                  "Default"
+                )
+                  .trim()
+                  .toLowerCase() ===
+                  normalizedColor,
             );
 
 
 
           if (
-
-            !variant ||
-
-            variant.stock <
-
-              item.quantity ||
-
-            variant.product.status !==
-
-              "ACTIVE"
-
+            !variant
           ) {
-
             throw new Error(
-
-              "Insufficient stock for a selected item.",
-
+              `The selected variant (${item.color} / ${item.size}) is no longer available. Please remove it from your cart and add it again.`,
             );
+          }
 
+          if (
+            variant.product.status !==
+            "ACTIVE"
+          ) {
+            throw new Error(
+              `${variant.product.name} is currently unavailable.`,
+            );
+          }
+
+          if (
+            variant.stock <
+            item.quantity
+          ) {
+            throw new Error(
+              `Only ${variant.stock} item(s) are available for ${variant.product.name} - ${variant.color ?? "Default"} / ${variant.size ?? "One Size"}.`,
+            );
           }
 
 
