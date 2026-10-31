@@ -386,6 +386,17 @@ export type OrderDetailData = {
     deliveryCharge:
       number;
 
+    deliveryAdvancePaid:
+      number;
+
+    deliveryAdvanceReference:
+      string |
+      null;
+
+    deliveryAdvancePaidAt:
+      string |
+      null;
+
     total:
       number;
 
@@ -664,6 +675,40 @@ export function OrderDetailClient({
       false,
     );
 
+      const [
+    advanceAmount,
+    setAdvanceAmount,
+  ] =
+    useState(
+      String(
+        data.order
+          .deliveryAdvancePaid >
+        0
+          ? data.order
+              .deliveryAdvancePaid
+          : data.order
+              .deliveryCharge,
+      ),
+    );
+
+  const [
+    advanceReference,
+    setAdvanceReference,
+  ] =
+    useState(
+      data.order
+        .deliveryAdvanceReference ??
+      "",
+    );
+
+  const [
+    savingAdvance,
+    setSavingAdvance,
+  ] =
+    useState(
+      false,
+    );
+
   const [
     updatingStatus,
     setUpdatingStatus,
@@ -743,6 +788,34 @@ export function OrderDetailClient({
       data.order.status
     ] ??
     [];
+
+      const outsideDhakaCod =
+    data.order
+      .paymentMethod ===
+      "COD" &&
+    data.order
+      .deliveryCharge ===
+      150;
+
+  const deliveryAdvanceLocked =
+    Boolean(
+      data.shipment
+        ?.consignmentId ||
+      data.shipment
+        ?.trackingId,
+    );
+
+  const steadfastCodPreview =
+    data.order
+      .paymentMethod ===
+      "COD"
+      ? Math.max(
+          0,
+          data.order.total -
+            data.order
+              .deliveryAdvancePaid,
+        )
+      : 0;
 
   const courierBookingReady =
     data.order.status ===
@@ -1102,6 +1175,120 @@ export function OrderDetailClient({
       );
     } finally {
       setUpdatingStatus(
+        false,
+      );
+    }
+  }
+
+    async function saveDeliveryAdvance() {
+    if (
+      savingAdvance ||
+      deliveryAdvanceLocked
+    ) {
+      return;
+    }
+
+    const amount =
+      Number(
+        advanceAmount,
+      );
+
+    if (
+      !Number.isFinite(
+        amount,
+      ) ||
+      amount < 0
+    ) {
+      setError(
+        "Enter a valid advance payment amount.",
+      );
+
+      return;
+    }
+
+    if (
+      amount >
+      data.order
+        .deliveryCharge
+    ) {
+      setError(
+        "Delivery advance cannot be greater than the delivery charge.",
+      );
+
+      return;
+    }
+
+    setSavingAdvance(
+      true,
+    );
+
+    setMessage(
+      "",
+    );
+
+    setError(
+      "",
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${data.order.id}/delivery-advance`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                amount,
+
+                reference:
+                  advanceReference,
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Request failed.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to update delivery advance.",
+        );
+      }
+
+      setMessage(
+        result.message ??
+          "Delivery advance updated.",
+      );
+
+      router.refresh();
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to update delivery advance.",
+      );
+    } finally {
+      setSavingAdvance(
         false,
       );
     }
@@ -2845,6 +3032,198 @@ export function OrderDetailClient({
               </div>
             </div>
 
+                        {outsideDhakaCod ? (
+              <div
+                className={
+                  styles.advancePayment
+                }
+              >
+                <div
+                  className={
+                    styles.advancePaymentHeader
+                  }
+                >
+                  <div>
+                    <strong>
+                      Delivery Advance
+                    </strong>
+
+                    <span>
+                      Outside Dhaka COD order
+                    </span>
+                  </div>
+
+                  <strong
+                    className={
+                      data.order
+                        .deliveryAdvancePaid >
+                      0
+                        ? styles.good
+                        : ""
+                    }
+                  >
+                    {data.order
+                      .deliveryAdvancePaid >
+                    0
+                      ? "Received"
+                      : "Pending"}
+                  </strong>
+                </div>
+
+                <div
+                  className={
+                    styles.advanceSummary
+                  }
+                >
+                  <div>
+                    <span>
+                      Delivery Charge
+                    </span>
+
+                    <strong>
+                      {formatBDT(
+                        data.order
+                          .deliveryCharge,
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Advance Paid
+                    </span>
+
+                    <strong>
+                      {formatBDT(
+                        data.order
+                          .deliveryAdvancePaid,
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Remaining COD
+                    </span>
+
+                    <strong>
+                      {formatBDT(
+                        steadfastCodPreview,
+                      )}
+                    </strong>
+                  </div>
+                </div>
+
+                {data.order
+                  .deliveryAdvancePaidAt ? (
+                  <small
+                    className={
+                      styles.advancePaidMeta
+                    }
+                  >
+                    Recorded{" "}
+                    {formatDate(
+                      data.order
+                        .deliveryAdvancePaidAt,
+                    )}
+
+                    {data.order
+                      .deliveryAdvanceReference
+                      ? ` · Ref: ${data.order.deliveryAdvanceReference}`
+                      : ""}
+                  </small>
+                ) : null}
+
+                {!deliveryAdvanceLocked ? (
+                  <div
+                    className={
+                      styles.advanceForm
+                    }
+                  >
+                    <label>
+                      <span>
+                        Amount Received
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        max={
+                          data.order
+                            .deliveryCharge
+                        }
+                        step="0.01"
+                        value={
+                          advanceAmount
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setAdvanceAmount(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      <span>
+                        Transaction / Reference
+                      </span>
+
+                      <input
+                        type="text"
+                        maxLength={
+                          200
+                        }
+                        placeholder="Optional bKash trxID / reference"
+                        value={
+                          advanceReference
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setAdvanceReference(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      disabled={
+                        savingAdvance
+                      }
+                      onClick={() =>
+                        void saveDeliveryAdvance()
+                      }
+                    >
+                      <Save
+                        size={
+                          14
+                        }
+                      />
+
+                      {savingAdvance
+                        ? "Saving..."
+                        : "Save Advance Payment"}
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.advanceLocked
+                    }
+                  >
+                    Advance payment is locked because the parcel has already been created in Steadfast.
+                  </div>
+                )}
+              </div>
+            ) : null}
+
             {data.payments.map(
               (
                 payment,
@@ -3490,8 +3869,7 @@ export function OrderDetailClient({
                         .paymentMethod ===
                       "COD"
                         ? `COD ${formatBDT(
-                            data.order
-                              .total,
+                            steadfastCodPreview,
                           )}`
                         : "Prepaid · COD ৳0"}
                     </small>

@@ -1538,3 +1538,351 @@
   font-size:
     8px;
 }
+
+
+/* =========================================================
+   DELIVERY ADVANCE PAYMENT
+   ========================================================= */
+
+.advancePayment {
+  margin-top:
+    15px;
+
+  padding:
+    15px;
+
+  border:
+    1px solid #ead7c8;
+
+  border-radius:
+    10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fffaf6 0%,
+      #fff 100%
+    );
+}
+
+.advancePaymentHeader {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    12px;
+}
+
+.advancePaymentHeader
+> div
+> strong,
+.advancePaymentHeader
+> div
+> span {
+  display:
+    block;
+}
+
+.advancePaymentHeader
+> div
+> strong {
+  color:
+    #242724;
+
+  font-size:
+    13px;
+}
+
+.advancePaymentHeader
+> div
+> span {
+  margin-top:
+    3px;
+
+  color:
+    #969a96;
+
+  font-size:
+    10px;
+}
+
+.advanceSummary {
+  margin-top:
+    13px;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap:
+    7px;
+}
+
+.advanceSummary
+> div {
+  padding:
+    10px;
+
+  border:
+    1px solid #ece7e2;
+
+  border-radius:
+    8px;
+
+  background:
+    #fff;
+}
+
+.advanceSummary
+span,
+.advanceSummary
+strong {
+  display:
+    block;
+}
+
+.advanceSummary
+span {
+  color:
+    #929792;
+
+  font-size:
+    9px;
+
+  text-transform:
+    uppercase;
+}
+
+.advanceSummary
+strong {
+  margin-top:
+    4px;
+
+  color:
+    #242724;
+
+  font-size:
+    13px;
+}
+
+.advancePaidMeta {
+  display:
+    block;
+
+  margin-top:
+    10px;
+
+  color:
+    #717771;
+
+  font-size:
+    10px;
+}
+
+.advanceForm {
+  margin-top:
+    13px;
+
+  padding-top:
+    13px;
+
+  border-top:
+    1px solid #eee7e1;
+
+  display:
+    grid;
+
+  grid-template-columns:
+    minmax(
+      120px,
+      .6fr
+    )
+    minmax(
+      180px,
+      1.4fr
+    )
+    auto;
+
+  gap:
+    8px;
+
+  align-items:
+    end;
+}
+
+.advanceForm
+label
+span {
+  display:
+    block;
+
+  margin-bottom:
+    5px;
+
+  color:
+    #777c77;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+}
+
+.advanceForm
+input {
+  width:
+    100%;
+
+  min-height:
+    37px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid #dcdedb;
+
+  border-radius:
+    7px;
+
+  outline:
+    none;
+
+  background:
+    #fff;
+
+  color:
+    #222522;
+}
+
+.advanceForm
+input:focus {
+  border-color:
+    var(--orange);
+
+  box-shadow:
+    0 0 0 3px
+      rgb(
+        255 90 22 /
+        8%
+      );
+}
+
+.advanceForm
+button {
+  min-height:
+    37px;
+
+  padding:
+    0 12px;
+
+  border:
+    0;
+
+  border-radius:
+    7px;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap:
+    6px;
+
+  background:
+    #171918;
+
+  color:
+    #fff;
+
+  font:
+    inherit;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+}
+
+.advanceForm
+button:hover:not(:disabled) {
+  background:
+    var(--orange);
+}
+
+.advanceForm
+button:disabled {
+  opacity:
+    .55;
+
+  cursor:
+    wait;
+}
+
+.advanceLocked {
+  margin-top:
+    12px;
+
+  padding:
+    10px 12px;
+
+  border:
+    1px solid #e1e3df;
+
+  border-radius:
+    7px;
+
+  background:
+    #f6f7f5;
+
+  color:
+    #777c77;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.5;
+}
+
+@media (
+  max-width:
+    760px
+) {
+  .advanceSummary {
+    grid-template-columns:
+      1fr;
+  }
+
+  .advanceForm {
+    grid-template-columns:
+      1fr;
+  }
+}

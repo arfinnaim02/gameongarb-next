@@ -428,37 +428,40 @@ model CartItem {
 }
 
 model Order {
-  id                String                 @id @default(cuid())
-  number            String                 @unique
-  customerId        String?
-  customer          Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerName      String
-  phone             String
-  email             String?
-  division          String
-  district          String
-  thana             String
-  shippingAddress   String
-  subtotal          Decimal                @db.Decimal(12, 2)
-  discount          Decimal                @default(0) @db.Decimal(12, 2)
-  deliveryCharge    Decimal                @db.Decimal(12, 2)
-  total             Decimal                @db.Decimal(12, 2)
-  paymentMethod     PaymentMethod
-  paymentStatus     PaymentStatus          @default(PENDING)
-  status            OrderStatus            @default(NEW)
-  couponCode        String?
-  internalNotes     String?
-  telegramChatId    String?
-  telegramMessageId Int?
-  items             OrderItem[]
-  history           OrderStatusHistory[]
-  payments          Payment[]
-  couponUsage       CouponUsage?
-  shipment          CourierShipment?
-  returns           Return[]
-  notifications     NotificationDelivery[]
-  createdAt         DateTime               @default(now())
-  updatedAt         DateTime               @updatedAt
+  id                       String                 @id @default(cuid())
+  number                   String                 @unique
+  customerId               String?
+  customer                 Customer?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName             String
+  phone                    String
+  email                    String?
+  division                 String
+  district                 String
+  thana                    String
+  shippingAddress          String
+  subtotal                 Decimal                @db.Decimal(12, 2)
+  discount                 Decimal                @default(0) @db.Decimal(12, 2)
+  deliveryCharge           Decimal                @db.Decimal(12, 2)
+  deliveryAdvancePaid      Decimal                @default(0) @db.Decimal(12, 2)
+  deliveryAdvanceReference String?
+  deliveryAdvancePaidAt    DateTime?
+  total                    Decimal                @db.Decimal(12, 2)
+  paymentMethod            PaymentMethod
+  paymentStatus            PaymentStatus          @default(PENDING)
+  status                   OrderStatus            @default(NEW)
+  couponCode               String?
+  internalNotes            String?
+  telegramChatId           String?
+  telegramMessageId        Int?
+  items                    OrderItem[]
+  history                  OrderStatusHistory[]
+  payments                 Payment[]
+  couponUsage              CouponUsage?
+  shipment                 CourierShipment?
+  returns                  Return[]
+  notifications            NotificationDelivery[]
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
 
   @@index([phone, createdAt])
   @@index([status, createdAt])

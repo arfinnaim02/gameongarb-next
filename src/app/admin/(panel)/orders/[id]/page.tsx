@@ -245,6 +245,19 @@ shipment: {
           order.deliveryCharge,
         ),
 
+      deliveryAdvancePaid:
+        Number(
+          order.deliveryAdvancePaid,
+        ),
+
+      deliveryAdvanceReference:
+        order.deliveryAdvanceReference,
+
+      deliveryAdvancePaidAt:
+        order.deliveryAdvancePaidAt
+          ?.toISOString() ??
+        null,
+
       total:
         Number(
           order.total,
