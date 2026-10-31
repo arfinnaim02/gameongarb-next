@@ -104,13 +104,6 @@ type CheckoutResponse = {
   >;
 };
 
-type BkashCreateResponse = {
-  ok?: boolean;
-  orderNumber?: string;
-  paymentId?: string;
-  bkashURL?: string;
-  error?: string;
-};
 
 type CouponResponse = {
   code?: string | null;
@@ -232,11 +225,6 @@ export function CheckoutClient() {
   ] =
     useState("");
 
-  const [
-    pendingBkashOrderNumber,
-    setPendingBkashOrderNumber,
-  ] =
-    useState("");
 
   /* =======================================================
      SETTINGS
@@ -1023,67 +1011,6 @@ export function CheckoutClient() {
     );
   }
 
-  /* =======================================================
-     START BKASH PAYMENT
-     ======================================================= */
-
-  async function startBkashPayment(
-    orderNumber:
-      string,
-  ) {
-    const bkashResponse =
-      await fetch(
-        "/api/payments/bkash/create",
-        {
-          method:
-            "POST",
-
-          headers: {
-            "content-type":
-              "application/json",
-          },
-
-          body:
-            JSON.stringify({
-              orderNumber,
-            }),
-        },
-      );
-
-    const bkashData =
-      (await bkashResponse
-        .json()
-        .catch(
-          () => ({
-            error:
-              "Unable to start bKash payment.",
-          }),
-        )) as
-        BkashCreateResponse;
-
-    if (
-      !bkashResponse.ok
-    ) {
-      throw new Error(
-        bkashData.error ??
-          "Unable to start bKash payment.",
-      );
-    }
-
-    if (
-      !bkashData.bkashURL
-    ) {
-      throw new Error(
-        "bKash payment URL was not received.",
-      );
-    }
-
-    clear();
-
-    window.location.assign(
-      bkashData.bkashURL,
-    );
-  }
 
   /* =======================================================
      SUBMIT
@@ -1170,18 +1097,6 @@ export function CheckoutClient() {
     );
 
     try {
-      if (
-        payment ===
-          "BKASH" &&
-        pendingBkashOrderNumber
-      ) {
-        await startBkashPayment(
-          pendingBkashOrderNumber,
-        );
-
-        return;
-      }
-
       const response =
         await fetch(
           "/api/orders",
@@ -1335,17 +1250,24 @@ export function CheckoutClient() {
         return;
       }
 
-      setPendingBkashOrderNumber(
-        data.orderNumber,
+      /*
+       * The order now exists and its stock
+       * has already been reserved.
+       *
+       * Clear the cart immediately so the
+       * customer cannot accidentally create
+       * another order for the same items.
+       *
+       * Payment happens against this existing
+       * order on the dedicated bKash page.
+       */
+      clear();
+
+      router.push(
+        `/payment/bkash/${data.orderNumber}`,
       );
 
-      /* ===============================================
-         BKASH CREATE PAYMENT
-         =============================================== */
-
-      await startBkashPayment(
-        data.orderNumber,
-      );
+      return;
     } catch (
       error
     ) {

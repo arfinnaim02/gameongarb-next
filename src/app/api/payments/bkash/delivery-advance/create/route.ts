@@ -334,10 +334,59 @@ export async function POST(
       latestPayment
         .providerPaymentId
     ) {
+      const payload =
+        latestPayment
+          .safePayload;
+
+      const savedBkashURL =
+        payload &&
+        typeof payload ===
+          "object" &&
+        !Array.isArray(
+          payload,
+        ) &&
+        typeof payload.bkashURL ===
+          "string"
+          ? payload.bkashURL
+          : null;
+
+      if (
+        savedBkashURL
+      ) {
+        return NextResponse.json(
+          {
+            ok:
+              true,
+
+            orderNumber:
+              order.number,
+
+            paymentId:
+              latestPayment
+                .providerPaymentId,
+
+            amount:
+              Number(
+                latestPayment.amount,
+              ),
+
+            bkashURL:
+              savedBkashURL,
+
+            resumed:
+              true,
+          },
+          {
+            status:
+              200,
+          },
+        );
+      }
+
       return NextResponse.json(
         {
           error:
-            "A delivery charge bKash payment is already in progress.",
+            "A delivery charge bKash payment is already in progress. Please try again shortly.",
         },
         {
           status:
@@ -473,6 +522,9 @@ export async function POST(
           paymentCreateTime:
             result.paymentCreateTime ??
             null,
+
+          bkashURL:
+            result.bkashURL,
         },
       },
     });
