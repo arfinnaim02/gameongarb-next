@@ -33,6 +33,10 @@ import {
   canAccessOrder,
 } from "@/lib/session";
 
+import {
+  isBkashAllowedForPhone,
+} from "@/lib/payments/bkash/access";
+
 import styles from "./order-success.module.css";
 
 import {
@@ -331,6 +335,11 @@ export default async function OrderSuccessPage({
         ?.trackingId,
     );
 
+  const bkashAllowedForOrder =
+    isBkashAllowedForPhone(
+      order.phone,
+    );
+
   const canPayDeliveryAdvance =
     order.paymentMethod ===
       "COD" &&
@@ -338,7 +347,8 @@ export default async function OrderSuccessPage({
     deliveryCharge >
       0 &&
     !deliveryAdvanceComplete &&
-    !courierCreated;
+    !courierCreated &&
+    bkashAllowedForOrder;
 
   const remainingCod =
     order.paymentMethod ===
