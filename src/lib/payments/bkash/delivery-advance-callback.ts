@@ -2,6 +2,10 @@ import {
   NextResponse,
 } from "next/server";
 
+import type {
+  Prisma,
+} from "@prisma/client";
+
 import {
   db,
 } from "@/lib/db";
@@ -60,6 +64,26 @@ function isPending(
     result.transactionStatus ===
       "Processing"
   );
+}
+
+function getSafePayloadObject(
+  value:
+    Prisma.JsonValue |
+    null,
+): Prisma.JsonObject {
+  if (
+    value &&
+    typeof value ===
+      "object" &&
+    !Array.isArray(
+      value,
+    )
+  ) {
+    return value as
+      Prisma.JsonObject;
+  }
+
+  return {};
 }
 
 function resultUrl(
@@ -146,6 +170,19 @@ export async function handleDeliveryAdvanceBkashCallback({
   const order =
     advancePayment.order;
 
+  const originalPayload =
+    getSafePayloadObject(
+      advancePayment.safePayload,
+    );
+
+  const expectedInvoice =
+    typeof originalPayload
+      .merchantInvoiceNumber ===
+      "string"
+      ? originalPayload
+          .merchantInvoiceNumber
+      : null;
+
   /*
    * Idempotency.
    *
@@ -186,6 +223,8 @@ export async function handleDeliveryAdvanceBkashCallback({
           "FAILED",
 
         safePayload: {
+          ...originalPayload,
+
           paymentId,
 
           callbackStatus:
@@ -226,6 +265,8 @@ export async function handleDeliveryAdvanceBkashCallback({
           "FAILED",
 
         safePayload: {
+          ...originalPayload,
+
           paymentId,
 
           callbackStatus:
@@ -354,6 +395,8 @@ export async function handleDeliveryAdvanceBkashCallback({
           "PROCESSING",
 
         safePayload: {
+          ...originalPayload,
+
           paymentId,
 
           transactionStatus:
@@ -394,6 +437,21 @@ export async function handleDeliveryAdvanceBkashCallback({
       advancePayment.amount,
     );
 
+  const resultInvoice =
+    result.merchantInvoiceNumber ??
+    result.merchantInvoice ??
+    null;
+
+  const invoiceMatches =
+    Boolean(
+      expectedInvoice,
+    ) &&
+    Boolean(
+      resultInvoice,
+    ) &&
+    resultInvoice ===
+      expectedInvoice;
+
   const paymentIdMatches =
     resultPaymentId ===
       paymentId;
@@ -424,6 +482,7 @@ export async function handleDeliveryAdvanceBkashCallback({
     !trxId ||
     !paymentIdMatches ||
     !amountMatches ||
+    !invoiceMatches ||
     !currencyMatches
   ) {
     console.error(
@@ -446,6 +505,10 @@ export async function handleDeliveryAdvanceBkashCallback({
 
         expectedAmount,
 
+        expectedInvoice,
+
+        resultInvoice,
+
         currency:
           result.currency,
 
@@ -464,6 +527,8 @@ export async function handleDeliveryAdvanceBkashCallback({
           "PROCESSING",
 
         safePayload: {
+          ...originalPayload,
+
           paymentId,
 
           resultPaymentId,
@@ -481,6 +546,9 @@ export async function handleDeliveryAdvanceBkashCallback({
           currency:
             result.currency ??
             null,
+
+          merchantInvoiceNumber:
+            resultInvoice,
 
           verificationSource,
 
@@ -598,6 +666,9 @@ export async function handleDeliveryAdvanceBkashCallback({
 
               currency:
                 result.currency,
+
+             merchantInvoiceNumber:
+                resultInvoice,
 
               verificationSource,
 
