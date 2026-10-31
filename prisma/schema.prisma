@@ -456,6 +456,7 @@ model Order {
   items                    OrderItem[]
   history                  OrderStatusHistory[]
   payments                 Payment[]
+  deliveryAdvancePayments  DeliveryAdvancePayment[]
   couponUsage              CouponUsage?
   shipment                 CourierShipment?
   returns                  Return[]
@@ -524,6 +525,23 @@ model PaymentTransaction {
   safePayload Json?
   payment     Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   createdAt   DateTime      @default(now())
+}
+
+model DeliveryAdvancePayment {
+  id                String        @id @default(cuid())
+  orderId           String
+  amount            Decimal       @db.Decimal(12, 2)
+  status            PaymentStatus @default(PENDING)
+  provider          String        @default("BKASH")
+  providerPaymentId String?       @unique
+  trxId             String?       @unique
+  safePayload       Json?
+  order             Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([orderId, createdAt])
+  @@index([status, createdAt])
 }
 
 model InventoryTransaction {
