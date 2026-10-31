@@ -3247,6 +3247,13 @@ const outsideDhakaCod =
                       {humanize(
                         payment.status,
                       )}
+                      {payment.method ===
+                        "COD" &&
+                      data.order
+                        .deliveryAdvancePaid >
+                        0
+                        ? " · Due"
+                        : ""}
                     </strong>
 
                     <span>
@@ -3276,7 +3283,10 @@ const outsideDhakaCod =
 
                   <strong>
                     {formatBDT(
-                      payment.amount,
+                      payment.method ===
+                        "COD"
+                        ? steadfastCodPreview
+                        : payment.amount,
                     )}
                   </strong>
                 </div>
