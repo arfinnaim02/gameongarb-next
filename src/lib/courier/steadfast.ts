@@ -1162,6 +1162,9 @@ export type GOGCourierOrder = {
   total:
     number;
 
+  deliveryAdvancePaid:
+    number;
+
   paymentMethod:
     "COD" |
     "BKASH";
@@ -1261,7 +1264,15 @@ export function buildSteadfastParcel(
     cod_amount:
       order.paymentMethod ===
       "COD"
-        ? order.total
+        ? Math.max(
+            0,
+            order.total -
+              Math.max(
+                0,
+                order
+                  .deliveryAdvancePaid,
+              ),
+          )
         : 0,
 
     total_lot:

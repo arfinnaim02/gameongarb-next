@@ -293,6 +293,11 @@ export async function POST(
             order.total,
           ),
 
+        deliveryAdvancePaid:
+          Number(
+            order.deliveryAdvancePaid,
+          ),
+
         paymentMethod:
           order.paymentMethod,
 
