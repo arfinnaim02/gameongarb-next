@@ -11,6 +11,10 @@ import {
 } from "@/lib/telegram";
 
 import {
+  handleDeliveryAdvanceBkashCallback,
+} from "@/lib/payments/bkash/delivery-advance-callback";
+
+import {
   bkashRequest,
 } from "@/lib/payments/bkash/client";
 
@@ -619,6 +623,25 @@ export async function GET(
         },
       ),
     );
+  }
+
+  /* =======================================================
+     DELIVERY ADVANCE PAYMENT
+     ======================================================= */
+
+  const advanceResponse =
+    await handleDeliveryAdvanceBkashCallback({
+      req,
+
+      paymentId,
+
+      callbackStatus,
+    });
+
+  if (
+    advanceResponse
+  ) {
+    return advanceResponse;
   }
 
   /* =======================================================
