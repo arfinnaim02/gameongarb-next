@@ -232,6 +232,12 @@ export function CheckoutClient() {
   ] =
     useState("");
 
+  const [
+    pendingBkashOrderNumber,
+    setPendingBkashOrderNumber,
+  ] =
+    useState("");
+
   /* =======================================================
      SETTINGS
      ======================================================= */
@@ -1018,6 +1024,68 @@ export function CheckoutClient() {
   }
 
   /* =======================================================
+     START BKASH PAYMENT
+     ======================================================= */
+
+  async function startBkashPayment(
+    orderNumber:
+      string,
+  ) {
+    const bkashResponse =
+      await fetch(
+        "/api/payments/bkash/create",
+        {
+          method:
+            "POST",
+
+          headers: {
+            "content-type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify({
+              orderNumber,
+            }),
+        },
+      );
+
+    const bkashData =
+      (await bkashResponse
+        .json()
+        .catch(
+          () => ({
+            error:
+              "Unable to start bKash payment.",
+          }),
+        )) as
+        BkashCreateResponse;
+
+    if (
+      !bkashResponse.ok
+    ) {
+      throw new Error(
+        bkashData.error ??
+          "Unable to start bKash payment.",
+      );
+    }
+
+    if (
+      !bkashData.bkashURL
+    ) {
+      throw new Error(
+        "bKash payment URL was not received.",
+      );
+    }
+
+    clear();
+
+    window.location.assign(
+      bkashData.bkashURL,
+    );
+  }
+
+  /* =======================================================
      SUBMIT
      ======================================================= */
 
@@ -1102,6 +1170,18 @@ export function CheckoutClient() {
     );
 
     try {
+      if (
+        payment ===
+          "BKASH" &&
+        pendingBkashOrderNumber
+      ) {
+        await startBkashPayment(
+          pendingBkashOrderNumber,
+        );
+
+        return;
+      }
+
       const response =
         await fetch(
           "/api/orders",
@@ -1255,68 +1335,25 @@ export function CheckoutClient() {
         return;
       }
 
+      setPendingBkashOrderNumber(
+        data.orderNumber,
+      );
+
       /* ===============================================
          BKASH CREATE PAYMENT
          =============================================== */
 
-      const bkashResponse =
-        await fetch(
-          "/api/payments/bkash/create",
-          {
-            method:
-              "POST",
-
-            headers: {
-              "content-type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                orderNumber:
-                  data.orderNumber,
-              }),
-          },
-        );
-
-      const bkashData =
-        (await bkashResponse
-          .json()
-          .catch(
-            () => ({
-              error:
-                "Unable to start bKash payment.",
-            }),
-          )) as
-          BkashCreateResponse;
-
-      if (
-        !bkashResponse.ok
-      ) {
-        setError(
-          bkashData.error ??
-            "Unable to start bKash payment.",
-        );
-
-        return;
-      }
-
-      if (
-        !bkashData.bkashURL
-      ) {
-        setError(
-          "bKash payment URL was not received.",
-        );
-
-        return;
-      }
-
-      window.location.assign(
-        bkashData.bkashURL,
+      await startBkashPayment(
+        data.orderNumber,
       );
-    } catch {
+    } catch (
+      error
+    ) {
       setError(
-        "Unable to place your order. Please check your connection and try again.",
+        error instanceof
+          Error
+          ? error.message
+          : "Unable to place your order. Please check your connection and try again.",
       );
     } finally {
       setSaving(
