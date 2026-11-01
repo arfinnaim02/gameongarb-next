@@ -1489,3 +1489,239 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   PRODUCT VARIANT GENERATOR
+   ========================================================= */
+
+.variantIntro {
+  margin: 5px 0 0;
+  color: #858c86;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.variantBuilder {
+  padding: 14px;
+  border: 1px solid #e1e5e0;
+  display: grid;
+  gap: 14px;
+  background: #f8faf7;
+}
+
+.variantBuilderBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.variantBuilderLabel {
+  color: #454b46;
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.variantChips {
+  min-height: 35px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.variantChip,
+.variantColorChip {
+  min-height: 31px;
+  padding: 0 9px;
+  border: 1px solid #dbe0db;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: #343a35;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.variantChip:hover,
+.variantColorChip:hover {
+  border-color: #efc2ad;
+  color: var(--orange);
+}
+
+.variantColorDot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-radius: 999px;
+}
+
+.variantAddRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.variantColorAddRow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    46px
+    auto;
+  gap: 7px;
+}
+
+.variantAddRow input,
+.variantColorAddRow input:not([type="color"]),
+.variantDefaults input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 9px;
+  border: 1px solid #dce1dc;
+  outline: 0;
+  background: #fff;
+  color: #252a26;
+  font: inherit;
+  font-size: 10px;
+}
+
+.variantColorAddRow input[type="color"] {
+  width: 46px;
+  min-height: 38px;
+  padding: 4px;
+  border: 1px solid #dce1dc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.variantAddRow button,
+.variantColorAddRow button {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #d7ddd7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #fff;
+  color: #3d433e;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.variantDefaults {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 160px)
+    minmax(120px, 160px)
+    minmax(130px, 1fr)
+    auto;
+  align-items: end;
+  gap: 9px;
+}
+
+.variantDefaults label {
+  display: grid;
+  gap: 5px;
+}
+
+.variantDefaults label > span {
+  color: #6c736d;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.variantCombinationCount {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid #e0e4df;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+}
+
+.variantCombinationCount strong {
+  color: #1d221e;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.variantCombinationCount span {
+  color: #858b86;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.generateVariantsButton {
+  min-height: 38px;
+  padding: 0 15px;
+  border: 0;
+  background: var(--orange);
+  color: #fff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 950;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.generateVariantsButton:hover {
+  filter: brightness(.96);
+}
+
+.variantTableMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: #7d847e;
+  font-size: 9px;
+}
+
+.variantTableMeta strong {
+  color: #222722;
+  font-size: 13px;
+}
+
+.variantEmpty {
+  padding: 17px;
+  border: 1px dashed #d8ddd8;
+  background: #fbfcfa;
+  color: #818781;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .variantDefaults {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .generateVariantsButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .variantAddRow,
+  .variantColorAddRow,
+  .variantDefaults {
+    grid-template-columns: 1fr;
+  }
+
+  .variantColorAddRow input[type="color"] {
+    width: 100%;
+  }
+
+  .variantAddRow button,
+  .variantColorAddRow button,
+  .generateVariantsButton {
+    width: 100%;
+  }
+}
