@@ -14676,15 +14676,24 @@ strong {
 .product-gallery-stage {
   position: relative;
 
+  /*
+   * Product photography standard:
+   * 1600 × 1200 (4:3).
+   *
+   * Matching the gallery frame to the
+   * uploaded image ratio prevents the
+   * empty outer bands visible with the
+   * previous near-square frame.
+   */
   aspect-ratio:
-    1 / 1.04;
+    4 / 3;
 
   overflow: hidden;
 
   isolation: isolate;
 
   background:
-    #f3f4f1;
+    #fff;
 }
 
 /* =========================================================
@@ -14738,15 +14747,18 @@ strong {
 }
 
 .product-gallery-image {
-  padding:
-    clamp(
-      26px,
-      6vw,
-      70px
-    );
+  padding: 0;
 
+  /*
+   * The moderator uploads 1600 × 1200
+   * product images, so contain fills the
+   * matching 4:3 stage without cropping.
+   */
   object-fit:
     contain;
+
+  object-position:
+    center center;
 
   transform:
     scale(1);
