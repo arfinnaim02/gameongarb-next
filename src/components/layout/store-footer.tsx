@@ -512,6 +512,10 @@ export function StoreFooter({
             Shop All
           </Link>
 
+          <Link href="/blog">
+            Blog
+          </Link>
+
           <Link href="/privacy-policy">
             Privacy Policy
           </Link>
