@@ -14342,7 +14342,7 @@ h2 {
     #666c67;
 
   font-size:
-    14px;
+    15px;
 
   line-height:
     1.75;
@@ -16423,7 +16423,7 @@ strong {
   color:
     #303532;
 
-  font-size: 13px;
+  font-size: 14px;
 
   font-weight:
     850;
@@ -16437,7 +16437,7 @@ span {
   color:
     #979c98;
 
-  font-size: 12px;
+  font-size: 13px;
 
   line-height:
     1.35;
@@ -16479,7 +16479,7 @@ span {
   color:
     #303532;
 
-  font-size: 14px;
+  font-size: 15px;
 
   font-weight:
     850;
@@ -16519,7 +16519,7 @@ svg {
   color:
     #737974;
 
-  font-size: 14px;
+  font-size: 15px;
 
   line-height:
     1.7;
@@ -16591,7 +16591,7 @@ dt {
   color:
     #8c918d;
 
-  font-size: 12px;
+  font-size: 13px;
 
   font-weight:
     850;
@@ -16607,7 +16607,7 @@ dd {
   color:
     #3f4440;
 
-  font-size: 13px;
+  font-size: 14px;
 
   font-weight:
     700;
@@ -17565,7 +17565,7 @@ body.promotion-popup-open {
     #4d534e;
 
   font-size:
-    14px;
+    15px;
 
   line-height:
     1.85;
@@ -17754,7 +17754,7 @@ hr {
 ) {
   .product-rich-description {
     font-size:
-      13.5px;
+      14.5px;
 
     line-height:
       1.8;
@@ -17773,5 +17773,28 @@ hr {
   h3 {
     font-size:
       16px;
+  }
+}
+
+/* =========================================================
+   STORE CONTENT READABILITY
+   Slightly larger long-form policy/detail copy
+   ========================================================= */
+
+.legal-content p,
+.legal-content li {
+  font-size: 17px;
+  line-height: 1.85;
+}
+
+.legal-content a {
+  font-size: inherit;
+}
+
+@media (max-width: 700px) {
+  .legal-content p,
+  .legal-content li {
+    font-size: 16px;
+    line-height: 1.8;
   }
 }
