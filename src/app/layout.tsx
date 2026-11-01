@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
   metadataBase: new URL(
     process.env.APP_URL ??
-      "http://localhost:3000",
+      "https://www.gameongarb.com",
   ),
 
   openGraph: {
