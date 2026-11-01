@@ -166,7 +166,7 @@ function logoUrl() {
         configured,
       )
     : absoluteUrl(
-        "/images/brand/gameongarb-email-logo.png",
+        "/brand/game-on-garb-logo.svg",
       );
 }
 
