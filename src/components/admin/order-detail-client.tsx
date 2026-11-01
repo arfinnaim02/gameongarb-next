@@ -327,6 +327,19 @@ type FraudCheckResult = {
   checkedAt:
     string;
 
+  providerCheckedAt?:
+    string;
+
+  source?:
+    | "LIVE"
+    | "LAST_SUCCESSFUL";
+
+  attempts?:
+    number;
+
+  providerReturnedZero?:
+    boolean;
+
   providerRiskStatus?:
     string |
     null;
@@ -2629,6 +2642,30 @@ const outsideDhakaCod =
                     </strong>
                   </div>
                 </div>
+
+                {fraudResult.source ===
+                "LAST_SUCCESSFUL" ? (
+                  <div
+                    className={
+                      styles.fraudWarning
+                    }
+                  >
+                    <ShieldAlert
+                      size={
+                        16
+                      }
+                    />
+
+                    <span>
+                      FraudChecker returned zero history on the latest live lookup. Showing the last successful result from{" "}
+                      {formatDate(
+                        fraudResult
+                          .checkedAt,
+                      )}
+                      .
+                    </span>
+                  </div>
+                ) : null}
 
                 {fraudResult
                   .fraudReports >
