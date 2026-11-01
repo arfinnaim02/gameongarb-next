@@ -819,6 +819,42 @@ const outsideDhakaCod =
         )
       : 0;
 
+  const fullBkashPaid =
+    data.order
+      .paymentMethod ===
+      "BKASH" &&
+    data.order
+      .paymentStatus ===
+      "PAID";
+
+  const codWithAdvance =
+    data.order
+      .paymentMethod ===
+      "COD" &&
+    data.order
+      .deliveryAdvancePaid >
+      0;
+
+  const paymentTypeLabel =
+    fullBkashPaid
+      ? "Full bKash Payment"
+      : codWithAdvance
+        ? "COD + Delivery Advance"
+        : "Cash on Delivery";
+
+  const collectionStatusLabel =
+    fullBkashPaid
+      ? "Fully Paid"
+      : codWithAdvance
+        ? "Partially Paid"
+        : "Unpaid";
+
+  const paidAmount =
+    fullBkashPaid
+      ? data.order.total
+      : data.order
+          .deliveryAdvancePaid;
+
   const courierBookingReady =
     data.order.status ===
       "READY_TO_SHIP" ||
@@ -3241,19 +3277,22 @@ const outsideDhakaCod =
                   <div>
                     <strong>
                       {
-                        payment.method
+                        payment.method ===
+                        data.order
+                          .paymentMethod
+                          ? paymentTypeLabel
+                          : payment.method
                       }{" "}
                       ·{" "}
-                      {humanize(
-                        payment.status,
-                      )}
-                      {payment.method ===
-                        "COD" &&
-                      data.order
-                        .deliveryAdvancePaid >
-                        0
-                        ? " · Due"
-                        : ""}
+                      {
+                        payment.method ===
+                        data.order
+                          .paymentMethod
+                          ? collectionStatusLabel
+                          : humanize(
+                              payment.status,
+                            )
+                      }
                     </strong>
 
                     <span>
@@ -3284,8 +3323,13 @@ const outsideDhakaCod =
                   <strong>
                     {formatBDT(
                       payment.method ===
-                        "COD"
-                        ? steadfastCodPreview
+                        data.order
+                          .paymentMethod
+                        ? (
+                            fullBkashPaid
+                              ? paidAmount
+                              : steadfastCodPreview
+                          )
                         : payment.amount,
                     )}
                   </strong>
