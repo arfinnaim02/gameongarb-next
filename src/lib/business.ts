@@ -647,6 +647,7 @@ export const permissions = {
     "settings",
     "integrations",
     "reports",
+    "blogs",
     "users",
   ],
 
@@ -657,6 +658,7 @@ export const permissions = {
     "inventory",
     "coupons",
     "reports",
+    "blogs",
   ],
 
   STAFF: [
