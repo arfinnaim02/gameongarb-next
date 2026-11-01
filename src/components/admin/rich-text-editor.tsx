@@ -5,6 +5,10 @@ import {
   useEditor,
 } from "@tiptap/react";
 
+import {
+  useEffect,
+} from "react";
+
 import StarterKit from "@tiptap/starter-kit";
 
 import {
@@ -245,6 +249,38 @@ export function RichTextEditor({
         );
       },
     });
+
+  useEffect(() => {
+    if (
+      !editor
+    ) {
+      return;
+    }
+
+    const normalized =
+      normalizeInitialContent(
+        value,
+      );
+
+    if (
+      editor.getHTML() !==
+      (
+        normalized ||
+        "<p></p>"
+      )
+    ) {
+      editor.commands.setContent(
+        normalized,
+        {
+          emitUpdate:
+            false,
+        },
+      );
+    }
+  }, [
+    editor,
+    value,
+  ]);
 
   if (!editor) {
     return (
