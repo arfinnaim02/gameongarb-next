@@ -96,6 +96,10 @@ type FieldErrors =
 type CheckoutResponse = {
   orderNumber?: string;
   paymentMode?: string;
+  deliveryZone?:
+    "INSIDE_DHAKA" |
+    "OUTSIDE_DHAKA";
+  deliveryCharge?: number;
   error?: string;
 
   fields?: Record<
@@ -175,6 +179,14 @@ export function CheckoutClient() {
   ] =
     useState<PaymentMethod>(
       "COD",
+    );
+
+  const [
+    payDeliveryAdvanceNow,
+    setPayDeliveryAdvanceNow,
+  ] =
+    useState(
+      false,
     );
 
   const [
@@ -434,6 +446,24 @@ export function CheckoutClient() {
           settings,
         )
       : 0;
+
+  useEffect(() => {
+    if (
+      payment !==
+        "COD" ||
+      deliveryZone !==
+        "OUTSIDE_DHAKA" ||
+      !settings?.bkashEnabled
+    ) {
+      setPayDeliveryAdvanceNow(
+        false,
+      );
+    }
+  }, [
+    deliveryZone,
+    payment,
+    settings?.bkashEnabled,
+  ]);
 
   const discount =
     couponOk
@@ -1243,6 +1273,69 @@ export function CheckoutClient() {
       ) {
         clear();
 
+        if (
+          payDeliveryAdvanceNow &&
+          (
+            data.deliveryZone ===
+              "OUTSIDE_DHAKA" ||
+            deliveryZone ===
+              "OUTSIDE_DHAKA"
+          )
+        ) {
+          try {
+            const advanceResponse =
+              await fetch(
+                "/api/payments/bkash/delivery-advance/create",
+                {
+                  method:
+                    "POST",
+
+                  headers: {
+                    "content-type":
+                      "application/json",
+                  },
+
+                  body:
+                    JSON.stringify({
+                      orderNumber:
+                        data.orderNumber,
+                    }),
+                },
+              );
+
+            const advanceData =
+              (await advanceResponse.json()) as {
+                bkashURL?:
+                  string;
+
+                error?:
+                  string;
+              };
+
+            if (
+              advanceResponse.ok &&
+              advanceData.bkashURL
+            ) {
+              window.location.href =
+                advanceData.bkashURL;
+
+              return;
+            }
+
+            router.push(
+              `/checkout/success/${data.orderNumber}?advancePayment=start-failed`,
+            );
+
+            return;
+          } catch {
+            router.push(
+              `/checkout/success/${data.orderNumber}?advancePayment=start-failed`,
+            );
+
+            return;
+          }
+        }
+
         router.push(
           `/checkout/success/${data.orderNumber}`,
         );
@@ -1806,6 +1899,72 @@ export function CheckoutClient() {
                 ) : null}
               </div>
 
+              {payment ===
+                "COD" &&
+              deliveryZone ===
+                "OUTSIDE_DHAKA" &&
+              settings?.bkashEnabled ? (
+                <label
+                  className={`${styles.paymentOption} ${styles.bkashPaymentOption} ${
+                    payDeliveryAdvanceNow
+                      ? `${styles.paymentSelected} ${styles.bkashPaymentSelected}`
+                      : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name="payDeliveryAdvanceNow"
+                    checked={
+                      payDeliveryAdvanceNow
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setPayDeliveryAdvanceNow(
+                        event.target
+                          .checked,
+                      )
+                    }
+                  />
+
+                  <span className={styles.bkashLogoWrap}>
+                    <Image
+                      src="/images/payments/bkash.png"
+                      alt="bKash"
+                      width={74}
+                      height={34}
+                      className={styles.bkashLogo}
+                    />
+                  </span>
+
+                  <span className={styles.paymentCopy}>
+                    <strong>
+                      Pay delivery charge now
+                    </strong>
+
+                    <small>
+                      Pay only{" "}
+                      {formatBDT(
+                        fee,
+                      )}{" "}
+                      with bKash now.
+                      The remaining{" "}
+                      {formatBDT(
+                        Math.max(
+                          0,
+                          total -
+                            fee,
+                        ),
+                      )}{" "}
+                      will stay Cash
+                      on Delivery.
+                    </small>
+                  </span>
+
+                  <span className={styles.radioMark} />
+                </label>
+              ) : null}
+
               {settings &&
               !paymentAvailable ? (
                 <div className={styles.paymentWarning}>
@@ -2163,17 +2322,25 @@ export function CheckoutClient() {
                   ? payment ===
                       "BKASH"
                     ? "Connecting to bKash…"
-                    : "Placing Order…"
+                    : payDeliveryAdvanceNow
+                      ? "Opening bKash…"
+                      : "Placing Order…"
                   : payment ===
                       "BKASH"
                     ? "Pay Securely"
-                    : "Place Order"}
+                    : payDeliveryAdvanceNow
+                      ? "Place Order & Pay Delivery"
+                      : "Place Order"}
               </span>
 
               {!saving ? (
                 <strong>
                   {formatBDT(
-                    total,
+                    payment ===
+                      "COD" &&
+                    payDeliveryAdvanceNow
+                      ? fee
+                      : total,
                   )}
                 </strong>
               ) : null}
