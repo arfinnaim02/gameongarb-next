@@ -47,6 +47,9 @@ type RichTextEditorProps = {
 
   placeholder?:
     string;
+
+  footerLabel?:
+    string;
 };
 
 /* =========================================================
@@ -180,6 +183,9 @@ export function RichTextEditor({
   onChange,
   placeholder =
     "Write a premium product description…",
+
+  footerLabel =
+    "Rich product description",
 }: RichTextEditorProps) {
   const editor =
     useEditor({
@@ -766,7 +772,7 @@ export function RichTextEditor({
         }
       >
         <span>
-          Rich product description
+          {footerLabel}
         </span>
 
         <span>
