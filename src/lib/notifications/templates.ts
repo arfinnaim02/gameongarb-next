@@ -651,7 +651,7 @@ export function renderNotificationEmail(
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;max-width:640px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e8e3dd;box-shadow:0 8px 30px rgba(20,16,12,.06);">
 
                 <tr>
-                  <td align="center" style="padding:28px 24px 24px;background:#0b0b0b;border-bottom:4px solid #e85d04;">
+                  <td align="center" style="padding:26px 24px 22px;background:#ffffff;border-bottom:4px solid #e85d04;">
                     <img
                       src="${escapeHtml(
                         logoUrl(),
