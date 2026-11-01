@@ -50,7 +50,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_PLACED:
       return {
         subject:
-          `Order received — ${orderNumber}`,
+          `Game On Garb | Order Received — ${orderNumber}`,
 
         message:
           "We have received your order and will review it shortly.",
@@ -59,7 +59,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_CONFIRMED:
       return {
         subject:
-          `Order confirmed — ${orderNumber}`,
+          `Game On Garb | Order Confirmed — ${orderNumber}`,
 
         message:
           "Your order has been confirmed and is now being prepared.",
@@ -68,7 +68,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_READY_TO_SHIP:
       return {
         subject:
-          `Order ready to ship — ${orderNumber}`,
+          `Game On Garb | Ready to Ship — ${orderNumber}`,
 
         message:
           "Your order is packed and ready to be handed over to the courier.",
@@ -77,7 +77,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_SHIPPED:
       return {
         subject:
-          `Order shipped — ${orderNumber}`,
+          `Game On Garb | Your Order Is on the Way — ${orderNumber}`,
 
         message:
           "Your order has been shipped and is on the way.",
@@ -86,7 +86,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_DELIVERED:
       return {
         subject:
-          `Order delivered — ${orderNumber}`,
+          `Game On Garb | Order Delivered — ${orderNumber}`,
 
         message:
           "Your order has been delivered successfully. Thank you for shopping with GameOn Garb.",
@@ -95,7 +95,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_CANCELLED:
       return {
         subject:
-          `Order cancelled — ${orderNumber}`,
+          `Game On Garb | Order Cancelled — ${orderNumber}`,
 
         message:
           "Your order has been cancelled.",
@@ -104,7 +104,7 @@ function getOrderNotificationCopy(
     case NotificationEvent.ORDER_FAILED_DELIVERY:
       return {
         subject:
-          `Delivery update — ${orderNumber}`,
+          `Game On Garb | Delivery Update — ${orderNumber}`,
 
         message:
           "The courier could not complete your delivery. Please contact GameOn Garb if you need assistance.",
@@ -196,6 +196,9 @@ export async function queueOrderNotifications({
 
             lineTotal:
               true,
+
+            image:
+              true,
           },
         },
 
@@ -272,6 +275,19 @@ export async function queueOrderNotifications({
         order.deliveryCharge,
       ),
 
+    deliveryAdvancePaid:
+      Number(
+        order.deliveryAdvancePaid,
+      ),
+
+    deliveryAdvanceReference:
+      order.deliveryAdvanceReference,
+
+    deliveryAdvancePaidAt:
+      order.deliveryAdvancePaidAt
+        ? order.deliveryAdvancePaidAt.toISOString()
+        : null,
+
     total:
       Number(
         order.total,
@@ -309,6 +325,9 @@ export async function queueOrderNotifications({
             Number(
               item.lineTotal,
             ),
+
+          image:
+            item.image,
         }),
       ),
 
