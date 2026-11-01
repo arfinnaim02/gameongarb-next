@@ -862,6 +862,34 @@ async function buildOrderMessage(
         )
       : 0;
 
+  const fullBkashPaid =
+    order.paymentMethod ===
+      "BKASH" &&
+    order.paymentStatus ===
+      "PAID";
+
+  const codWithAdvance =
+    order.paymentMethod ===
+      "COD" &&
+    Number(
+      order.deliveryAdvancePaid,
+    ) >
+      0;
+
+  const paymentTypeLabel =
+    fullBkashPaid
+      ? "Full bKash"
+      : codWithAdvance
+        ? "COD + bKash Advance"
+        : "Cash on Delivery";
+
+  const collectionStatusLabel =
+    fullBkashPaid
+      ? "Fully Paid"
+      : codWithAdvance
+        ? "Partially Paid"
+        : "Unpaid";
+
   return [
     "🛍 <b>GameOn Garb — ORDER</b>",
     "",
@@ -936,17 +964,19 @@ async function buildOrderMessage(
       ),
     )}</b>`,
 
-        order.paymentMethod ===
-      "COD" &&
-    Number(
-      order.deliveryAdvancePaid,
-    ) >
-      0
-      ? `✅ Advance Paid: <b>${formatBDT(
+    codWithAdvance
+      ? `✅ Delivery Advance Paid: <b>${formatBDT(
           Number(
             order.deliveryAdvancePaid,
           ),
         )}</b>`
+      : "",
+
+    codWithAdvance &&
+    order.deliveryAdvanceReference
+      ? `🔖 Advance TrxID: <code>${escapeHtml(
+          order.deliveryAdvanceReference,
+        )}</code>`
       : "",
 
     order.paymentMethod ===
@@ -954,14 +984,14 @@ async function buildOrderMessage(
       ? `💵 COD to Collect: <b>${formatBDT(
           remainingCod,
         )}</b>`
-      : "",
+      : fullBkashPaid
+        ? "💵 COD to Collect: <b>৳0</b>"
+        : "",
 
     "",
-    `💳 Payment: <b>${order.paymentMethod}</b>`,
+    `💳 Payment: <b>${paymentTypeLabel}</b>`,
 
-    `Payment Status: <b>${statusLabel(
-      order.paymentStatus,
-    )}</b>`,
+    `Payment Status: <b>${collectionStatusLabel}</b>`,
 
     order.paymentMethod ===
       "BKASH" &&
@@ -1324,7 +1354,21 @@ ${escapeHtml(
             Number(
               order.total,
             ),
-          )} · ${order.paymentMethod}${courier}`;
+          )} · ${
+            order.paymentMethod ===
+              "BKASH" &&
+            order.paymentStatus ===
+              "PAID"
+              ? "Full bKash"
+              : order.paymentMethod ===
+                    "COD" &&
+                  Number(
+                    order.deliveryAdvancePaid,
+                  ) >
+                    0
+                ? "COD + Advance"
+                : "COD"
+          }${courier}`;
         },
       ),
     ].join(
