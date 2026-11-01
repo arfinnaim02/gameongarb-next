@@ -166,7 +166,7 @@ function logoUrl() {
         configured,
       )
     : absoluteUrl(
-        "/images/brand/gameongarb-email-logo.png",
+        "/images/brand/gameongarb-email-logo.png?v=20261101-clean1",
       );
 }
 
@@ -657,8 +657,8 @@ export function renderNotificationEmail(
                         logoUrl(),
                       )}"
                       alt="Game On Garb"
-                      width="520"
-                      style="display:block;width:520px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;"
+                      width="500"
+                      style="display:block;width:500px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;"
                     >
                   </td>
                 </tr>
