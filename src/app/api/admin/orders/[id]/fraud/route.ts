@@ -35,6 +35,42 @@ type CourierResult = {
     number;
 };
 
+type FraudSource =
+  | "LIVE"
+  | "LAST_SUCCESSFUL";
+
+type ProviderCourier = {
+  courier_name?:
+    string;
+
+  total?:
+    number |
+    string;
+
+  delivered?:
+    number |
+    string;
+
+  cancelled?:
+    number |
+    string;
+
+  total_parcels?:
+    number |
+    string;
+
+  total_delivered_parcels?:
+    number |
+    string;
+
+  total_cancelled_parcels?:
+    number |
+    string;
+
+  status?:
+    string;
+};
+
 type FraudCheckerResponse = {
   success?:
     boolean;
@@ -48,11 +84,23 @@ type FraudCheckerResponse = {
   phone?:
     string;
 
+  mobile_number?:
+    string;
+
   total_parcels?:
     number |
     string;
 
   total_delivered?:
+    number |
+    string;
+
+  /*
+   * FraudChecker has used both names.
+   * Support both so a provider-side schema
+   * change does not silently erase history.
+   */
+  total_cancel?:
     number |
     string;
 
@@ -74,22 +122,65 @@ type FraudCheckerResponse = {
   fraud_reports?:
     unknown[];
 
+  /*
+   * Older response shape.
+   */
   couriers?:
     Record<
       string,
-      {
-        total?:
-          number |
-          string;
+      ProviderCourier
+    >;
 
-        delivered?:
-          number |
-          string;
+  /*
+   * Current response shape observed in
+   * production on 2026-11-01.
+   */
+  apis?:
+    Record<
+      string,
+      ProviderCourier
+    >;
+};
 
-        cancelled?:
-          number |
-          string;
-      }
+type NormalizedFraudResult = {
+  phone:
+    string;
+
+  totalParcels:
+    number;
+
+  delivered:
+    number;
+
+  cancelled:
+    number;
+
+  fraudReports:
+    number;
+
+  riskStatus:
+    RiskStatus;
+
+  riskScore:
+    number |
+    null;
+
+  deliveryRate:
+    number |
+    null;
+
+  cancellationRate:
+    number |
+    null;
+
+  providerRiskStatus:
+    string |
+    null;
+
+  couriers:
+    Record<
+      string,
+      CourierResult
     >;
 };
 
@@ -144,11 +235,6 @@ function normalizePhone(
       "",
     );
 
-  /*
-   * FraudChecker examples use
-   * Bangladesh local format:
-   * 01XXXXXXXXX
-   */
   if (
     digits.startsWith(
       "880",
@@ -251,20 +337,12 @@ function normalizeRiskStatus(
     return "LOW";
   }
 
-  /*
-   * Fallback only if FraudChecker
-   * does not provide a recognizable
-   * risk_status.
-   */
   const cancellationRate =
-    totalParcels >
-    0
-      ? (
-          cancelled /
-          totalParcels
-        ) *
-        100
-      : 0;
+    (
+      cancelled /
+      totalParcels
+    ) *
+    100;
 
   if (
     cancellationRate >=
@@ -291,15 +369,17 @@ function normalizeRiskStatus(
 }
 
 function normalizeCouriers(
-  value:
-    FraudCheckerResponse[
-      "couriers"
-    ],
+  raw:
+    FraudCheckerResponse,
 ):
   Record<
     string,
     CourierResult
   > {
+  const value =
+    raw.apis ??
+    raw.couriers;
+
   if (
     !value ||
     typeof value !==
@@ -329,7 +409,8 @@ function normalizeCouriers(
           0,
           Math.trunc(
             numberValue(
-              data?.total,
+              data.total_parcels ??
+              data.total,
             ),
           ),
         ),
@@ -339,7 +420,8 @@ function normalizeCouriers(
           0,
           Math.trunc(
             numberValue(
-              data?.delivered,
+              data.total_delivered_parcels ??
+              data.delivered,
             ),
           ),
         ),
@@ -349,7 +431,8 @@ function normalizeCouriers(
           0,
           Math.trunc(
             numberValue(
-              data?.cancelled,
+              data.total_cancelled_parcels ??
+              data.cancelled,
             ),
           ),
         ),
@@ -357,6 +440,584 @@ function normalizeCouriers(
   }
 
   return result;
+}
+
+function normalizeProviderResult(
+  raw:
+    FraudCheckerResponse,
+
+  fallbackPhone:
+    string,
+):
+  NormalizedFraudResult {
+  const couriers =
+    normalizeCouriers(
+      raw,
+    );
+
+  const courierTotals =
+    Object.values(
+      couriers,
+    ).reduce(
+      (
+        totals,
+        courier,
+      ) => ({
+        total:
+          totals.total +
+          courier.total,
+
+        delivered:
+          totals.delivered +
+          courier.delivered,
+
+        cancelled:
+          totals.cancelled +
+          courier.cancelled,
+      }),
+      {
+        total:
+          0,
+
+        delivered:
+          0,
+
+        cancelled:
+          0,
+      },
+    );
+
+  const providerTotal =
+    Math.max(
+      0,
+      Math.trunc(
+        numberValue(
+          raw.total_parcels,
+        ),
+      ),
+    );
+
+  const providerDelivered =
+    Math.max(
+      0,
+      Math.trunc(
+        numberValue(
+          raw.total_delivered,
+        ),
+      ),
+    );
+
+  const providerCancelled =
+    Math.max(
+      0,
+      Math.trunc(
+        numberValue(
+          raw.total_cancel ??
+          raw.total_cancelled,
+        ),
+      ),
+    );
+
+  /*
+   * Use whichever source is more complete:
+   * top-level totals or the sum of courier rows.
+   */
+  const totalParcels =
+    Math.max(
+      providerTotal,
+      courierTotals.total,
+      providerDelivered +
+        providerCancelled,
+      courierTotals.delivered +
+        courierTotals.cancelled,
+    );
+
+  const delivered =
+    Math.max(
+      providerDelivered,
+      courierTotals.delivered,
+    );
+
+  const cancelled =
+    Math.max(
+      providerCancelled,
+      courierTotals.cancelled,
+    );
+
+  const normalizedTotal =
+    Math.max(
+      totalParcels,
+      delivered +
+        cancelled,
+    );
+
+  const providerDeliveryRate =
+    numberValue(
+      raw.delivery_rate,
+    );
+
+  const deliveryRate =
+    normalizedTotal >
+    0
+      ? providerDeliveryRate >
+        0
+        ? Math.round(
+            providerDeliveryRate *
+              100,
+          ) /
+          100
+        : Math.round(
+            (
+              delivered /
+              normalizedTotal
+            ) *
+              10_000,
+          ) /
+          100
+      : null;
+
+  const cancellationRate =
+    normalizedTotal >
+    0
+      ? Math.round(
+          (
+            cancelled /
+            normalizedTotal
+          ) *
+            10_000,
+        ) /
+        100
+      : null;
+
+  const fraudReports =
+    Array.isArray(
+      raw.fraud_reports,
+    )
+      ? raw
+          .fraud_reports
+          .length
+      : Math.max(
+          0,
+          Math.trunc(
+            numberValue(
+              raw.total_fraud_reports,
+            ),
+          ),
+        );
+
+  const riskStatus =
+    normalizeRiskStatus(
+      raw.risk_status,
+      {
+        totalParcels:
+          normalizedTotal,
+
+        cancelled,
+      },
+    );
+
+  return {
+    phone:
+      normalizePhone(
+        raw.mobile_number ??
+        raw.phone ??
+        fallbackPhone,
+      ),
+
+    totalParcels:
+      normalizedTotal,
+
+    delivered,
+
+    cancelled,
+
+    fraudReports,
+
+    riskStatus,
+
+    riskScore:
+      cancellationRate,
+
+    deliveryRate,
+
+    cancellationRate,
+
+    providerRiskStatus:
+      raw.risk_status ??
+      null,
+
+    couriers,
+  };
+}
+
+async function fetchFraudChecker(
+  url:
+    URL,
+) {
+  const controller =
+    new AbortController();
+
+  const timeout =
+    setTimeout(
+      () => {
+        controller.abort();
+      },
+      15_000,
+    );
+
+  try {
+    const response =
+      await fetch(
+        url.toString(),
+        {
+          method:
+            "GET",
+
+          headers: {
+            Accept:
+              "application/json",
+          },
+
+          cache:
+            "no-store",
+
+          signal:
+            controller.signal,
+        },
+      );
+
+    const responseText =
+      await response.text();
+
+    let raw:
+      FraudCheckerResponse;
+
+    try {
+      raw =
+        responseText
+          ? JSON.parse(
+              responseText,
+            ) as FraudCheckerResponse
+          : {};
+    } catch {
+      throw new Error(
+        `FraudChecker returned an invalid response (HTTP ${response.status}).`,
+      );
+    }
+
+    if (
+      !response.ok
+    ) {
+      const providerMessage =
+        raw.message ??
+        raw.error;
+
+      throw new Error(
+        providerMessage ??
+        `FraudChecker request failed with HTTP ${response.status}.`,
+      );
+    }
+
+    if (
+      raw.success ===
+        false
+    ) {
+      throw new Error(
+        raw.message ??
+        raw.error ??
+        "FraudChecker could not check this customer.",
+      );
+    }
+
+    return raw;
+  } finally {
+    clearTimeout(
+      timeout,
+    );
+  }
+}
+
+async function sleep(
+  ms:
+    number,
+) {
+  await new Promise<
+    void
+  >(
+    (
+      resolve,
+    ) => {
+      setTimeout(
+        resolve,
+        ms,
+      );
+    },
+  );
+}
+
+async function getLastSuccessfulResult(
+  phone:
+    string,
+) {
+  const logs =
+    await db.activityLog.findMany({
+      where: {
+        action:
+          "FRAUDCHECKER_CUSTOMER_CHECKED",
+
+        metadata: {
+          path: [
+            "phone",
+          ],
+
+          equals:
+            phone,
+        },
+      },
+
+      select: {
+        metadata:
+          true,
+
+        createdAt:
+          true,
+      },
+
+      orderBy: {
+        createdAt:
+          "desc",
+      },
+
+      take:
+        20,
+    });
+
+  for (
+    const log
+    of logs
+  ) {
+    const metadata =
+      log.metadata;
+
+    if (
+      !metadata ||
+      typeof metadata !==
+        "object" ||
+      Array.isArray(
+        metadata,
+      )
+    ) {
+      continue;
+    }
+
+    const data =
+      metadata as
+        Record<
+          string,
+          unknown
+        >;
+
+    const totalParcels =
+      Math.max(
+        0,
+        Math.trunc(
+          numberValue(
+            data.totalParcels,
+          ),
+        ),
+      );
+
+    if (
+      totalParcels <=
+      0
+    ) {
+      continue;
+    }
+
+    const delivered =
+      Math.max(
+        0,
+        Math.trunc(
+          numberValue(
+            data.delivered,
+          ),
+        ),
+      );
+
+    const cancelled =
+      Math.max(
+        0,
+        Math.trunc(
+          numberValue(
+            data.cancelled,
+          ),
+        ),
+      );
+
+    const cancellationRate =
+      data.cancellationRate ===
+        null
+        ? null
+        : numberValue(
+            data.cancellationRate,
+          );
+
+    const deliveryRate =
+      data.deliveryRate ===
+        null
+        ? null
+        : numberValue(
+            data.deliveryRate,
+          );
+
+    const riskStatusValue =
+      typeof data.riskStatus ===
+        "string"
+        ? data.riskStatus
+        : "LOW";
+
+    const riskStatus:
+      RiskStatus =
+        [
+          "NO_HISTORY",
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "VERY_HIGH",
+        ].includes(
+          riskStatusValue,
+        )
+          ? riskStatusValue as
+              RiskStatus
+          : normalizeRiskStatus(
+              undefined,
+              {
+                totalParcels,
+                cancelled,
+              },
+            );
+
+    const rawCouriers =
+      data.couriers;
+
+    const couriers:
+      Record<
+        string,
+        CourierResult
+      > =
+        rawCouriers &&
+        typeof rawCouriers ===
+          "object" &&
+        !Array.isArray(
+          rawCouriers,
+        )
+          ? Object.fromEntries(
+              Object.entries(
+                rawCouriers,
+              ).map(
+                (
+                  [
+                    name,
+                    value,
+                  ],
+                ) => {
+                  const item =
+                    value &&
+                    typeof value ===
+                      "object" &&
+                    !Array.isArray(
+                      value,
+                    )
+                      ? value as
+                          Record<
+                            string,
+                            unknown
+                          >
+                      : {};
+
+                  return [
+                    name,
+                    {
+                      total:
+                        Math.max(
+                          0,
+                          Math.trunc(
+                            numberValue(
+                              item.total,
+                            ),
+                          ),
+                        ),
+
+                      delivered:
+                        Math.max(
+                          0,
+                          Math.trunc(
+                            numberValue(
+                              item.delivered,
+                            ),
+                          ),
+                        ),
+
+                      cancelled:
+                        Math.max(
+                          0,
+                          Math.trunc(
+                            numberValue(
+                              item.cancelled,
+                            ),
+                          ),
+                        ),
+                    },
+                  ];
+                },
+              ),
+            )
+          : {};
+
+    return {
+      result: {
+        phone,
+
+        totalParcels,
+
+        delivered,
+
+        cancelled,
+
+        fraudReports:
+          Math.max(
+            0,
+            Math.trunc(
+              numberValue(
+                data.fraudReports,
+              ),
+            ),
+          ),
+
+        riskStatus,
+
+        riskScore:
+          cancellationRate,
+
+        deliveryRate,
+
+        cancellationRate,
+
+        providerRiskStatus:
+          typeof data.providerRiskStatus ===
+            "string"
+            ? data.providerRiskStatus
+            : null,
+
+        couriers,
+      } satisfies NormalizedFraudResult,
+
+      checkedAt:
+        log.createdAt,
+    };
+  }
+
+  return null;
 }
 
 export async function POST(
@@ -441,9 +1102,6 @@ export async function POST(
           number:
             true,
 
-          customerName:
-            true,
-
           phone:
             true,
         },
@@ -501,331 +1159,208 @@ export async function POST(
       phone,
     );
 
-    const controller =
-      new AbortController();
-
-    const timeout =
-      setTimeout(
-        () => {
-          controller.abort();
-        },
-        15_000,
-      );
-
-    let response:
-      Response;
-
-    try {
-      response =
-        await fetch(
-          url.toString(),
-          {
-            method:
-              "GET",
-
-            headers: {
-              Accept:
-                "application/json",
-            },
-
-            cache:
-              "no-store",
-
-            signal:
-              controller.signal,
-          },
-        );
-    } finally {
-      clearTimeout(
-        timeout,
-      );
-    }
-
-    const responseText =
-      await response.text();
-
-    let raw:
-      FraudCheckerResponse;
-
-    try {
-      raw =
-        responseText
-          ? JSON.parse(
-              responseText,
-            ) as FraudCheckerResponse
-          : {};
-    } catch {
-      throw new Error(
-        `FraudChecker returned an invalid response (HTTP ${response.status}).`,
-      );
-    }
-
     /*
-     * Keep this temporarily while
-     * testing the real API response.
-     *
-     * Never log the API key.
+     * FraudChecker has been observed returning
+     * contradictory zero/non-zero results for the
+     * same number. Retry once when the first live
+     * lookup unexpectedly reports no history.
      */
-    console.log(
-      "FRAUDCHECKER RESPONSE:",
-      JSON.stringify(
+    let attempts =
+      1;
+
+    let raw =
+      await fetchFraudChecker(
+        url,
+      );
+
+    let liveResult =
+      normalizeProviderResult(
         raw,
-        null,
-        2,
-      ),
-    );
+        phone,
+      );
 
     if (
-      !response.ok
+      liveResult.totalParcels ===
+      0
     ) {
-      const providerMessage =
-        raw.message ??
-        raw.error;
-
-      return NextResponse.json(
-        {
-          error:
-            providerMessage ??
-            `FraudChecker request failed with HTTP ${response.status}.`,
-        },
-        {
-          status:
-            response.status >=
-              400 &&
-            response.status <
-              600
-              ? response.status
-              : 502,
-        },
+      await sleep(
+        700,
       );
+
+      attempts =
+        2;
+
+      raw =
+        await fetchFraudChecker(
+          url,
+        );
+
+      liveResult =
+        normalizeProviderResult(
+          raw,
+          phone,
+        );
     }
 
-    if (
-      raw.success ===
-      false
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            raw.message ??
-            raw.error ??
-            "FraudChecker could not check this customer.",
-        },
-        {
-          status:
-            502,
-        },
-      );
-    }
-
-    const totalParcels =
-      Math.max(
-        0,
-        Math.trunc(
-          numberValue(
-            raw.total_parcels,
-          ),
-        ),
-      );
-
-    const delivered =
-      Math.max(
-        0,
-        Math.trunc(
-          numberValue(
-            raw.total_delivered,
-          ),
-        ),
-      );
-
-    const cancelled =
-      Math.max(
-        0,
-        Math.trunc(
-          numberValue(
-            raw.total_cancelled,
-          ),
-        ),
-      );
-
-    /*
-     * If the provider's reported total
-     * is unexpectedly lower than the
-     * delivered + cancelled figures,
-     * use the actual completed counts.
-     */
-    const normalizedTotal =
-      Math.max(
-        totalParcels,
-        delivered +
-          cancelled,
-      );
-
-    const providerDeliveryRate =
-      numberValue(
-        raw.delivery_rate,
-      );
-
-    const deliveryRate =
-      normalizedTotal >
-      0
-        ? providerDeliveryRate >
-          0
-          ? Math.round(
-              providerDeliveryRate *
-                100,
-            ) /
-            100
-          : Math.round(
-              (
-                delivered /
-                normalizedTotal
-              ) *
-                10_000,
-            ) /
-            100
-        : null;
-
-    const cancellationRate =
-      normalizedTotal >
-      0
-        ? Math.round(
-            (
-              cancelled /
-              normalizedTotal
-            ) *
-              10_000,
-          ) /
-          100
-        : null;
-
-    const fraudReports =
-      Array.isArray(
-        raw.fraud_reports,
-      )
-        ? raw
-            .fraud_reports
-            .length
-        : Math.max(
-            0,
-            Math.trunc(
-              numberValue(
-                raw.total_fraud_reports,
-              ),
-            ),
-          );
-
-    const riskStatus =
-      normalizeRiskStatus(
-        raw.risk_status,
-        {
-          totalParcels:
-            normalizedTotal,
-
-          cancelled,
-        },
-      );
-
-    /*
-     * Keep riskScore compatible with
-     * the existing dashboard model.
-     * Here it represents return /
-     * cancellation percentage.
-     */
-    const riskScore =
-      cancellationRate;
-
-    const couriers =
-      normalizeCouriers(
-        raw.couriers,
-      );
-
-    const checkedAt =
+    const providerCheckedAt =
       new Date();
 
-    await db
-      .activityLog
-      .create({
-        data: {
-          actorId:
-            admin.id,
+    let resolvedResult =
+      liveResult;
 
-          action:
-            "FRAUDCHECKER_CUSTOMER_CHECKED",
+    let source:
+      FraudSource =
+        "LIVE";
 
-          entityType:
-            "Order",
+    let resultCheckedAt =
+      providerCheckedAt;
 
-          entityId:
-            order.id,
+    /*
+     * A fresh zero must not erase a known-good
+     * historical result when the provider is
+     * temporarily inconsistent. We clearly mark
+     * the fallback as cached/last-successful.
+     */
+    if (
+      liveResult.totalParcels ===
+      0
+    ) {
+      const previous =
+        await getLastSuccessfulResult(
+          phone,
+        );
 
-          metadata: {
-            provider:
-              "FRAUDCHECKER",
+      if (
+        previous
+      ) {
+        resolvedResult =
+          previous.result;
 
-            orderNumber:
-              order.number,
+        source =
+          "LAST_SUCCESSFUL";
 
-            phone,
+        resultCheckedAt =
+          previous.checkedAt;
+      }
+    }
 
-            totalParcels:
-              normalizedTotal,
+    await db.activityLog.create({
+      data: {
+        actorId:
+          admin.id,
 
-            delivered,
+        action:
+          "FRAUDCHECKER_CUSTOMER_CHECKED",
 
-            cancelled,
+        entityType:
+          "Order",
 
-            fraudReports,
+        entityId:
+          order.id,
 
-            providerRiskStatus:
-              raw.risk_status ??
-              null,
+        metadata: {
+          provider:
+            "FRAUDCHECKER",
 
-            riskStatus,
+          orderNumber:
+            order.number,
 
-            riskScore,
+          phone,
 
-            deliveryRate,
+          totalParcels:
+            resolvedResult.totalParcels,
 
-            cancellationRate,
+          delivered:
+            resolvedResult.delivered,
 
-            couriers,
-          },
+          cancelled:
+            resolvedResult.cancelled,
+
+          fraudReports:
+            resolvedResult.fraudReports,
+
+          providerRiskStatus:
+            resolvedResult.providerRiskStatus,
+
+          riskStatus:
+            resolvedResult.riskStatus,
+
+          riskScore:
+            resolvedResult.riskScore,
+
+          deliveryRate:
+            resolvedResult.deliveryRate,
+
+          cancellationRate:
+            resolvedResult.cancellationRate,
+
+          couriers:
+            resolvedResult.couriers,
+
+          source,
+
+          attempts,
+
+          providerReturnedZero:
+            liveResult.totalParcels ===
+            0,
+
+          providerCheckedAt:
+            providerCheckedAt.toISOString(),
+
+          resultCheckedAt:
+            resultCheckedAt.toISOString(),
         },
-      });
+      },
+    });
+
+    /*
+     * Keep only a compact production diagnostic.
+     * Never log the API key or full provider payload.
+     */
+    console.info(
+      "FRAUDCHECKER CHECK",
+      {
+        phone,
+
+        attempts,
+
+        providerTotal:
+          liveResult.totalParcels,
+
+        resolvedTotal:
+          resolvedResult.totalParcels,
+
+        source,
+      },
+    );
 
     return NextResponse.json({
       message:
-        "Fraud check completed.",
+        source ===
+        "LAST_SUCCESSFUL"
+          ? "FraudChecker returned no history right now. Showing the last successful result for this customer."
+          : attempts >
+              1
+            ? "Fraud check completed after retrying the provider."
+            : "Fraud check completed.",
 
       result: {
-        phone,
-
-        totalParcels:
-          normalizedTotal,
-
-        delivered,
-
-        cancelled,
-
-        fraudReports,
-
-        riskStatus,
-
-        riskScore,
-
-        deliveryRate,
-
-        cancellationRate,
+        ...resolvedResult,
 
         checkedAt:
-          checkedAt.toISOString(),
+          resultCheckedAt.toISOString(),
 
-        providerRiskStatus:
-          raw.risk_status ??
-          null,
+        providerCheckedAt:
+          providerCheckedAt.toISOString(),
 
-        couriers,
+        source,
+
+        attempts,
+
+        providerReturnedZero:
+          liveResult.totalParcels ===
+          0,
       },
     });
   } catch (
