@@ -166,7 +166,7 @@ function logoUrl() {
         configured,
       )
     : absoluteUrl(
-        "/brand/game-on-garb-logo.svg",
+        "/images/brand/gameongarb-email-logo.png",
       );
 }
 
@@ -651,14 +651,14 @@ export function renderNotificationEmail(
               <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;max-width:640px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e8e3dd;box-shadow:0 8px 30px rgba(20,16,12,.06);">
 
                 <tr>
-                  <td align="center" style="padding:26px 24px 22px;background:#ffffff;border-bottom:4px solid #e85d04;">
+                  <td align="center" style="padding:20px 24px 18px;background:#ffffff;border-bottom:4px solid #e85d04;">
                     <img
                       src="${escapeHtml(
                         logoUrl(),
                       )}"
                       alt="Game On Garb"
                       width="390"
-                      style="display:block;width:100%;max-width:390px;height:auto;border:0;outline:none;text-decoration:none;"
+                      style="display:block;width:360px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;"
                     >
                   </td>
                 </tr>
