@@ -83,6 +83,14 @@ type EditorImage =
       string;
   };
 
+type VariantColorOption = {
+  name:
+    string;
+
+  hex:
+    string;
+};
+
 type ProductFormState = {
   name:
     string;
@@ -181,6 +189,193 @@ function slugify(
     );
 }
 
+
+const DEFAULT_VARIANT_SIZES = [
+  "S",
+  "M",
+  "L",
+  "XL",
+  "2XL",
+];
+
+const COMMON_COLOR_HEX:
+  Record<string, string> = {
+  black: "#111111",
+  white: "#f7f7f5",
+  navy: "#172239",
+  "navy blue": "#172239",
+  blue: "#2e5fa8",
+  red: "#c83c35",
+  maroon: "#6f2634",
+  orange: "#ef641f",
+  green: "#496d52",
+  olive: "#707348",
+  brown: "#72513e",
+  beige: "#d8c6ad",
+  cream: "#eee5d5",
+  grey: "#919593",
+  gray: "#919593",
+  charcoal: "#454948",
+  pink: "#dca0ae",
+  purple: "#71598c",
+  yellow: "#d9b637",
+};
+
+function normalizeVariantPart(
+  value:
+    string,
+) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(
+      /\s+/g,
+      " ",
+    );
+}
+
+function variantKey(
+  color:
+    string,
+
+  size:
+    string,
+) {
+  return `${normalizeVariantPart(
+    color,
+  )}::${normalizeVariantPart(
+    size,
+  )}`;
+}
+
+function skuPart(
+  value:
+    string,
+) {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(
+      /[^A-Z0-9]+/g,
+      "-",
+    )
+    .replace(
+      /^-+|-+$/g,
+      "",
+    );
+}
+
+function skuBase(
+  productSlug:
+    string,
+
+  productName:
+    string,
+) {
+  const source =
+    productSlug.trim() ||
+    slugify(
+      productName,
+    );
+
+  const normalized =
+    skuPart(
+      source,
+    );
+
+  return (
+    normalized.slice(
+      0,
+      26,
+    ) ||
+    "PRODUCT"
+  );
+}
+
+function createVariantSku(
+  productSlug:
+    string,
+
+  productName:
+    string,
+
+  color:
+    string,
+
+  size:
+    string,
+) {
+  return [
+    "GOG",
+    skuBase(
+      productSlug,
+      productName,
+    ),
+    skuPart(
+      color,
+    ).slice(
+      0,
+      14,
+    ) ||
+      "COLOR",
+    skuPart(
+      size,
+    ).slice(
+      0,
+      10,
+    ) ||
+      "SIZE",
+  ].join(
+    "-",
+  );
+}
+
+function uniqueSku(
+  base:
+    string,
+
+  used:
+    Set<string>,
+) {
+  let candidate =
+    base;
+
+  let suffix =
+    2;
+
+  while (
+    used.has(
+      candidate,
+    )
+  ) {
+    candidate =
+      `${base}-${suffix}`;
+
+    suffix +=
+      1;
+  }
+
+  used.add(
+    candidate,
+  );
+
+  return candidate;
+}
+
+function defaultColorHex(
+  name:
+    string,
+) {
+  return (
+    COMMON_COLOR_HEX[
+      normalizeVariantPart(
+        name,
+      )
+    ] ??
+    "#111111"
+  );
+}
+
 function emptyVariant():
   EditorVariant {
   return {
@@ -262,9 +457,7 @@ function emptyForm(
 
     images: [],
 
-    variants: [
-      emptyVariant(),
-    ],
+    variants: [],
   };
 }
 
@@ -603,6 +796,58 @@ export function ProductManager({
     setError,
   ] =
     useState("");
+
+  const [
+    generatorSizes,
+    setGeneratorSizes,
+  ] =
+    useState<string[]>(
+      DEFAULT_VARIANT_SIZES,
+    );
+
+  const [
+    generatorColors,
+    setGeneratorColors,
+  ] =
+    useState<
+      VariantColorOption[]
+    >([]);
+
+  const [
+    sizeInput,
+    setSizeInput,
+  ] =
+    useState("");
+
+  const [
+    colorInput,
+    setColorInput,
+  ] =
+    useState("");
+
+  const [
+    colorHexInput,
+    setColorHexInput,
+  ] =
+    useState(
+      "#111111",
+    );
+
+  const [
+    defaultVariantStock,
+    setDefaultVariantStock,
+  ] =
+    useState(
+      "0",
+    );
+
+  const [
+    defaultVariantLowStock,
+    setDefaultVariantLowStock,
+  ] =
+    useState(
+      "5",
+    );
 
   const categoryMap =
     useMemo(
@@ -961,6 +1206,26 @@ export function ProductManager({
       ),
     );
 
+    setGeneratorSizes(
+      DEFAULT_VARIANT_SIZES,
+    );
+
+    setGeneratorColors(
+      [],
+    );
+
+    setSizeInput("");
+    setColorInput("");
+    setColorHexInput(
+      "#111111",
+    );
+    setDefaultVariantStock(
+      "0",
+    );
+    setDefaultVariantLowStock(
+      "5",
+    );
+
     setError("");
     setMessage("");
 
@@ -983,11 +1248,416 @@ export function ProductManager({
       ),
     );
 
+    const existingSizes =
+      Array.from(
+        new Set(
+          product.variants
+            .map(
+              (
+                variant,
+              ) =>
+                variant.size
+                  .trim(),
+            )
+            .filter(
+              Boolean,
+            ),
+        ),
+      );
+
+    const existingColorMap =
+      new Map<
+        string,
+        VariantColorOption
+      >();
+
+    product.variants.forEach(
+      (
+        variant,
+      ) => {
+        const name =
+          variant.color
+            .trim();
+
+        if (
+          !name
+        ) {
+          return;
+        }
+
+        const key =
+          normalizeVariantPart(
+            name,
+          );
+
+        if (
+          !existingColorMap.has(
+            key,
+          )
+        ) {
+          existingColorMap.set(
+            key,
+            {
+              name,
+
+              hex:
+                variant.colorHex ||
+                defaultColorHex(
+                  name,
+                ),
+            },
+          );
+        }
+      },
+    );
+
+    setGeneratorSizes(
+      existingSizes.length >
+      0
+        ? existingSizes
+        : DEFAULT_VARIANT_SIZES,
+    );
+
+    setGeneratorColors(
+      Array.from(
+        existingColorMap.values(),
+      ),
+    );
+
+    setSizeInput("");
+    setColorInput("");
+    setColorHexInput(
+      "#111111",
+    );
+    setDefaultVariantStock(
+      "0",
+    );
+    setDefaultVariantLowStock(
+      "5",
+    );
+
     setError("");
     setMessage("");
 
     setEditorOpen(
       true,
+    );
+  }
+
+
+  function addGeneratorSize() {
+    const value =
+      sizeInput
+        .trim();
+
+    if (
+      !value
+    ) {
+      return;
+    }
+
+    setGeneratorSizes(
+      (
+        current,
+      ) =>
+        current.some(
+          (
+            item,
+          ) =>
+            normalizeVariantPart(
+              item,
+            ) ===
+            normalizeVariantPart(
+              value,
+            ),
+        )
+          ? current
+          : [
+              ...current,
+              value,
+            ],
+    );
+
+    setSizeInput("");
+  }
+
+  function addGeneratorColor() {
+    const name =
+      colorInput
+        .trim();
+
+    if (
+      !name
+    ) {
+      return;
+    }
+
+    setGeneratorColors(
+      (
+        current,
+      ) =>
+        current.some(
+          (
+            item,
+          ) =>
+            normalizeVariantPart(
+              item.name,
+            ) ===
+            normalizeVariantPart(
+              name,
+            ),
+        )
+          ? current
+          : [
+              ...current,
+              {
+                name,
+
+                hex:
+                  /^#[0-9a-f]{6}$/i.test(
+                    colorHexInput,
+                  )
+                    ? colorHexInput
+                    : defaultColorHex(
+                        name,
+                      ),
+              },
+            ],
+    );
+
+    setColorInput("");
+    setColorHexInput(
+      "#111111",
+    );
+  }
+
+  function generateVariants() {
+    setError("");
+    setMessage("");
+
+    if (
+      generatorSizes.length ===
+      0
+    ) {
+      setError(
+        "Add at least one size before generating variants.",
+      );
+
+      return;
+    }
+
+    if (
+      generatorColors.length ===
+      0
+    ) {
+      setError(
+        "Add at least one color before generating variants.",
+      );
+
+      return;
+    }
+
+    const defaultStock =
+      Math.max(
+        0,
+        Math.trunc(
+          Number(
+            defaultVariantStock,
+          ) ||
+          0,
+        ),
+      );
+
+    const defaultLowStock =
+      Math.max(
+        0,
+        Math.trunc(
+          Number(
+            defaultVariantLowStock,
+          ) ||
+          0,
+        ),
+      );
+
+    setForm(
+      (
+        current,
+      ) => {
+        const preserved =
+          current.variants.filter(
+            (
+              variant,
+            ) =>
+              Boolean(
+                variant.id ||
+                variant.sku.trim() ||
+                variant.color.trim() ||
+                variant.size.trim(),
+              ),
+          );
+
+        const existingByCombination =
+          new Map<
+            string,
+            EditorVariant
+          >();
+
+        preserved.forEach(
+          (
+            variant,
+          ) => {
+            if (
+              !variant.color.trim() ||
+              !variant.size.trim()
+            ) {
+              return;
+            }
+
+            existingByCombination.set(
+              variantKey(
+                variant.color,
+                variant.size,
+              ),
+              variant,
+            );
+          },
+        );
+
+        const usedSkus =
+          new Set(
+            products
+              .flatMap(
+                (
+                  product,
+                ) =>
+                  product.variants,
+              )
+              .filter(
+                (
+                  variant,
+                ) =>
+                  !editingProduct ||
+                  !editingProduct
+                    .variants
+                    .some(
+                      (
+                        currentVariant,
+                      ) =>
+                        currentVariant.id ===
+                        variant.id,
+                    ),
+              )
+              .map(
+                (
+                  variant,
+                ) =>
+                  variant.sku
+                    .trim()
+                    .toUpperCase(),
+              ),
+          );
+
+        preserved.forEach(
+          (
+            variant,
+          ) => {
+            if (
+              variant.sku.trim()
+            ) {
+              usedSkus.add(
+                variant.sku
+                  .trim()
+                  .toUpperCase(),
+              );
+            }
+          },
+        );
+
+        const generated: EditorVariant[] =
+          [
+            ...preserved,
+          ];
+
+        generatorColors.forEach(
+          (
+            color,
+          ) => {
+            generatorSizes.forEach(
+              (
+                size,
+              ) => {
+                const key =
+                  variantKey(
+                    color.name,
+                    size,
+                  );
+
+                if (
+                  existingByCombination.has(
+                    key,
+                  )
+                ) {
+                  return;
+                }
+
+                const base =
+                  createVariantSku(
+                    current.slug,
+                    current.name,
+                    color.name,
+                    size,
+                  );
+
+                const sku =
+                  uniqueSku(
+                    base,
+                    usedSkus,
+                  );
+
+                const variant: EditorVariant = {
+                  ...emptyVariant(),
+
+                  sku,
+
+                  color:
+                    color.name,
+
+                  colorHex:
+                    color.hex,
+
+                  size,
+
+                  stock:
+                    defaultStock,
+
+                  lowStockThreshold:
+                    defaultLowStock,
+                };
+
+                generated.push(
+                  variant,
+                );
+
+                existingByCombination.set(
+                  key,
+                  variant,
+                );
+              },
+            );
+          },
+        );
+
+        return {
+          ...current,
+
+          variants:
+            generated,
+        };
+      },
+    );
+
+    setMessage(
+      "Variants generated. Existing combinations were preserved and only missing combinations were added.",
     );
   }
 
@@ -3038,12 +3708,22 @@ export function ProductManager({
                     styles.sectionHeadingRow
                   }
                 >
-                  <div
-                    className={
-                      styles.sectionTitle
-                    }
-                  >
-                    Variants
+                  <div>
+                    <div
+                      className={
+                        styles.sectionTitle
+                      }
+                    >
+                      Variants
+                    </div>
+
+                    <p
+                      className={
+                        styles.variantIntro
+                      }
+                    >
+                      Select sizes and colors, then generate every missing combination automatically. Existing variants are preserved.
+                    </p>
                   </div>
 
                   <button
@@ -3072,341 +3752,681 @@ export function ProductManager({
                       }
                     />
 
-                    Add Variant
+                    Add Manual Variant
                   </button>
                 </div>
 
                 <div
                   className={
-                    styles.variantTableWrap
+                    styles.variantBuilder
                   }
                 >
-                  <table
+                  <div
                     className={
-                      styles.variantTable
+                      styles.variantBuilderBlock
                     }
                   >
-                    <thead>
-                      <tr>
-                        <th>
-                          SKU
-                        </th>
+                    <div
+                      className={
+                        styles.variantBuilderLabel
+                      }
+                    >
+                      Sizes
+                    </div>
 
-                        <th>
-                          Color
-                        </th>
-
-                        <th>
-                          Size
-                        </th>
-
-                        <th>
-                          Stock
-                        </th>
-
-                        <th>
-                          Low Stock
-                        </th>
-
-                        <th>
-                          Active
-                        </th>
-
-                        <th />
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {form.variants.map(
+                    <div
+                      className={
+                        styles.variantChips
+                      }
+                    >
+                      {generatorSizes.map(
                         (
-                          variant,
-                          index,
+                          size,
                         ) => (
-                          <tr
+                          <button
                             key={
-                              variant.clientId
+                              size
                             }
+                            type="button"
+                            className={
+                              styles.variantChip
+                            }
+                            onClick={() =>
+                              setGeneratorSizes(
+                                (
+                                  current,
+                                ) =>
+                                  current.filter(
+                                    (
+                                      item,
+                                    ) =>
+                                      item !==
+                                      size,
+                                  ),
+                              )
+                            }
+                            title="Remove size"
                           >
-                            <td>
-                              <input
-                                value={
-                                  variant.sku
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
+                            {size}
 
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  sku:
-                                                    event
-                                                      .target
-                                                      .value,
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                value={
-                                  variant.color
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  color:
-                                                    event
-                                                      .target
-                                                      .value,
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                value={
-                                  variant.size
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  size:
-                                                    event
-                                                      .target
-                                                      .value,
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                value={
-                                  variant.stock
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  stock:
-                                                    Number(
-                                                      event
-                                                        .target
-                                                        .value,
-                                                    ),
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                value={
-                                  variant.lowStockThreshold
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  lowStockThreshold:
-                                                    Number(
-                                                      event
-                                                        .target
-                                                        .value,
-                                                    ),
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={
-                                  variant.active
-                                }
-                                onChange={(
-                                  event,
-                                ) =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.map(
-                                          (
-                                            item,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex ===
-                                            index
-                                              ? {
-                                                  ...item,
-
-                                                  active:
-                                                    event
-                                                      .target
-                                                      .checked,
-                                                }
-                                              : item,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              <button
-                                type="button"
-                                className={
-                                  styles.variantDelete
-                                }
-                                disabled={
-                                  form.variants.length ===
-                                  1
-                                }
-                                onClick={() =>
-                                  setForm(
-                                    (
-                                      current,
-                                    ) => ({
-                                      ...current,
-
-                                      variants:
-                                        current.variants.filter(
-                                          (
-                                            _,
-                                            itemIndex,
-                                          ) =>
-                                            itemIndex !==
-                                            index,
-                                        ),
-                                    }),
-                                  )
-                                }
-                              >
-                                <Trash2
-                                  size={
-                                    13
-                                  }
-                                />
-                              </button>
-                            </td>
-                          </tr>
+                            <X
+                              size={
+                                11
+                              }
+                            />
+                          </button>
                         ),
                       )}
-                    </tbody>
-                  </table>
+                    </div>
+
+                    <div
+                      className={
+                        styles.variantAddRow
+                      }
+                    >
+                      <input
+                        value={
+                          sizeInput
+                        }
+                        placeholder="Add size, e.g. 3XL or 32"
+                        onChange={(
+                          event,
+                        ) =>
+                          setSizeInput(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+
+                      <button
+                        type="button"
+                        onClick={
+                          addGeneratorSize
+                        }
+                      >
+                        <Plus
+                          size={
+                            13
+                          }
+                        />
+
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className={
+                      styles.variantBuilderBlock
+                    }
+                  >
+                    <div
+                      className={
+                        styles.variantBuilderLabel
+                      }
+                    >
+                      Colors
+                    </div>
+
+                    <div
+                      className={
+                        styles.variantChips
+                      }
+                    >
+                      {generatorColors.map(
+                        (
+                          color,
+                        ) => (
+                          <button
+                            key={
+                              normalizeVariantPart(
+                                color.name,
+                              )
+                            }
+                            type="button"
+                            className={
+                              styles.variantColorChip
+                            }
+                            onClick={() =>
+                              setGeneratorColors(
+                                (
+                                  current,
+                                ) =>
+                                  current.filter(
+                                    (
+                                      item,
+                                    ) =>
+                                      normalizeVariantPart(
+                                        item.name,
+                                      ) !==
+                                      normalizeVariantPart(
+                                        color.name,
+                                      ),
+                                  ),
+                              )
+                            }
+                            title="Remove color"
+                          >
+                            <span
+                              className={
+                                styles.variantColorDot
+                              }
+                              style={{
+                                background:
+                                  color.hex,
+                              }}
+                            />
+
+                            {color.name}
+
+                            <X
+                              size={
+                                11
+                              }
+                            />
+                          </button>
+                        ),
+                      )}
+                    </div>
+
+                    <div
+                      className={
+                        styles.variantColorAddRow
+                      }
+                    >
+                      <input
+                        value={
+                          colorInput
+                        }
+                        placeholder="Color name, e.g. Navy"
+                        onChange={(
+                          event,
+                        ) => {
+                          const value =
+                            event.target
+                              .value;
+
+                          setColorInput(
+                            value,
+                          );
+
+                          if (
+                            value.trim()
+                          ) {
+                            setColorHexInput(
+                              defaultColorHex(
+                                value,
+                              ),
+                            );
+                          }
+                        }}
+                      />
+
+                      <input
+                        type="color"
+                        value={
+                          colorHexInput
+                        }
+                        aria-label="Color swatch"
+                        onChange={(
+                          event,
+                        ) =>
+                          setColorHexInput(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+
+                      <button
+                        type="button"
+                        onClick={
+                          addGeneratorColor
+                        }
+                      >
+                        <Plus
+                          size={
+                            13
+                          }
+                        />
+
+                        Add
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className={
+                      styles.variantDefaults
+                    }
+                  >
+                    <label>
+                      <span>
+                        Default Stock
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          defaultVariantStock
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setDefaultVariantStock(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      <span>
+                        Low Stock Alert
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          defaultVariantLowStock
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setDefaultVariantLowStock(
+                            event.target
+                              .value,
+                          )
+                        }
+                      />
+                    </label>
+
+                    <div
+                      className={
+                        styles.variantCombinationCount
+                      }
+                    >
+                      <strong>
+                        {
+                          generatorSizes.length *
+                          generatorColors.length
+                        }
+                      </strong>
+
+                      <span>
+                        combinations selected
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={
+                        styles.generateVariantsButton
+                      }
+                      onClick={
+                        generateVariants
+                      }
+                    >
+                      Generate Variants
+                    </button>
+                  </div>
                 </div>
+
+                <div
+                  className={
+                    styles.variantTableMeta
+                  }
+                >
+                  <strong>
+                    {form.variants.length}
+                  </strong>
+
+                  <span>
+                    variant
+                    {form.variants.length ===
+                    1
+                      ? ""
+                      : "s"}{" "}
+                    ready
+                  </span>
+                </div>
+
+                {form.variants.length >
+                0 ? (
+                  <div
+                    className={
+                      styles.variantTableWrap
+                    }
+                  >
+                    <table
+                      className={
+                        styles.variantTable
+                      }
+                    >
+                      <thead>
+                        <tr>
+                          <th>
+                            SKU
+                          </th>
+
+                          <th>
+                            Color
+                          </th>
+
+                          <th>
+                            Size
+                          </th>
+
+                          <th>
+                            Stock
+                          </th>
+
+                          <th>
+                            Low Stock
+                          </th>
+
+                          <th>
+                            Active
+                          </th>
+
+                          <th />
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {form.variants.map(
+                          (
+                            variant,
+                            index,
+                          ) => (
+                            <tr
+                              key={
+                                variant.clientId
+                              }
+                            >
+                              <td>
+                                <input
+                                  value={
+                                    variant.sku
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    sku:
+                                                      event.target
+                                                        .value,
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  value={
+                                    variant.color
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    color:
+                                                      event.target
+                                                        .value,
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  value={
+                                    variant.size
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    size:
+                                                      event.target
+                                                        .value,
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={
+                                    variant.stock
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    stock:
+                                                      Number(
+                                                        event.target
+                                                          .value,
+                                                      ),
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={
+                                    variant.lowStockThreshold
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    lowStockThreshold:
+                                                      Number(
+                                                        event.target
+                                                          .value,
+                                                      ),
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    variant.active
+                                  }
+                                  onChange={(
+                                    event,
+                                  ) =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.map(
+                                            (
+                                              item,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex ===
+                                              index
+                                                ? {
+                                                    ...item,
+
+                                                    active:
+                                                      event.target
+                                                        .checked,
+                                                  }
+                                                : item,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                />
+                              </td>
+
+                              <td>
+                                <button
+                                  type="button"
+                                  className={
+                                    styles.variantDelete
+                                  }
+                                  onClick={() =>
+                                    setForm(
+                                      (
+                                        current,
+                                      ) => ({
+                                        ...current,
+
+                                        variants:
+                                          current.variants.filter(
+                                            (
+                                              _,
+                                              itemIndex,
+                                            ) =>
+                                              itemIndex !==
+                                              index,
+                                          ),
+                                      }),
+                                    )
+                                  }
+                                >
+                                  <Trash2
+                                    size={
+                                      13
+                                    }
+                                  />
+                                </button>
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      styles.variantEmpty
+                    }
+                  >
+                    Choose at least one color and size, then click Generate Variants. You can still add a manual variant if needed.
+                  </div>
+                )}
               </section>
 
               <section
