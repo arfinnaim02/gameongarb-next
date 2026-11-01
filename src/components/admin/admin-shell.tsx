@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BarChart3,
+  BookOpen,
   ChevronRight,
   CircleUserRound,
   ExternalLink,
@@ -137,6 +138,18 @@ const navigationGroups: NavigationGroup[] = [
         label: "Shop Hero",
         href: "/admin/shop/hero",
         icon: Images,
+      },
+    ],
+  },
+
+  {
+    title: "Content",
+    items: [
+      {
+        label: "Blogs",
+        href: "/admin/blogs",
+        permission: "blogs",
+        icon: BookOpen,
       },
     ],
   },
