@@ -136,7 +136,13 @@ export default async function Content({
           style={{ padding: "24px 0", borderTop: "1px solid var(--line)" }}
         >
           <h2>{s.heading}</h2>
-          <p className="muted" style={{ lineHeight: 1.8 }}>
+          <p
+            className="muted"
+            style={{
+              fontSize: 17,
+              lineHeight: 1.85,
+            }}
+          >
             {s.body}
           </p>
         </section>
