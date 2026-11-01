@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.APP_URL ?? "http://localhost:3000";
+  const base = process.env.APP_URL ?? "https://www.gameongarb.com";
   const [products, categories] = await Promise.all([
     db.product.findMany({
       where: { status: "ACTIVE" },
