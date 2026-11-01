@@ -3691,7 +3691,7 @@ span {
   overflow: hidden;
 
   border:
-    1px solid transparent;
+    1px solid #111;
 
   background:
     #fff;
@@ -3725,16 +3725,13 @@ span {
   position: relative;
 
   /*
-   * Product photography standard:
-   * 1600 × 1200 (4:3).
-   *
-   * New Arrival, Trending and all shared
-   * product cards now match the source
-   * image ratio so the product fills the
-   * card naturally without outer bands.
+   * Keep the premium portrait card
+   * presentation while moderators
+   * continue uploading 1600 × 1200
+   * (4:3) product photography.
    */
   aspect-ratio:
-    4 / 3;
+    1 / 1.08;
 
   overflow: hidden;
 
@@ -3751,8 +3748,15 @@ span {
   object-position:
     center center;
 
+  /*
+   * The source images include generous
+   * white canvas around the garment.
+   * A controlled scale makes the product
+   * visually larger without changing the
+   * uploaded file or using cover/cropping.
+   */
   transform:
-    scale(1);
+    scale(1.12);
 
   transition:
     transform
@@ -4097,7 +4101,7 @@ svg {
   .product-card:hover
   .product-card-image {
     transform:
-      scale(1.04);
+      scale(1.16);
   }
 
   .product-card-wishlist:hover {
