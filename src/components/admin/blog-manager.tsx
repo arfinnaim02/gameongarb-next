@@ -159,6 +159,14 @@ export function BlogManager({
     useState("");
 
   const [
+    slugEdited,
+    setSlugEdited,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
     saving,
     setSaving,
   ] =
@@ -256,6 +264,10 @@ export function BlogManager({
       emptyForm(),
     );
 
+    setSlugEdited(
+      false,
+    );
+
     setMessage(
       "",
     );
@@ -277,6 +289,10 @@ export function BlogManager({
       postToForm(
         post,
       ),
+    );
+
+    setSlugEdited(
+      true,
     );
 
     setMessage(
@@ -935,7 +951,7 @@ export function BlogManager({
 
                       slug:
                         selectedId ||
-                        current.slug
+                        slugEdited
                           ? current.slug
                           : slugify(
                               title,
@@ -964,15 +980,19 @@ export function BlogManager({
                   placeholder="football-jersey-size-guide"
                   onChange={(
                     event,
-                  ) =>
+                  ) => {
+                    setSlugEdited(
+                      true,
+                    );
+
                     update(
                       "slug",
                       slugify(
                         event.target
                           .value,
                       ),
-                    )
-                  }
+                    );
+                  }}
                 />
               </label>
 
