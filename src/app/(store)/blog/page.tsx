@@ -26,7 +26,7 @@ export const dynamic =
 export const metadata:
   Metadata = {
   title:
-    "Blog | GameOn Garb",
+    "Blog",
 
   description:
     "Style guides, jersey care, sportswear tips and stories from GameOn Garb.",
