@@ -3724,25 +3724,32 @@ span {
 .product-card-media {
   position: relative;
 
+  /*
+   * Product photography standard:
+   * 1600 × 1200 (4:3).
+   *
+   * New Arrival, Trending and all shared
+   * product cards now match the source
+   * image ratio so the product fills the
+   * card naturally without outer bands.
+   */
   aspect-ratio:
-    1 / 1.08;
+    4 / 3;
 
   overflow: hidden;
 
   background:
-    #f4f5f2;
+    #fff;
 }
 
 .product-card-image {
-  padding:
-    clamp(
-      6px,
-      .7vw,
-      10px
-    );
+  padding: 0;
 
   object-fit:
     contain;
+
+  object-position:
+    center center;
 
   transform:
     scale(1);
