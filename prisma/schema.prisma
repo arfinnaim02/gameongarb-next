@@ -33,6 +33,12 @@ enum ProductStatus {
   ARCHIVED
 }
 
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 enum SizeChartUnit {
   IN
   CM
@@ -853,4 +859,28 @@ model Review {
   approved     Boolean  @default(false)
   product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
+}
+
+
+model BlogPost {
+  id               String         @id @default(cuid())
+  title            String
+  slug             String         @unique
+  excerpt          String?
+  content          String
+  featuredImage    String?
+  featuredImageId  String?
+  featuredImageAlt String?
+  category         String?
+  status           BlogPostStatus @default(DRAFT)
+  featured         Boolean        @default(false)
+  seoTitle         String?
+  seoDescription   String?
+  publishedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([featured, publishedAt])
+  @@index([category])
 }
