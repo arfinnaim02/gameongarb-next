@@ -71,10 +71,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           Product,
 
         size =
-          product.sizes[0],
+          product.sizes[0] ??
+          "",
 
         color =
-          product.colors[0],
+          product.colors[0] ??
+          "",
 
         quantity =
           1,
