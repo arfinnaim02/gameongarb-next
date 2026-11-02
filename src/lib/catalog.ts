@@ -195,7 +195,7 @@ export function toStoreProduct(
 
         color:
           variant.color ??
-          "Default",
+          "",
 
         colorHex:
           variant.colorHex ??
