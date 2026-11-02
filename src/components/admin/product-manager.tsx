@@ -1531,7 +1531,6 @@ export function ProductManager({
             variant,
           ) => {
             if (
-              !variant.color.trim() ||
               !variant.size.trim()
             ) {
               return;
@@ -1647,7 +1646,9 @@ export function ProductManager({
                     color.name,
 
                   colorHex:
-                    color.hex,
+                    color.name
+                      ? color.hex
+                      : "",
 
                   size,
 
