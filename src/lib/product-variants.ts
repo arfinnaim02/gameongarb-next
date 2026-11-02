@@ -264,13 +264,23 @@ export function uniqueVariantColors(
     const variant
     of variants
   ) {
+    const color =
+      variant.color
+        .trim();
+
+    if (
+      !color
+    ) {
+      continue;
+    }
+
     if (
       !map.has(
-        variant.color,
+        color,
       )
     ) {
       map.set(
-        variant.color,
+        color,
         variant,
       );
     }
