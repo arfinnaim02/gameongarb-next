@@ -305,27 +305,47 @@ function createVariantSku(
   size:
     string,
 ) {
-  return [
+  const parts = [
     "GOG",
     skuBase(
       productSlug,
       productName,
     ),
+  ];
+
+  const colorPart =
     skuPart(
       color,
     ).slice(
       0,
       14,
-    ) ||
-      "COLOR",
+    );
+
+  const sizePart =
     skuPart(
       size,
     ).slice(
       0,
       10,
-    ) ||
-      "SIZE",
-  ].join(
+    );
+
+  if (
+    colorPart
+  ) {
+    parts.push(
+      colorPart,
+    );
+  }
+
+  if (
+    sizePart
+  ) {
+    parts.push(
+      sizePart,
+    );
+  }
+
+  return parts.join(
     "-",
   );
 }
@@ -1446,16 +1466,20 @@ export function ProductManager({
       return;
     }
 
-    if (
-      generatorColors.length ===
-      0
-    ) {
-      setError(
-        "Add at least one color before generating variants.",
-      );
+    const colorsToGenerate:
+      VariantColorOption[] =
+        generatorColors.length >
+        0
+          ? generatorColors
+          : [
+              {
+                name:
+                  "",
 
-      return;
-    }
+                hex:
+                  "#111111",
+              },
+            ];
 
     const defaultStock =
       Math.max(
@@ -1578,7 +1602,7 @@ export function ProductManager({
             ...preserved,
           ];
 
-        generatorColors.forEach(
+        colorsToGenerate.forEach(
           (
             color,
           ) => {
@@ -3722,7 +3746,7 @@ export function ProductManager({
                         styles.variantIntro
                       }
                     >
-                      Select sizes and colors, then generate every missing combination automatically. Existing variants are preserved.
+                      Select sizes and, when needed, colors. Generate every missing combination automatically. Existing variants are preserved.
                     </p>
                   </div>
 
@@ -3866,7 +3890,7 @@ export function ProductManager({
                         styles.variantBuilderLabel
                       }
                     >
-                      Colors
+                      Colors (Optional)
                     </div>
 
                     <div
@@ -4053,7 +4077,10 @@ export function ProductManager({
                       <strong>
                         {
                           generatorSizes.length *
-                          generatorColors.length
+                          Math.max(
+                            generatorColors.length,
+                            1,
+                          )
                         }
                       </strong>
 
@@ -4424,7 +4451,7 @@ export function ProductManager({
                       styles.variantEmpty
                     }
                   >
-                    Choose at least one color and size, then click Generate Variants. You can still add a manual variant if needed.
+                    Choose at least one size, optionally add colors, then click Generate Variants. You can still add a manual variant if needed.
                   </div>
                 )}
               </section>
