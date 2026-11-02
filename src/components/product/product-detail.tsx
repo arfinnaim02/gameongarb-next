@@ -165,7 +165,7 @@ export function ProductDetail({
   ] = useState(
     defaultVariant?.color ??
       product.colors[0] ??
-      "Default",
+      "",
   );
 
   const [
@@ -483,6 +483,10 @@ export function ProductDetail({
       ],
     );
 
+  const hasColorOptions =
+    colorOptions.length >
+    0;
+
   /* =======================================================
      SIZE OPTIONS
      ======================================================= */
@@ -532,8 +536,13 @@ export function ProductDetail({
       ) =>
         variant.size ===
           size &&
-        variant.color ===
-          color,
+        (
+          hasColorOptions
+            ? variant.color ===
+              color
+            : !variant.color
+              .trim()
+        ),
     );
 
   const selectedPrice =
@@ -731,8 +740,13 @@ export function ProductDetail({
       (
         variant,
       ) =>
-        variant.color ===
-          color &&
+        (
+          hasColorOptions
+            ? variant.color ===
+              color
+            : !variant.color
+              .trim()
+        ) &&
         variant.size ===
           targetSize &&
         variant.stock >
