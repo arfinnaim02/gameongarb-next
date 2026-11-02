@@ -16791,12 +16791,7 @@ img {
   }
 
   .product-gallery-image {
-    padding:
-      clamp(
-        20px,
-        4vw,
-        45px
-      );
+    padding: 0;
   }
 }
 
@@ -16853,12 +16848,11 @@ img {
 
   .product-gallery-stage {
     aspect-ratio:
-      1 / 1.03;
+      4 / 3;
   }
 
   .product-gallery-image {
-    padding:
-      24px;
+    padding: 0;
   }
 
   .product-gallery-thumbnails {
@@ -16984,8 +16978,7 @@ img {
   }
 
   .product-gallery-image {
-    padding:
-      19px;
+    padding: 0;
   }
 
   .product-gallery-badge {
