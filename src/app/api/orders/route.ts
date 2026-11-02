@@ -793,7 +793,7 @@ export async function POST(
                   normalizedSize &&
                 (
                   candidate.color ??
-                  "Default"
+                  ""
                 )
                   .trim()
                   .toLowerCase() ===
@@ -824,7 +824,7 @@ export async function POST(
             item.quantity
           ) {
             throw new Error(
-              `Only ${variant.stock} item(s) are available for ${variant.product.name} - ${variant.color ?? "Default"} / ${variant.size ?? "One Size"}.`,
+              `Only ${variant.stock} item(s) are available for ${variant.product.name}${variant.color ? ` - ${variant.color}` : ""} / ${variant.size ?? "One Size"}.`,
             );
           }
 
