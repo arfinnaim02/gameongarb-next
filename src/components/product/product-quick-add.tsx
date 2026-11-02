@@ -82,7 +82,7 @@ export function ProductQuickAdd({
   ] = useState(
     initialVariant?.color ??
       product.colors[0] ??
-      "Default",
+      "",
   );
 
   const [
@@ -145,6 +145,10 @@ export function ProductQuickAdd({
       variants,
     );
 
+  const hasColorOptions =
+    colorVariants.length >
+    0;
+
   const sizesForColor =
     sortProductSizes([
       ...new Set(
@@ -153,8 +157,11 @@ export function ProductQuickAdd({
             (
               variant,
             ) =>
-              variant.color ===
-              selectedColor,
+              hasColorOptions
+                ? variant.color ===
+                  selectedColor
+                : !variant.color
+                    .trim(),
           )
           .map(
             (
@@ -170,8 +177,13 @@ export function ProductQuickAdd({
       (
         variant,
       ) =>
-        variant.color ===
-          selectedColor &&
+        (
+          hasColorOptions
+            ? variant.color ===
+              selectedColor
+            : !variant.color
+                .trim()
+        ) &&
         variant.size ===
           selectedSize,
     );
@@ -497,8 +509,13 @@ export function ProductQuickAdd({
                       (
                         item,
                       ) =>
-                        item.color ===
-                          selectedColor &&
+                        (
+                          hasColorOptions
+                            ? item.color ===
+                              selectedColor
+                            : !item.color
+                                .trim()
+                        ) &&
                         item.size ===
                           size,
                     );
