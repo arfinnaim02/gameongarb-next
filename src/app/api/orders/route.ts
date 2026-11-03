@@ -189,6 +189,17 @@ const schema =
 
 
 
+    payDeliveryAdvanceNow:
+
+      z
+        .boolean()
+        .optional()
+        .default(
+          false,
+        ),
+
+
+
     couponCode:
 
       z
@@ -616,6 +627,45 @@ export async function POST(
 
       );
 
+    }
+
+
+
+    if (
+      deliveryZone ===
+        "OUTSIDE_DHAKA" &&
+      input.paymentMethod ===
+        "COD"
+    ) {
+      if (
+        !input.payDeliveryAdvanceNow
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Outside Dhaka orders require the delivery charge to be paid in advance with bKash.",
+          },
+          {
+            status:
+              400,
+          },
+        );
+      }
+
+      if (
+        !bkashAllowed
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "bKash is required to confirm an outside Dhaka order. Please use an available bKash payment option.",
+          },
+          {
+            status:
+              400,
+          },
+        );
+      }
     }
 
 
