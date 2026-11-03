@@ -249,39 +249,6 @@ export function HomeProductRail({
   }
 
   /* =======================================================
-     DESKTOP HOVER PAUSE
-     ======================================================= */
-
-  function handleMouseEnter() {
-    if (
-      staticRail ||
-      dragging
-    ) {
-      return;
-    }
-
-    const animation =
-      getRailAnimation();
-
-    animation?.pause();
-  }
-
-  function handleMouseLeave() {
-    if (
-      staticRail ||
-      dragging ||
-      dragRef.current
-    ) {
-      return;
-    }
-
-    const animation =
-      getRailAnimation();
-
-    animation?.play();
-  }
-
-  /* =======================================================
      POINTER DOWN
      ======================================================= */
 
@@ -546,24 +513,9 @@ export function HomeProductRail({
 
     /*
      * Resume automatic carousel exactly
-     * from the manually selected point,
-     * unless a desktop mouse is still
-     * hovering over the rail.
+     * from the manually selected point.
      */
-    const keepPausedForHover =
-      event.pointerType ===
-        "mouse" &&
-      Boolean(
-        viewport?.matches(
-          ":hover",
-        ),
-      );
-
-    if (
-      !keepPausedForHover
-    ) {
-      state.animation.play();
-    }
+    state.animation.play();
 
     const wasDragged =
       state.moved;
@@ -610,23 +562,10 @@ export function HomeProductRail({
       return;
     }
 
+    state.animation.play();
+
     const viewport =
       viewportRef.current;
-
-    const keepPausedForHover =
-      event.pointerType ===
-        "mouse" &&
-      Boolean(
-        viewport?.matches(
-          ":hover",
-        ),
-      );
-
-    if (
-      !keepPausedForHover
-    ) {
-      state.animation.play();
-    }
 
     if (
       viewport?.hasPointerCapture(
@@ -692,12 +631,6 @@ export function HomeProductRail({
         role="region"
         aria-label={`${label} product carousel`}
         aria-live="off"
-        onMouseEnter={
-          handleMouseEnter
-        }
-        onMouseLeave={
-          handleMouseLeave
-        }
         onPointerDown={
           handlePointerDown
         }
