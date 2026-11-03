@@ -600,6 +600,12 @@ export async function POST(
 
             "Enter your complete delivery address.",
 
+          fields: {
+            address: [
+              "Enter your complete delivery address including area, city and district.",
+            ],
+          },
+
         },
 
         {
@@ -705,16 +711,36 @@ export async function POST(
             ...input.items.map(
               (
                 item,
-              ) => ({
-                productId:
-                  item.productId,
+              ) => {
+                const color =
+                  item.color.trim();
 
-                size:
-                  item.size,
+                return {
+                  productId:
+                    item.productId,
 
-                color:
-                  item.color,
-              }),
+                  size:
+                    item.size,
+
+                  ...(color
+                    ? {
+                        color:
+                          item.color,
+                      }
+                    : {
+                        OR: [
+                          {
+                            color:
+                              null,
+                          },
+                          {
+                            color:
+                              "",
+                          },
+                        ],
+                      }),
+                };
+              },
             ),
           ],
         },
