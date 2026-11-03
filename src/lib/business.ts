@@ -1,3 +1,5 @@
+import { detectDeliveryZoneFromAddress } from "@/lib/dhaka-delivery-classifier";
+
 export type ShippingSettings = {
   insideDhaka: number;
   outsideDhaka: number;
@@ -312,71 +314,9 @@ export function detectDeliveryZone(
     return null;
   }
 
-  const district =
-    findDistrict(
-      trimmed,
-    );
-
-  if (district) {
-    return district ===
-      "Dhaka"
-      ? "INSIDE_DHAKA"
-      : "OUTSIDE_DHAKA";
-  }
-
-  const normalized =
-    normalizePlace(
-      trimmed,
-    );
-
-  const matchesDhakaLocality =
-    DHAKA_LOCALITIES.some(
-      (
-        locality,
-      ) => {
-        const escaped =
-          locality.replace(
-            /[.*+?^${}()|[\]\\]/g,
-            "\\$&",
-          );
-
-        return new RegExp(
-          `(?:^|\\s)${escaped}(?:$|\\s)`,
-          "i",
-        ).test(
-          normalized,
-        );
-      },
-    );
-
-  if (
-    matchesDhakaLocality
-  ) {
-    return "INSIDE_DHAKA";
-  }
-
-  /*
-   * If Dhaka was explicitly written
-   * and no other district was found,
-   * classify it as Dhaka.
-   */
-  if (
-    /(?:^|\s)dhaka(?:$|\s)/i.test(
-      normalized.replace(
-        /\bdhaka division\b/g,
-        " ",
-      ),
-    )
-  ) {
-    return "INSIDE_DHAKA";
-  }
-
-  /*
-   * Unknown locations safely use the
-   * outside-Dhaka rate rather than
-   * incorrectly undercharging.
-   */
-  return "OUTSIDE_DHAKA";
+  return detectDeliveryZoneFromAddress(
+    trimmed,
+  ).zone;
 }
 
 /* =========================================================
