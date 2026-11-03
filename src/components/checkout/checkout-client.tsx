@@ -990,44 +990,20 @@ export function CheckoutClient() {
                   cart.map(
                     (
                       line,
-                    ) => {
-                      const variant =
+                    ) => ({
+                      productId:
                         line.product
-                          .variants?.find(
-                            (
-                              candidate,
-                            ) =>
-                              candidate.size ===
-                                line.size &&
-                              (
-                                candidate.color ??
-                                ""
-                              )
-                                .trim()
-                                .toLowerCase() ===
-                                line.color
-                                  .trim()
-                                  .toLowerCase(),
-                          );
+                          .id,
 
-                      return {
-                        productId:
-                          line.product
-                            .id,
+                      size:
+                        line.size,
 
-                        variantId:
-                          variant?.id,
+                      color:
+                        line.color,
 
-                        size:
-                          line.size,
-
-                        color:
-                          line.color,
-
-                        quantity:
-                          line.quantity,
-                      };
-                    },
+                      quantity:
+                        line.quantity,
+                    }),
                   ),
               }),
           },
@@ -1252,20 +1228,44 @@ export function CheckoutClient() {
                   cart.map(
                     (
                       line,
-                    ) => ({
-                      productId:
+                    ) => {
+                      const variant =
                         line.product
-                          .id,
+                          .variants?.find(
+                            (
+                              candidate,
+                            ) =>
+                              candidate.size ===
+                                line.size &&
+                              (
+                                candidate.color ??
+                                ""
+                              )
+                                .trim()
+                                .toLowerCase() ===
+                                line.color
+                                  .trim()
+                                  .toLowerCase(),
+                          );
 
-                      size:
-                        line.size,
+                      return {
+                        productId:
+                          line.product
+                            .id,
 
-                      color:
-                        line.color,
+                        variantId:
+                          variant?.id,
 
-                      quantity:
-                        line.quantity,
-                    }),
+                        size:
+                          line.size,
+
+                        color:
+                          line.color,
+
+                        quantity:
+                          line.quantity,
+                      };
+                    },
                   ),
               }),
           },
