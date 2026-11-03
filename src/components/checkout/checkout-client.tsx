@@ -449,16 +449,22 @@ export function CheckoutClient() {
 
   useEffect(() => {
     if (
-      payment !==
-        "COD" ||
-      deliveryZone !==
-        "OUTSIDE_DHAKA" ||
-      !settings?.bkashEnabled
+      payment ===
+        "COD" &&
+      deliveryZone ===
+        "OUTSIDE_DHAKA" &&
+      settings?.bkashEnabled
     ) {
       setPayDeliveryAdvanceNow(
-        false,
+        true,
       );
+
+      return;
     }
+
+    setPayDeliveryAdvanceNow(
+      false,
+    );
   }, [
     deliveryZone,
     payment,
@@ -482,12 +488,20 @@ export function CheckoutClient() {
         discount,
     );
 
+  const outsideDhaka =
+    deliveryZone ===
+    "OUTSIDE_DHAKA";
+
   const paymentAvailable =
     Boolean(
       settings &&
       (
-        settings.codEnabled ||
-        settings.bkashEnabled
+        outsideDhaka
+          ? settings.bkashEnabled
+          : (
+              settings.codEnabled ||
+              settings.bkashEnabled
+            )
       ),
     );
 
@@ -1171,7 +1185,22 @@ export function CheckoutClient() {
       !paymentAvailable
     ) {
       setError(
-        "No payment method is currently available.",
+        outsideDhaka
+          ? "Outside Dhaka orders require bKash payment. Please enter a valid phone number and choose full bKash payment or the required delivery advance."
+          : "No payment method is currently available.",
+      );
+
+      return;
+    }
+
+    if (
+      outsideDhaka &&
+      payment ===
+        "COD" &&
+      !payDeliveryAdvanceNow
+    ) {
+      setError(
+        "Outside Dhaka orders require the delivery charge to be paid in advance with bKash.",
       );
 
       return;
@@ -1211,6 +1240,12 @@ export function CheckoutClient() {
 
                 paymentMethod:
                   payment,
+
+                payDeliveryAdvanceNow:
+                  outsideDhaka &&
+                  payment ===
+                    "COD" &&
+                  payDeliveryAdvanceNow,
 
                 couponCode:
                   couponOk &&
@@ -1897,14 +1932,42 @@ export function CheckoutClient() {
                 </div>
               </div>
 
+              {outsideDhaka ? (
+                <div
+                  className={styles.advanceRequirement}
+                  role="status"
+                >
+                  <CircleAlert
+                    size={18}
+                    strokeWidth={1.8}
+                  />
+
+                  <div>
+                    <strong>
+                      Advance payment required for outside-Dhaka orders
+                    </strong>
+
+                    <span>
+                      To confirm your order, pay the {formatBDT(
+                        fee,
+                      )} delivery charge in advance with bKash, or pay the full order amount with bKash.
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
               <div className={styles.paymentGrid}>
                 {settings?.codEnabled !==
-                false ? (
+                  false &&
+                (
+                  !outsideDhaka ||
+                  settings?.bkashEnabled
+                ) ? (
                   <label
-                    className={`${styles.paymentOption} ${
+                    className={`${styles.paymentOption} ${outsideDhaka ? styles.bkashPaymentOption : ""} ${
                       payment ===
                       "COD"
-                        ? styles.paymentSelected
+                        ? `${styles.paymentSelected} ${outsideDhaka ? styles.bkashPaymentSelected : ""}`
                         : ""
                     }`}
                   >
@@ -1916,31 +1979,63 @@ export function CheckoutClient() {
                         payment ===
                         "COD"
                       }
-                      onChange={() =>
+                      onChange={() => {
                         setPayment(
                           "COD",
-                        )
-                      }
+                        );
+
+                        if (
+                          outsideDhaka
+                        ) {
+                          setPayDeliveryAdvanceNow(
+                            true,
+                          );
+                        }
+                      }}
                     />
 
-                    <span className={styles.paymentIcon}>
-                      <Banknote
-                        size={21}
-                        strokeWidth={
-                          1.5
-                        }
-                      />
-                    </span>
+                    {outsideDhaka ? (
+                      <span className={styles.bkashLogoWrap}>
+                        <Image
+                          src="/images/payments/bkash.png"
+                          alt="bKash"
+                          width={74}
+                          height={34}
+                          className={styles.bkashLogo}
+                        />
+                      </span>
+                    ) : (
+                      <span className={styles.paymentIcon}>
+                        <Banknote
+                          size={21}
+                          strokeWidth={
+                            1.5
+                          }
+                        />
+                      </span>
+                    )}
 
                     <span className={styles.paymentCopy}>
                       <strong>
-                        Cash on
-                        Delivery
+                        {outsideDhaka
+                          ? `Pay ${formatBDT(
+                              fee,
+                            )} Advance + COD`
+                          : "Cash on Delivery"}
                       </strong>
 
                       <small>
-                        Pay when your
-                        order arrives.
+                        {outsideDhaka
+                          ? `Pay ${formatBDT(
+                              fee,
+                            )} securely with bKash now. Pay the remaining ${formatBDT(
+                              Math.max(
+                                0,
+                                total -
+                                  fee,
+                              ),
+                            )} when your order arrives.`
+                          : "Pay when your order arrives."}
                       </small>
                     </span>
 
@@ -1965,11 +2060,15 @@ export function CheckoutClient() {
                         payment ===
                         "BKASH"
                       }
-                      onChange={() =>
+                      onChange={() => {
                         setPayment(
                           "BKASH",
-                        )
-                      }
+                        );
+
+                        setPayDeliveryAdvanceNow(
+                          false,
+                        );
+                      }}
                     />
 
                     <span className={styles.bkashLogoWrap}>
@@ -1984,12 +2083,17 @@ export function CheckoutClient() {
 
                     <span className={styles.paymentCopy}>
                       <strong>
-                        Pay with bKash
+                        {outsideDhaka
+                          ? "Pay Full Amount with bKash"
+                          : "Pay with bKash"}
                       </strong>
 
                       <small>
-                        Fast and secure payment
-                        through bKash.
+                        {outsideDhaka
+                          ? `Pay the full order total of ${formatBDT(
+                              total,
+                            )} securely through bKash.`
+                          : "Fast and secure payment through bKash."}
                       </small>
                     </span>
 
@@ -1998,79 +2102,12 @@ export function CheckoutClient() {
                 ) : null}
               </div>
 
-              {payment ===
-                "COD" &&
-              deliveryZone ===
-                "OUTSIDE_DHAKA" &&
-              settings?.bkashEnabled ? (
-                <label
-                  className={`${styles.paymentOption} ${styles.bkashPaymentOption} ${
-                    payDeliveryAdvanceNow
-                      ? `${styles.paymentSelected} ${styles.bkashPaymentSelected}`
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    name="payDeliveryAdvanceNow"
-                    checked={
-                      payDeliveryAdvanceNow
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      setPayDeliveryAdvanceNow(
-                        event.target
-                          .checked,
-                      )
-                    }
-                  />
-
-                  <span className={styles.bkashLogoWrap}>
-                    <Image
-                      src="/images/payments/bkash.png"
-                      alt="bKash"
-                      width={74}
-                      height={34}
-                      className={styles.bkashLogo}
-                    />
-                  </span>
-
-                  <span className={styles.paymentCopy}>
-                    <strong>
-                      Pay delivery charge now
-                    </strong>
-
-                    <small>
-                      Pay only{" "}
-                      {formatBDT(
-                        fee,
-                      )}{" "}
-                      with bKash now.
-                      The remaining{" "}
-                      {formatBDT(
-                        Math.max(
-                          0,
-                          total -
-                            fee,
-                        ),
-                      )}{" "}
-                      will stay Cash
-                      on Delivery.
-                    </small>
-                  </span>
-
-                  <span className={styles.radioMark} />
-                </label>
-              ) : null}
-
               {settings &&
               !paymentAvailable ? (
                 <div className={styles.paymentWarning}>
-                  No payment method
-                  is currently
-                  available. Please
-                  contact the store.
+                  {outsideDhaka
+                    ? "Outside Dhaka orders require bKash. The required advance or full-payment option is not currently available for this checkout."
+                    : "No payment method is currently available. Please contact the store."}
                 </div>
               ) : null}
             </section>
