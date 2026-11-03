@@ -2636,3 +2636,62 @@
       none;
   }
 }
+
+/* =========================================================
+   DESKTOP TYPOGRAPHY
+   ========================================================= */
+
+@media (min-width: 1024px) {
+  .deliveryCopy strong,
+  .advanceRequirement strong,
+  .paymentCopy strong,
+  .safeNote strong,
+  .summaryProduct a,
+  .summaryItemPrice,
+  .placeOrder,
+  .placeOrder strong {
+    font-size:
+      14px;
+  }
+
+  .deliveryCopy span,
+  .deliveryRates,
+  .advanceRequirement span,
+  .paymentCopy small,
+  .paymentWarning,
+  .safeNote span,
+  .summaryProduct small,
+  .couponLabel,
+  .couponForm button,
+  .totals > div,
+  .totals strong,
+  .summaryNote {
+    font-size:
+      13px;
+  }
+
+  .summaryHeader span,
+  .summaryHeader > strong,
+  .couponError,
+  .couponSuccess span,
+  .couponSuccess button,
+  .totalRow small {
+    font-size:
+      12px;
+  }
+
+  .couponForm input {
+    font-size:
+      14px;
+  }
+
+  .couponSuccess strong {
+    font-size:
+      13px;
+  }
+
+  .totalRow span {
+    font-size:
+      15px;
+  }
+}
