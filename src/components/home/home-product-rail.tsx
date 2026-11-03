@@ -546,9 +546,24 @@ export function HomeProductRail({
 
     /*
      * Resume automatic carousel exactly
-     * from the manually selected point.
+     * from the manually selected point,
+     * unless a desktop mouse is still
+     * hovering over the rail.
      */
-    state.animation.play();
+    const keepPausedForHover =
+      event.pointerType ===
+        "mouse" &&
+      Boolean(
+        viewport?.matches(
+          ":hover",
+        ),
+      );
+
+    if (
+      !keepPausedForHover
+    ) {
+      state.animation.play();
+    }
 
     const wasDragged =
       state.moved;
@@ -595,10 +610,23 @@ export function HomeProductRail({
       return;
     }
 
-    state.animation.play();
-
     const viewport =
       viewportRef.current;
+
+    const keepPausedForHover =
+      event.pointerType ===
+        "mouse" &&
+      Boolean(
+        viewport?.matches(
+          ":hover",
+        ),
+      );
+
+    if (
+      !keepPausedForHover
+    ) {
+      state.animation.play();
+    }
 
     if (
       viewport?.hasPointerCapture(
