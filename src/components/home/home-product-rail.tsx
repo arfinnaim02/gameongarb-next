@@ -249,6 +249,39 @@ export function HomeProductRail({
   }
 
   /* =======================================================
+     DESKTOP HOVER PAUSE
+     ======================================================= */
+
+  function handleMouseEnter() {
+    if (
+      staticRail ||
+      dragging
+    ) {
+      return;
+    }
+
+    const animation =
+      getRailAnimation();
+
+    animation?.pause();
+  }
+
+  function handleMouseLeave() {
+    if (
+      staticRail ||
+      dragging ||
+      dragRef.current
+    ) {
+      return;
+    }
+
+    const animation =
+      getRailAnimation();
+
+    animation?.play();
+  }
+
+  /* =======================================================
      POINTER DOWN
      ======================================================= */
 
@@ -631,6 +664,12 @@ export function HomeProductRail({
         role="region"
         aria-label={`${label} product carousel`}
         aria-live="off"
+        onMouseEnter={
+          handleMouseEnter
+        }
+        onMouseLeave={
+          handleMouseLeave
+        }
         onPointerDown={
           handlePointerDown
         }
