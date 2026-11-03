@@ -830,6 +830,52 @@ export function CheckoutClient() {
   }
 
   /* =======================================================
+     FIELD NAVIGATION
+     ======================================================= */
+
+  function focusCheckoutField(
+    field:
+      CheckoutField,
+  ) {
+    window.requestAnimationFrame(
+      () => {
+        const control =
+          document.querySelector<
+            HTMLInputElement |
+            HTMLTextAreaElement
+          >(
+            `[name="${field}"]`,
+          );
+
+        if (
+          !control
+        ) {
+          return;
+        }
+
+        control.scrollIntoView({
+          behavior:
+            "smooth",
+
+          block:
+            "center",
+        });
+
+        window.setTimeout(
+          () => {
+            control.focus({
+              preventScroll:
+                true,
+            });
+          },
+
+          260,
+        );
+      },
+    );
+  }
+
+  /* =======================================================
      CLIENT VALIDATION
      ======================================================= */
 
@@ -944,20 +990,44 @@ export function CheckoutClient() {
                   cart.map(
                     (
                       line,
-                    ) => ({
-                      productId:
+                    ) => {
+                      const variant =
                         line.product
-                          .id,
+                          .variants?.find(
+                            (
+                              candidate,
+                            ) =>
+                              candidate.size ===
+                                line.size &&
+                              (
+                                candidate.color ??
+                                ""
+                              )
+                                .trim()
+                                .toLowerCase() ===
+                                line.color
+                                  .trim()
+                                  .toLowerCase(),
+                          );
 
-                      size:
-                        line.size,
+                      return {
+                        productId:
+                          line.product
+                            .id,
 
-                      color:
-                        line.color,
+                        variantId:
+                          variant?.id,
 
-                      quantity:
-                        line.quantity,
-                    }),
+                        size:
+                          line.size,
+
+                        color:
+                          line.color,
+
+                        quantity:
+                          line.quantity,
+                      };
+                    },
                   ),
               }),
           },
@@ -1073,21 +1143,30 @@ export function CheckoutClient() {
         "Please complete the highlighted fields.",
       );
 
-      window.requestAnimationFrame(
-        () => {
-          document
-            .querySelector(
-              '[aria-invalid="true"]',
-            )
-            ?.scrollIntoView({
-              behavior:
-                "smooth",
+      const firstInvalidField =
+        (
+          [
+            "fullName",
+            "phone",
+            "email",
+            "address",
+          ] as CheckoutField[]
+        ).find(
+          (
+            field,
+          ) =>
+            Boolean(
+              errors[field],
+            ),
+        );
 
-              block:
-                "center",
-            });
-        },
-      );
+      if (
+        firstInvalidField
+      ) {
+        focusCheckoutField(
+          firstInvalidField,
+        );
+      }
 
       return;
     }
@@ -1247,6 +1326,26 @@ export function CheckoutClient() {
               ...serverErrors,
             }),
           );
+
+          const firstServerField =
+            fields.find(
+              (
+                field,
+              ) =>
+                Boolean(
+                  serverErrors[
+                    field
+                  ],
+                ),
+            );
+
+          if (
+            firstServerField
+          ) {
+            focusCheckoutField(
+              firstServerField,
+            );
+          }
         }
 
         setError(
