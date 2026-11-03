@@ -17814,3 +17814,138 @@ hr {
     line-height: 1.8;
   }
 }
+
+
+/* =========================================================
+   DESKTOP TYPOGRAPHY NORMALIZATION
+   Keeps mobile sizing unchanged while preventing undersized
+   storefront/admin UI text on desktop.
+   ========================================================= */
+
+@media (min-width: 1024px) {
+  /* ---------------- Storefront ---------------- */
+
+  .store-main button:not([aria-label]),
+  .store-footer button:not([aria-label]) {
+    font-size: 14px;
+  }
+
+  .store-main input,
+  .store-main select,
+  .store-main textarea,
+  .store-footer input,
+  .store-footer select,
+  .store-footer textarea {
+    font-size: 15px;
+  }
+
+  .store-main small,
+  .store-footer small {
+    font-size: 13px;
+  }
+
+  .header-search-top > div > span,
+  .header-search-section-title span {
+    font-size: 12px;
+  }
+
+  .header-search-form input {
+    font-size: 15px;
+  }
+
+  .header-search-submit,
+  .header-search-section-title button,
+  .header-search-recent button,
+  .header-search-all {
+    font-size: 13px;
+  }
+
+  .header-search-product-copy small,
+  .header-search-stock {
+    font-size: 12px;
+  }
+
+  .header-search-product-copy strong,
+  .header-search-categories span {
+    font-size: 14px;
+  }
+
+  .header-search-product-copy span,
+  .header-search-categories b,
+  .header-search-empty span {
+    font-size: 13px;
+  }
+
+  .header-search-empty strong {
+    font-size: 14px;
+  }
+
+  /* ---------------- Admin shell ---------------- */
+
+  .admin-nav-group-title,
+  .admin-header-eyebrow,
+  .admin-sidebar-brand-copy span,
+  .admin-sidebar-user-copy span,
+  .admin-header-user-copy span {
+    font-size: 12px !important;
+  }
+
+  .admin-nav-link,
+  .admin-sidebar-store-link,
+  .admin-sidebar-logout,
+  .admin-header-store-button,
+  .admin-header-logout-button {
+    font-size: 14px !important;
+  }
+
+  .admin-sidebar-brand-copy strong,
+  .admin-sidebar-user-copy strong,
+  .admin-header-user-copy strong {
+    font-size: 14px !important;
+  }
+
+  .admin-header-page-title {
+    font-size: 18px !important;
+  }
+
+  /* ---------------- Admin content ---------------- */
+
+  .admin-main button:not([aria-label]) {
+    font-size: 14px !important;
+  }
+
+  .admin-main input,
+  .admin-main select,
+  .admin-main textarea {
+    font-size: 15px !important;
+  }
+
+  .admin-main label,
+  .admin-main label > span {
+    font-size: 13px !important;
+  }
+
+  .admin-main p,
+  .admin-main small {
+    font-size: 13px !important;
+  }
+
+  .admin-main table th {
+    font-size: 12px !important;
+  }
+
+  .admin-main table td {
+    font-size: 14px !important;
+  }
+
+  .admin-main table td button:not([aria-label]),
+  .admin-main table td input,
+  .admin-main table td select {
+    font-size: 13px !important;
+  }
+
+  .admin-main table td small,
+  .admin-main table td span {
+    font-size: 12px !important;
+  }
+}
