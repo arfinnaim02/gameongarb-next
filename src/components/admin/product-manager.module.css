@@ -1199,6 +1199,48 @@
   background: #eef1ed;
 }
 
+.imageSequence {
+  position: absolute;
+
+  top: 6px;
+  left: 6px;
+
+  z-index: 2;
+
+  min-width: 24px;
+  height: 24px;
+
+  padding:
+    0 6px;
+
+  border:
+    1px solid
+    rgb(
+      255 255 255 /
+      70%
+    );
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background:
+    rgb(
+      17 20 18 /
+      88%
+    );
+
+  color: #fff;
+
+  font-size: 9px;
+
+  line-height: 1;
+
+  font-weight: 950;
+}
+
 .imagePreview img {
   object-fit: cover;
 }
@@ -1220,6 +1262,77 @@
   font: inherit;
 
   font-size: 8px;
+}
+
+.imageOrderActions {
+  margin-top: 6px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 4px;
+}
+
+.imageOrderActions button {
+  min-height: 29px;
+
+  padding:
+    0 6px;
+
+  border:
+    1px solid
+    #dfe3de;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 3px;
+
+  background:
+    #fff;
+
+  color:
+    #4f5651;
+
+  font: inherit;
+
+  font-size: 7px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.imageOrderActions button:hover:not(
+  :disabled
+) {
+  border-color:
+    #c8cec9;
+
+  background:
+    #f2f5f1;
+
+  color:
+    var(--orange);
+}
+
+.imageOrderActions button:disabled {
+  opacity:
+    .35;
+
+  cursor:
+    not-allowed;
 }
 
 .imageActions {
