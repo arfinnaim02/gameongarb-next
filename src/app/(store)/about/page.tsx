@@ -39,8 +39,10 @@ export const dynamic =
 
 export const metadata:
   Metadata = {
-  title:
-    "About Game On Garb | Sports, Fashion & Everyday Style in Bangladesh",
+  title: {
+    absolute:
+      "About Game On Garb | Sports, Fashion & Everyday Style in Bangladesh",
+  },
 
   description:
     "Discover Game On Garb, a Bangladesh-based sports and lifestyle fashion brand. Learn our story, what we offer, delivery options, contact details, and visit our Mirpur store.",
