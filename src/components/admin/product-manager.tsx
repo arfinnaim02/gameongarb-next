@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   ArrowLeft,
   Boxes,
+  ChevronLeft,
   ChevronRight,
   Copy,
   FolderOpen,
@@ -3578,6 +3579,15 @@ export function ProductManager({
                             styles.imagePreview
                           }
                         >
+                          <span
+                            className={
+                              styles.imageSequence
+                            }
+                            aria-label={`Image position ${index + 1}`}
+                          >
+                            {index + 1}
+                          </span>
+
                           <Image
                             src={
                               image.url
@@ -3627,6 +3637,111 @@ export function ProductManager({
                             )
                           }
                         />
+
+                        <div
+                          className={
+                            styles.imageOrderActions
+                          }
+                        >
+                          <button
+                            type="button"
+                            aria-label={`Move image ${index + 1} left`}
+                            title="Move left"
+                            disabled={
+                              index === 0
+                            }
+                            onClick={() =>
+                              setForm(
+                                (
+                                  current,
+                                ) => {
+                                  if (
+                                    index ===
+                                    0
+                                  ) {
+                                    return current;
+                                  }
+
+                                  const next = [
+                                    ...current.images,
+                                  ];
+
+                                  [
+                                    next[index - 1],
+                                    next[index],
+                                  ] = [
+                                    next[index],
+                                    next[index - 1],
+                                  ];
+
+                                  return {
+                                    ...current,
+
+                                    images:
+                                      next,
+                                  };
+                                },
+                              )
+                            }
+                          >
+                            <ChevronLeft
+                              size={14}
+                            />
+
+                            Left
+                          </button>
+
+                          <button
+                            type="button"
+                            aria-label={`Move image ${index + 1} right`}
+                            title="Move right"
+                            disabled={
+                              index ===
+                              form.images.length -
+                                1
+                            }
+                            onClick={() =>
+                              setForm(
+                                (
+                                  current,
+                                ) => {
+                                  if (
+                                    index >=
+                                    current.images.length -
+                                      1
+                                  ) {
+                                    return current;
+                                  }
+
+                                  const next = [
+                                    ...current.images,
+                                  ];
+
+                                  [
+                                    next[index],
+                                    next[index + 1],
+                                  ] = [
+                                    next[index + 1],
+                                    next[index],
+                                  ];
+
+                                  return {
+                                    ...current,
+
+                                    images:
+                                      next,
+                                  };
+                                },
+                              )
+                            }
+                          >
+                            Right
+
+                            <ChevronRight
+                              size={14}
+                            />
+                          </button>
+                        </div>
 
                         <div
                           className={
