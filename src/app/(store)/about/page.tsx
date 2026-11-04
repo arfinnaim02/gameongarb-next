@@ -41,11 +41,11 @@ export const metadata:
   Metadata = {
   title: {
     absolute:
-      "About Game On Garb | Sports, Fashion & Everyday Style in Bangladesh",
+      "About GameOn Garb | Sports, Fashion & Everyday Style in Bangladesh",
   },
 
   description:
-    "Discover Game On Garb, a Bangladesh-based sports and lifestyle fashion brand. Learn our story, what we offer, delivery options, contact details, and visit our Mirpur store.",
+    "Discover GameOn Garb, a Bangladesh-based sports and lifestyle fashion brand. Learn our story, what we offer, delivery options, contact details, and visit our Mirpur store.",
 
   alternates: {
     canonical:
@@ -54,10 +54,10 @@ export const metadata:
 
   openGraph: {
     title:
-      "About Game On Garb",
+      "About GameOn Garb",
 
     description:
-      "Sports, fashion and everyday essentials for people who live with energy. Discover the Game On Garb story and visit our Mirpur store.",
+      "Sports, fashion and everyday essentials for people who live with energy. Discover the GameOn Garb story and visit our Mirpur store.",
 
     url:
       "/about",
@@ -257,7 +257,7 @@ export default async function AboutPage() {
         <div className={`container ${styles.heroInner}`}>
           <div className={styles.heroCopy}>
             <span className={styles.kicker}>
-              Game On Garb
+              GameOn Garb
             </span>
 
             <h1>
@@ -267,7 +267,7 @@ export default async function AboutPage() {
             </h1>
 
             <p className={styles.heroLead}>
-              Game On Garb brings
+              GameOn Garb brings
               sports, fashion and
               everyday style together
               for people who move with
@@ -343,7 +343,7 @@ export default async function AboutPage() {
 
           <div className={styles.storyCopy}>
             <p>
-              Game On Garb is a
+              GameOn Garb is a
               Bangladesh-based sports,
               fashion and lifestyle
               brand created for people
@@ -354,7 +354,8 @@ export default async function AboutPage() {
 
             <p>
               Our collections move
-              across football jerseys,
+              across sneakers,
+              football jerseys,
               sportswear, polo shirts,
               drop-shoulder styles,
               baggy trousers and other
@@ -368,7 +369,7 @@ export default async function AboutPage() {
             <p>
               From match day to
               everyday wear, we want
-              Game On Garb to feel
+              GameOn Garb to feel
               active, confident and
               easy to choose.
             </p>
@@ -441,13 +442,14 @@ export default async function AboutPage() {
             </h2>
 
             <p>
-              Explore football
-              jerseys, sportswear,
-              polos, drop shoulders,
-              baggy trousers and
-              lifestyle pieces
-              selected for the modern
-              Bangladesh customer.
+              Explore sneakers,
+              football jerseys,
+              sportswear, polos,
+              drop shoulders, baggy
+              trousers and lifestyle
+              pieces selected for the
+              modern Bangladesh
+              customer.
             </p>
 
             <Link
@@ -463,6 +465,19 @@ export default async function AboutPage() {
           </div>
 
           <div className={styles.categoryStack}>
+            <div>
+              <strong>
+                Sneakers
+              </strong>
+
+              <span>
+                Everyday comfort,
+                street-ready style and
+                pairs built to lead the
+                rotation.
+              </span>
+            </div>
+
             <div>
               <strong>
                 Football &
@@ -608,7 +623,7 @@ export default async function AboutPage() {
         <div className={`container ${styles.contactGrid}`}>
           <div className={styles.locationPanel}>
             <span className={styles.kicker}>
-              Visit Game On Garb
+              Visit GameOn Garb
             </span>
 
             <h2>
@@ -707,7 +722,7 @@ export default async function AboutPage() {
                   </small>
 
                   <strong>
-                    Chat with Game On Garb
+                    Chat with GameOn Garb
                   </strong>
                 </div>
               </a>
@@ -715,7 +730,7 @@ export default async function AboutPage() {
 
             <div className={styles.socialBlock}>
               <small>
-                Follow Game On Garb
+                Follow GameOn Garb
               </small>
 
               <div>
@@ -756,7 +771,7 @@ export default async function AboutPage() {
 
             <h2>
               Find your next
-              Game On Garb piece.
+              GameOn Garb piece.
             </h2>
           </div>
 
