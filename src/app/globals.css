@@ -17991,6 +17991,15 @@ hr {
   line-height: 1.45;
 }
 
+.product-customization-note {
+  margin: 9px 0 0;
+  max-width: 520px;
+  color: #252925;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
 .product-customization-heading button {
   min-height: 38px;
   padding: 0 13px;
