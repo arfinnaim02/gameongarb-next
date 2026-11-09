@@ -1020,6 +1020,9 @@ export function CheckoutClient() {
 
                       quantity:
                         line.quantity,
+
+                      personalization:
+                        line.personalization,
                     }),
                   ),
               }),
