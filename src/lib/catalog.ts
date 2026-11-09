@@ -10,6 +10,10 @@ import type {
   Product as StoreProduct,
 } from "@/lib/data";
 
+import {
+  getJerseyCustomizationConfig,
+} from "@/lib/product-customization";
+
 /* =========================================================
    BASE PRODUCT TYPE
    ========================================================= */
@@ -123,6 +127,9 @@ export function toStoreProduct(
 
         priceOverride?:
           unknown;
+
+        attributes?:
+          unknown;
       }[];
 
       categories?: {
@@ -159,6 +166,11 @@ export function toStoreProduct(
         variant,
       ) =>
         variant.active,
+    );
+
+  const jerseyCustomization =
+    getJerseyCustomizationConfig(
+      variants[0]?.attributes,
     );
 
   const primaryCategory =
@@ -310,6 +322,8 @@ export function toStoreProduct(
             product.regularPrice,
           )
         : undefined,
+
+    jerseyCustomization,
 
     priceVaries,
 
