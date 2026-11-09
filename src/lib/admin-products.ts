@@ -14,6 +14,10 @@ import {
   sanitizeProductDescription,
 } from "@/lib/product-rich-text";
 
+import {
+  getJerseyCustomizationConfig,
+} from "@/lib/product-customization";
+
 /* =========================================================
    PRISMA INCLUDE
    ========================================================= */
@@ -173,6 +177,16 @@ export const productEditorSchema =
 
       salePrice:
         nullablePositiveMoney,
+
+      jerseyCustomizationEnabled:
+        z.boolean().default(false),
+
+      jerseyCustomizationPrice:
+        z.coerce
+          .number()
+          .min(0)
+          .max(5000)
+          .default(0),
 
       status:
         z.enum([
@@ -561,6 +575,12 @@ export function serializeAdminProduct(
         variant.stock <= 0,
     );
 
+  const jerseyCustomization =
+    getJerseyCustomizationConfig(
+      product.variants[0]
+        ?.attributes,
+    );
+
   const primaryImage =
     product.images.find(
       (image) =>
@@ -601,6 +621,12 @@ export function serializeAdminProduct(
             product.salePrice,
           )
         : null,
+
+    jerseyCustomizationEnabled:
+      jerseyCustomization.enabled,
+
+    jerseyCustomizationPrice:
+      jerseyCustomization.price,
 
     status:
       product.status,
