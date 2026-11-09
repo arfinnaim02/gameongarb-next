@@ -600,7 +600,7 @@ export function CheckoutClient() {
             (
               line,
             ) =>
-              `${line.product.id}:${line.size}:${line.color}:${line.quantity}`,
+              `${line.product.id}:${line.size}:${line.color}:${line.personalization?.name ?? ""}:${line.personalization?.number ?? ""}:${line.quantity}`,
           )
           .join("|"),
 
@@ -664,6 +664,9 @@ export function CheckoutClient() {
 
                         quantity:
                           line.quantity,
+
+                        personalization:
+                          line.personalization,
                       }),
                     ),
                 }),
@@ -1299,6 +1302,9 @@ export function CheckoutClient() {
 
                         quantity:
                           line.quantity,
+
+                        personalization:
+                          line.personalization,
                       };
                     },
                   ),
@@ -2188,6 +2194,7 @@ export function CheckoutClient() {
                         .id,
                       line.size,
                       line.color,
+                      line.personalization,
                     )}
                     className={styles.summaryItem}
                   >
@@ -2231,6 +2238,20 @@ export function CheckoutClient() {
                           ? ` · ${line.size}`
                           : ""}
                       </small>
+
+                      {line.personalization ? (
+                        <small>
+                          {
+                            line.personalization
+                              .name
+                          }
+                          {" · #"}
+                          {
+                            line.personalization
+                              .number
+                          }
+                        </small>
+                      ) : null}
                     </div>
 
                     <strong className={styles.summaryItemPrice}>
