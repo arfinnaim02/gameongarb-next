@@ -88,6 +88,12 @@ import {
   processNotificationDelivery,
 } from "@/lib/notifications/service";
 
+import {
+  getJerseyCustomizationConfig,
+  normalizePersonalization,
+  personalizedOrderItemName,
+} from "@/lib/product-customization";
+
 
 /* =========================================================
 
@@ -267,6 +273,24 @@ const schema =
                 .min(1)
 
                 .max(10),
+
+            personalization:
+
+              z
+
+                .object({
+
+                  name:
+
+                    z.string(),
+
+                  number:
+
+                    z.string(),
+
+                })
+
+                .optional(),
 
           }),
 
@@ -906,11 +930,41 @@ export async function POST(
 
 
 
+          const personalization =
+            normalizePersonalization(
+              item.personalization,
+            );
+
+          const customization =
+            getJerseyCustomizationConfig(
+              variant.attributes,
+            );
+
+          if (
+            personalization &&
+            !customization.enabled
+          ) {
+            throw new Error(
+              "Jersey customization is not available for this product.",
+            );
+          }
+
+          const basePrice =
+            Number(
+              variant.priceOverride ??
+                variant.product
+                  .salePrice ??
+                variant.product
+                  .regularPrice,
+            );
+
           return {
 
             item,
 
             variant,
+
+            personalization,
 
 
 
@@ -918,19 +972,12 @@ export async function POST(
 
               toPaisa(
 
-                Number(
-
-                  variant.priceOverride ??
-
-                    variant.product
-
-                      .salePrice ??
-
-                    variant.product
-
-                      .regularPrice,
-
-                ),
+                basePrice +
+                  (
+                    personalization
+                      ? customization.price
+                      : 0
+                  ),
 
               ),
 
@@ -1954,11 +2001,17 @@ export async function POST(
 
                       name:
 
-                        entry.variant
+                        personalizedOrderItemName(
 
-                          .product
+                          entry.variant
 
-                          .name,
+                            .product
+
+                            .name,
+
+                          entry.personalization,
+
+                        ),
 
 
 
