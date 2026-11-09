@@ -52,6 +52,10 @@ import {
   trackViewContent,
 } from "@/lib/tracking";
 
+import {
+  normalizePersonalization,
+} from "@/lib/product-customization";
+
 /* =========================================================
    CONSTANTS
    ========================================================= */
@@ -181,6 +185,35 @@ export function ProductDetail({
     quantity,
     setQuantity,
   ] = useState(1);
+
+  const [
+    personalize,
+    setPersonalize,
+  ] = useState(false);
+
+  const [
+    jerseyName,
+    setJerseyName,
+  ] = useState("");
+
+  const [
+    jerseyNumber,
+    setJerseyNumber,
+  ] = useState("");
+
+  const [
+    personalizationError,
+    setPersonalizationError,
+  ] = useState("");
+
+  const customization =
+    product.jerseyCustomization;
+
+  const customizationFee =
+    personalize &&
+    customization?.enabled
+      ? customization.price
+      : 0;
 
   /* =======================================================
      GALLERY
@@ -790,12 +823,53 @@ export function ProductDetail({
       return;
     }
 
+    let personalization;
+
+    if (
+      personalize &&
+      customization?.enabled
+    ) {
+      try {
+        personalization =
+          normalizePersonalization({
+            name:
+              jerseyName,
+            number:
+              jerseyNumber,
+          });
+
+        if (!personalization) {
+          setPersonalizationError(
+            "Enter the jersey name and number.",
+          );
+
+          return;
+        }
+      } catch (
+        error
+      ) {
+        setPersonalizationError(
+          error instanceof
+            Error
+            ? error.message
+            : "Check the jersey name and number.",
+        );
+
+        return;
+      }
+    }
+
+    setPersonalizationError(
+      "",
+    );
+
     add(
       {
         ...product,
 
         price:
-          selectedPrice,
+          selectedPrice +
+          customizationFee,
       },
 
       size,
@@ -803,6 +877,9 @@ export function ProductDetail({
       color,
 
       quantity,
+
+      personalization ??
+        undefined,
     );
   }
 
@@ -1290,6 +1367,144 @@ export function ProductDetail({
                 }
               />
             ) : null}
+            {customization?.enabled ? (
+              <div className="product-customization">
+                <div className="product-customization-heading">
+                  <div>
+                    <strong>
+                      Personalize Your Jersey
+                    </strong>
+
+                    <span>
+                      Add your name and number to the back
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={
+                      personalize
+                        ? "is-active"
+                        : ""
+                    }
+                    onClick={() => {
+                      setPersonalize(
+                        (
+                          current,
+                        ) =>
+                          !current,
+                      );
+
+                      setPersonalizationError(
+                        "",
+                      );
+                    }}
+                  >
+                    {personalize
+                      ? "Remove"
+                      : `Add +${formatBDT(
+                          customization.price,
+                        )}`}
+                  </button>
+                </div>
+
+                {personalize ? (
+                  <div className="product-customization-fields">
+                    <label>
+                      <span>
+                        Name on Jersey
+                      </span>
+
+                      <input
+                        type="text"
+                        value={
+                          jerseyName
+                        }
+                        maxLength={
+                          15
+                        }
+                        autoComplete="off"
+                        placeholder="MESSI"
+                        onChange={(
+                          event,
+                        ) => {
+                          setJerseyName(
+                            event.target.value,
+                          );
+
+                          setPersonalizationError(
+                            "",
+                          );
+                        }}
+                      />
+                    </label>
+
+                    <label>
+                      <span>
+                        Jersey Number
+                      </span>
+
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={
+                          jerseyNumber
+                        }
+                        maxLength={
+                          2
+                        }
+                        autoComplete="off"
+                        placeholder="10"
+                        onChange={(
+                          event,
+                        ) => {
+                          setJerseyNumber(
+                            event.target.value
+                              .replace(
+                                /\D/g,
+                                "",
+                              )
+                              .slice(
+                                0,
+                                2,
+                              ),
+                          );
+
+                          setPersonalizationError(
+                            "",
+                          );
+                        }}
+                      />
+                    </label>
+
+                    <div className="product-customization-summary">
+                      <span>
+                        Customization
+                      </span>
+
+                      <strong>
+                        +
+                        {formatBDT(
+                          customization.price,
+                        )}
+                      </strong>
+                    </div>
+
+                    {personalizationError ? (
+                      <p
+                        className="product-customization-error"
+                        role="alert"
+                      >
+                        {
+                          personalizationError
+                        }
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {/* =============================================
                 QUANTITY + STOCK
                 ============================================= */}
@@ -1394,7 +1609,10 @@ export function ProductDetail({
 
               <strong>
                 {formatBDT(
-                  selectedPrice *
+                  (
+                    selectedPrice +
+                    customizationFee
+                  ) *
                     quantity,
                 )}
               </strong>
