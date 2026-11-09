@@ -3,6 +3,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/data";
 
+import type {
+  JerseyPersonalization,
+} from "@/lib/product-customization";
+
+import {
+  personalizationKey,
+} from "@/lib/product-customization";
+
 import {
   trackAddToCart,
 } from "@/lib/tracking";
@@ -12,6 +20,7 @@ export type CartLine = {
   size: string;
   color: string;
   quantity: number;
+  personalization?: JerseyPersonalization;
 };
 type StoreContextValue = {
   cart: CartLine[];
@@ -30,6 +39,9 @@ type StoreContextValue = {
 
     quantity?:
       number,
+
+    personalization?:
+      JerseyPersonalization,
   ) => void;
   remove: (key: string) => void;
   setQuantity: (key: string, q: number) => void;
@@ -80,6 +92,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         quantity =
           1,
+
+        personalization,
       ) => {
         const requestedQuantity =
           Math.max(
@@ -117,6 +131,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             product.id,
             size,
             color,
+            personalization,
           );
 
         const existingIndex =
@@ -131,6 +146,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 line.size,
 
                 line.color,
+
+                line.personalization,
               ) ===
               key,
           );
@@ -174,6 +191,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                   color,
                   quantity:
                     addedQuantity,
+
+                  personalization,
                 },
               ]
             : cart.map(
@@ -227,12 +246,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       },
       remove: (key: string) =>
         setCart((v) =>
-          v.filter((x) => cartKey(x.product.id, x.size, x.color) !== key),
+          v.filter((x) =>
+            cartKey(
+              x.product.id,
+              x.size,
+              x.color,
+              x.personalization,
+            ) !== key,
+          ),
         ),
       setQuantity: (key: string, q: number) =>
         setCart((v) =>
           v.map((x) => {
-            if (cartKey(x.product.id, x.size, x.color) !== key) return x;
+            if (
+              cartKey(
+                x.product.id,
+                x.size,
+                x.color,
+                x.personalization,
+              ) !== key
+            ) {
+              return x;
+            }
             const stock =
               x.product.variants?.find(
                 (
@@ -289,8 +324,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
   );
 }
-export function cartKey(productId: string, size: string, color: string) {
-  return `${productId}::${size}::${color}`;
+export function cartKey(
+  productId: string,
+  size: string,
+  color: string,
+  personalization?: JerseyPersonalization,
+) {
+  return `${productId}::${size}::${color}::${personalizationKey(
+    personalization,
+  )}`;
 }
 export function useStore() {
   const v = useContext(StoreContext);
