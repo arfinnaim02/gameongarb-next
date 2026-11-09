@@ -1380,7 +1380,7 @@ export function ProductDetail({
                     </span>
 
                     <p className="product-customization-note">
-                      বি.দ্র.: জার্সির পিছনে আগে থেকে কোনো নাম বা নম্বর থাকে না। নাম ও নম্বর দিতে চাইলে নিচের বক্সে লিখুন।
+                      বি.দ্র.: জার্সির পিছনে আগে থেকে কোনো নাম বা নম্বর থাকে না। নাম ও নম্বর দিতে চাইলে পাশের বাটনে ক্লিক করুন।
                     </p>
                   </div>
 
@@ -1405,8 +1405,8 @@ export function ProductDetail({
                     }}
                   >
                     {personalize
-                      ? "Remove"
-                      : `Add +${formatBDT(
+                      ? "বাদ দিন"
+                      : `নাম ও নম্বর যোগ করুন +${formatBDT(
                           customization.price,
                         )}`}
                   </button>
