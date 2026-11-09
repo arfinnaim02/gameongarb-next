@@ -584,6 +584,7 @@ export function CartClient({
                         .id,
                       line.size,
                       line.color,
+                      line.personalization,
                     );
 
                   const stock =
@@ -718,6 +719,33 @@ export function CartClient({
                             </span>
                           ) : null}
                         </div>
+
+                        {line.personalization ? (
+                          <div className={styles.variantRow}>
+                            <span>
+                              Jersey Name
+
+                              <strong>
+                                {
+                                  line.personalization
+                                    .name
+                                }
+                              </strong>
+                            </span>
+
+                            <span>
+                              Number
+
+                              <strong>
+                                #
+                                {
+                                  line.personalization
+                                    .number
+                                }
+                              </strong>
+                            </span>
+                          </div>
+                        ) : null}
 
                         {/* =================================
                             STOCK
