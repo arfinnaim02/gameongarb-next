@@ -114,6 +114,12 @@ type ProductFormState = {
   salePrice:
     string;
 
+  jerseyCustomizationEnabled:
+    boolean;
+
+  jerseyCustomizationPrice:
+    string;
+
   categoryId:
     string;
 
@@ -453,6 +459,12 @@ function emptyForm(
     salePrice:
       "",
 
+    jerseyCustomizationEnabled:
+      false,
+
+    jerseyCustomizationPrice:
+      "250",
+
     categoryId,
 
     sizeChartId:
@@ -515,6 +527,15 @@ function productToForm(
         : String(
             product.salePrice,
           ),
+
+    jerseyCustomizationEnabled:
+      product.jerseyCustomizationEnabled,
+
+    jerseyCustomizationPrice:
+      String(
+        product.jerseyCustomizationPrice ||
+          250,
+      ),
 
     categoryId:
       product.categoryId,
@@ -598,6 +619,16 @@ function formPayload(
             form.salePrice,
           )
         : null,
+
+    jerseyCustomizationEnabled:
+      form.jerseyCustomizationEnabled,
+
+    jerseyCustomizationPrice:
+      form.jerseyCustomizationEnabled
+        ? Number(
+            form.jerseyCustomizationPrice,
+          )
+        : 0,
 
     categoryId:
       form.categoryId,
@@ -3254,6 +3285,71 @@ export function ProductManager({
                               event
                                 .target
                                 .value,
+                          }),
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label
+                    className={
+                      styles.checkbox
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={
+                        form.jerseyCustomizationEnabled
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            jerseyCustomizationEnabled:
+                              event.target.checked,
+                          }),
+                        )
+                      }
+                    />
+
+                    Allow Jersey Name & Number
+                  </label>
+
+                  <label
+                    className={
+                      styles.field
+                    }
+                  >
+                    <span>
+                      Customization Price
+                    </span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="5000"
+                      value={
+                        form.jerseyCustomizationPrice
+                      }
+                      disabled={
+                        !form.jerseyCustomizationEnabled
+                      }
+                      onChange={(
+                        event,
+                      ) =>
+                        setForm(
+                          (
+                            current,
+                          ) => ({
+                            ...current,
+
+                            jerseyCustomizationPrice:
+                              event.target.value,
                           }),
                         )
                       }
