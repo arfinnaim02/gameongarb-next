@@ -202,6 +202,7 @@ export function CartDrawer({
                           .id,
                         line.size,
                         line.color,
+                        line.personalization,
                       );
 
                     const lineTotal =
@@ -284,6 +285,27 @@ export function CartDrawer({
                                   </>
                                 ) : null}
                               </span>
+
+                              {line.personalization ? (
+                                <span className="cart-drawer-variant">
+                                  Name:{" "}
+                                  <b>
+                                    {
+                                      line.personalization
+                                        .name
+                                    }
+                                  </b>
+                                  {" · "}
+                                  Number:{" "}
+                                  <b>
+                                    #
+                                    {
+                                      line.personalization
+                                        .number
+                                    }
+                                  </b>
+                                </span>
+                              ) : null}
 
                               <span className="cart-drawer-unit-price">
                                 {formatBDT(
