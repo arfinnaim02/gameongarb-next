@@ -76,6 +76,12 @@ export type AdminProductRecord = {
   salePrice:
     number | null;
 
+  jerseyCustomizationEnabled:
+    boolean;
+
+  jerseyCustomizationPrice:
+    number;
+
   status:
     | "DRAFT"
     | "ACTIVE"
