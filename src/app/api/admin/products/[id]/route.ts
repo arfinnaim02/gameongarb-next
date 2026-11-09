@@ -23,6 +23,10 @@ import {
 } from "@/lib/business";
 
 import {
+  withJerseyCustomizationConfig,
+} from "@/lib/product-customization";
+
+import {
   adminProductInclude,
   normalizeProductImages,
   productEditorSchema,
@@ -487,6 +491,18 @@ export async function PATCH(
                 priceOverride:
                   incoming.priceOverride,
 
+                attributes:
+                  withJerseyCustomizationConfig(
+                    current.attributes,
+                    {
+                      enabled:
+                        input.jerseyCustomizationEnabled,
+
+                      price:
+                        input.jerseyCustomizationPrice,
+                    },
+                  ),
+
                 stock:
                   incoming.stock,
 
@@ -537,6 +553,18 @@ export async function PATCH(
 
                   priceOverride:
                     variant.priceOverride,
+
+                  attributes:
+                    withJerseyCustomizationConfig(
+                      undefined,
+                      {
+                        enabled:
+                          input.jerseyCustomizationEnabled,
+
+                        price:
+                          input.jerseyCustomizationPrice,
+                      },
+                    ),
 
                   stock:
                     variant.stock,
