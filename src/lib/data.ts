@@ -36,6 +36,11 @@ export type Product = {
 
   oldPrice?: number;
 
+  jerseyCustomization?: {
+    enabled: boolean;
+    price: number;
+  };
+
   /*
    * True when active variants do not
    * all use the same selling price.
