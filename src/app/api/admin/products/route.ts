@@ -30,6 +30,10 @@ import {
 } from "@/lib/business";
 
 import {
+  withJerseyCustomizationConfig,
+} from "@/lib/product-customization";
+
+import {
   db,
 } from "@/lib/db";
 
@@ -421,6 +425,18 @@ export async function POST(
 
                         priceOverride:
                           variant.priceOverride,
+
+                        attributes:
+                          withJerseyCustomizationConfig(
+                            undefined,
+                            {
+                              enabled:
+                                input.jerseyCustomizationEnabled,
+
+                              price:
+                                input.jerseyCustomizationPrice,
+                            },
+                          ),
 
                         stock:
                           variant.stock,
