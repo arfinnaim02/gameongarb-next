@@ -1378,6 +1378,10 @@ export function ProductDetail({
                     <span>
                       Add your name and number to the back
                     </span>
+
+                    <p className="product-customization-note">
+                      বি.দ্র.: জার্সির পিছনে আগে থেকে কোনো নাম বা নম্বর থাকে না। নাম ও নম্বর দিতে চাইলে নিচের বক্সে লিখুন।
+                    </p>
                   </div>
 
                   <button
