@@ -533,8 +533,9 @@ function productToForm(
 
     jerseyCustomizationPrice:
       String(
-        product.jerseyCustomizationPrice ||
-          250,
+        product.jerseyCustomizationEnabled
+          ? product.jerseyCustomizationPrice
+          : 250,
       ),
 
     categoryId:
