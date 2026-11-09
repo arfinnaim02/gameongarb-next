@@ -16,6 +16,11 @@ import {
   detectDeliveryZone,
 } from "@/lib/business";
 
+import {
+  getJerseyCustomizationConfig,
+  normalizePersonalization,
+} from "@/lib/product-customization";
+
 /* =========================================================
    VALIDATION
    ========================================================= */
@@ -54,6 +59,17 @@ const schema =
                 .number()
                 .int()
                 .positive(),
+
+            personalization:
+              z
+                .object({
+                  name:
+                    z.string(),
+
+                  number:
+                    z.string(),
+                })
+                .optional(),
           }),
         )
         .min(1),
@@ -259,13 +275,42 @@ export async function POST(
             );
           }
 
-          const lineTotal =
+          const basePrice =
             Number(
               variant.priceOverride ??
                 variant.product
                   .salePrice ??
                 variant.product
                   .regularPrice,
+            );
+
+          const personalization =
+            normalizePersonalization(
+              item.personalization,
+            );
+
+          const customization =
+            getJerseyCustomizationConfig(
+              variant.attributes,
+            );
+
+          if (
+            personalization &&
+            !customization.enabled
+          ) {
+            throw new Error(
+              "Jersey customization is not available for this product.",
+            );
+          }
+
+          const lineTotal =
+            (
+              basePrice +
+              (
+                personalization
+                  ? customization.price
+                  : 0
+              )
             ) *
             item.quantity;
 
