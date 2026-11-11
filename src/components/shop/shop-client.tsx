@@ -11,6 +11,7 @@ import type {
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -1080,6 +1081,16 @@ export function ShopClient({
   const searchParams =
     useSearchParams();
 
+  const resultsRef =
+    useRef<HTMLElement | null>(
+      null,
+    );
+
+  const lastAutoScrolledCategory =
+    useRef<string | null>(
+      null,
+    );
+
   /* =======================================================
      APPLIED URL STATE
      ======================================================= */
@@ -1136,6 +1147,64 @@ export function ShopClient({
       ) ===
       "1",
   };
+
+  /* =======================================================
+     CATEGORY LANDING SCROLL
+
+     Campaign/category links such as
+     /shop?category=sneakers should land
+     directly on the relevant product results.
+     Plain /shop keeps its normal top-of-page
+     experience.
+     ======================================================= */
+
+  useEffect(() => {
+    const category =
+      appliedFilters.category;
+
+    if (
+      category ===
+        "all" ||
+      lastAutoScrolledCategory
+        .current ===
+        category
+    ) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          const target =
+            resultsRef.current;
+
+          if (!target) {
+            return;
+          }
+
+          lastAutoScrolledCategory.current =
+            category;
+
+          target.scrollIntoView({
+            behavior:
+              "smooth",
+
+            block:
+              "start",
+          });
+        },
+
+        120,
+      );
+
+    return () => {
+      window.clearTimeout(
+        timer,
+      );
+    };
+  }, [
+    appliedFilters.category,
+  ]);
 
   /* =======================================================
      LOCAL UI STATE
@@ -3437,7 +3506,13 @@ export function ShopClient({
            FILTERED / SEARCH RESULTS
            ================================================= */
 
-        <section className={`container ${styles.results}`}>
+        <section
+          ref={
+            resultsRef
+          }
+          id="shop-products"
+          className={`container ${styles.results}`}
+        >
           <div className={styles.resultsHeading}>
             <div>
               <span>
