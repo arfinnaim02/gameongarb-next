@@ -7935,8 +7935,38 @@ span {
    ========================================================= */
 
 @media (max-width: 700px) {
+  /*
+   * Mobile storefront viewport guard.
+   *
+   * Some fixed / horizontally scrollable shop controls can
+   * extend beyond the layout width on narrow browsers. Keep
+   * the storefront shell pinned to the real viewport without
+   * changing desktop sizing or the intentional horizontal
+   * scrolling inside category/navigation rows.
+   */
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   body {
     padding-bottom: 64px;
+  }
+
+  .store-main,
+  .premium-shop-page,
+  .store-header,
+  .announcement-bar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .store-main,
+  .premium-shop-page {
+    min-width: 0;
+    overflow-x: clip;
   }
 
   .container,
