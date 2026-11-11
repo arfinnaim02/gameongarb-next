@@ -1621,6 +1621,9 @@ span {
    ========================================================= */
 
 .results {
+  scroll-margin-top:
+    96px;
+
   padding-top:
     30px;
 
@@ -3416,6 +3419,9 @@ input {
   }
 
   .results {
+    scroll-margin-top:
+      78px;
+
     padding-top:
       23px;
 
