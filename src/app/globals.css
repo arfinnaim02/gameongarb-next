@@ -18887,6 +18887,12 @@ hr {
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.home-review-rail-viewport::-webkit-scrollbar {
+  display: none;
 }
 
 .home-review-rail.is-dragging
@@ -18986,17 +18992,3 @@ hr {
   }
 }
 
-@media (
-  prefers-reduced-motion:
-    reduce
-) {
-  .home-review-rail-track {
-    animation:
-      none !important;
-  }
-
-  .home-review-rail-viewport {
-    overflow-x:
-      auto;
-  }
-}
