@@ -31,6 +31,30 @@ export default async function StoreLayout({
         getNavigationCategories(),
     );
 
+  const reviewAggregate =
+    await withDatabaseRetry(
+      () =>
+        db.review.aggregate({
+          where: {
+            status:
+              "APPROVED",
+
+            approved:
+              true,
+          },
+
+          _avg: {
+            rating:
+              true,
+          },
+
+          _count: {
+            _all:
+              true,
+          },
+        }),
+    );
+
   const settingsRows =
     await withDatabaseRetry(
       () =>
@@ -103,6 +127,15 @@ export default async function StoreLayout({
         settings={
           settings
         }
+
+        reviewRating={{
+          average:
+            reviewAggregate._avg.rating ??
+            0,
+
+          count:
+            reviewAggregate._count._all,
+        }}
       >
         {unavailable ? (
         <section className="store-maintenance">
