@@ -49,6 +49,14 @@ type StoreFooterProps = {
 
   navCategories:
     NavCategory[];
+
+  reviewRating: {
+    average:
+      number;
+
+    count:
+      number;
+  };
 };
 
 /* =========================================================
@@ -200,6 +208,7 @@ async function readResponse(
 export function StoreFooter({
   settings,
   navCategories,
+  reviewRating,
 }: StoreFooterProps) {
   const [
     email,
@@ -341,6 +350,47 @@ export function StoreFooter({
             Experience The
             Thrill.
           </span>
+
+          <div className="store-footer-rating">
+            <div className="store-footer-rating-stars">
+              ★★★★★
+            </div>
+
+            <div className="store-footer-rating-copy">
+              <strong>
+                {
+                  reviewRating.count >
+                  0
+                    ? reviewRating.average.toFixed(
+                        1,
+                      )
+                    : "0.0"
+                }{" "}
+                / 5
+              </strong>
+
+              <span>
+                {
+                  reviewRating.count
+                }{" "}
+                approved review
+                {reviewRating.count ===
+                1
+                  ? ""
+                  : "s"}
+              </span>
+            </div>
+
+            <div className="store-footer-rating-actions">
+              <Link href="/reviews">
+                Read Reviews
+              </Link>
+
+              <Link href="/reviews#write-review">
+                Write a Review
+              </Link>
+            </div>
+          </div>
 
           <div className="store-footer-contact-box">
             <div className="store-footer-contact-list">
@@ -514,6 +564,10 @@ export function StoreFooter({
 
           <Link href="/blog">
             Blog
+          </Link>
+
+          <Link href="/reviews">
+            Customer Reviews
           </Link>
 
           <Link href="/privacy-policy">
