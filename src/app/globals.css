@@ -18169,6 +18169,25 @@ hr {
   gap: 14px;
 }
 
+.home-reviews-empty {
+  padding: 28px;
+  border: 1px dashed #d9ddda;
+  background: #fafbf9;
+  text-align: center;
+}
+
+.home-reviews-empty strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.home-reviews-empty p {
+  margin: 6px 0 0;
+  color: #777d78;
+  font-size: 13px;
+}
+
 .customer-review-card {
   min-width: 0;
   overflow: hidden;
