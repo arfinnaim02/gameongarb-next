@@ -18826,6 +18826,9 @@ hr {
     display: none;
   }
 
+  .reviews-list
+  .customer-review-card,
+  .product-reviews-grid
   .customer-review-card {
     flex: 0 0 86%;
     scroll-snap-align: start;
@@ -18865,5 +18868,135 @@ hr {
 
   .store-footer-rating {
     width: 100%;
+  }
+}
+
+
+/* =========================================================
+   HOMEPAGE CUSTOMER REVIEW RAIL
+   Four cards visible on desktop, seamless continuous motion.
+   ========================================================= */
+
+.home-review-rail {
+  --review-rail-gap: 14px;
+  min-width: 0;
+}
+
+.home-review-rail-viewport {
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.home-review-rail.is-dragging
+.home-review-rail-viewport {
+  cursor: grabbing;
+}
+
+.home-review-rail-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation:
+    homeReviewRailMove
+    var(--review-rail-duration)
+    linear
+    infinite;
+}
+
+.home-review-rail.is-static
+.home-review-rail-track {
+  animation: none;
+}
+
+.home-review-rail-group {
+  display: flex;
+  gap: var(--review-rail-gap);
+  padding-right: var(--review-rail-gap);
+}
+
+.home-review-rail-item {
+  width:
+    calc(
+      (
+        min(
+          var(--container),
+          calc(100vw - 48px)
+        )
+        -
+        (
+          var(--review-rail-gap) *
+          3
+        )
+      )
+      /
+      4
+    );
+
+  flex: 0 0 auto;
+}
+
+.home-review-rail-item
+.customer-review-card {
+  height: 100%;
+}
+
+@keyframes homeReviewRailMove {
+  from {
+    transform:
+      translateX(0);
+  }
+
+  to {
+    transform:
+      translateX(-50%);
+  }
+}
+
+@media (max-width: 1050px) {
+  .home-review-rail-item {
+    width:
+      calc(
+        (
+          min(
+            var(--container),
+            calc(100vw - 28px)
+          )
+          -
+          var(--review-rail-gap)
+        )
+        /
+        2
+      );
+  }
+}
+
+@media (max-width: 700px) {
+  .home-review-rail {
+    --review-rail-gap: 10px;
+  }
+
+  .home-review-rail-item {
+    width:
+      calc(
+        86vw -
+        24px
+      );
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+    reduce
+) {
+  .home-review-rail-track {
+    animation:
+      none !important;
+  }
+
+  .home-review-rail-viewport {
+    overflow-x:
+      auto;
   }
 }
