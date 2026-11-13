@@ -12,11 +12,19 @@ import { PromotionPopup } from "@/components/home/promotion-popup";
 import { Section } from "@/components/home/section";
 
 import {
+  ReviewCard,
+} from "@/components/reviews/review-card";
+
+import {
   getCategoryTree,
   getProducts,
 } from "@/lib/catalog";
 
 import { db } from "@/lib/db";
+
+import {
+  serializePublicReview,
+} from "@/lib/reviews";
 
 export const dynamic =
   "force-dynamic";
@@ -27,6 +35,7 @@ export default async function Home() {
     products,
     categories,
     promotionSetting,
+    customerReviews,
   ] = await Promise.all([
     db.homepageSection.findMany({
       where: {
@@ -60,6 +69,63 @@ export default async function Home() {
       where: {
         key:
           "homepage_promotion_popup",
+      },
+    }),
+
+    db.review.findMany({
+      where: {
+        status:
+          "APPROVED",
+
+        approved:
+          true,
+      },
+
+      orderBy: [
+        {
+          featured:
+            "desc",
+        },
+
+        {
+          sortOrder:
+            "asc",
+        },
+
+        {
+          createdAt:
+            "desc",
+        },
+      ],
+
+      take:
+        6,
+
+      include: {
+        product: {
+          select: {
+            name:
+              true,
+
+            slug:
+              true,
+          },
+        },
+
+        images: {
+          orderBy: {
+            sortOrder:
+              "asc",
+          },
+
+          select: {
+            id:
+              true,
+
+            url:
+              true,
+          },
+        },
       },
     }),
   ]);
@@ -421,6 +487,56 @@ export default async function Home() {
       ) : (
         <EmptyHomepage />
       )}
+
+      {customerReviews.length >
+      0 ? (
+        <section className="home-reviews-section">
+          <div className="container">
+            <div className="home-reviews-heading">
+              <div>
+                <span className="eyebrow">
+                  Customer Stories
+                </span>
+
+                <h2 className="section-title">
+                  Loved by Our Customers
+                </h2>
+              </div>
+
+              <Link
+                href="/reviews"
+                className="home-view-all"
+              >
+                Read All Reviews
+
+                <span aria-hidden="true">
+                  ↗
+                </span>
+              </Link>
+            </div>
+
+            <div className="home-reviews-grid">
+              {customerReviews.map(
+                (
+                  review,
+                ) => (
+                  <ReviewCard
+                    key={
+                      review.id
+                    }
+                    review={
+                      serializePublicReview(
+                        review,
+                      )
+                    }
+                    compact
+                  />
+                ),
+              )}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
