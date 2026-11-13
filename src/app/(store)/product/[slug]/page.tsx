@@ -21,9 +21,17 @@ import {
 } from "@/components/product/product-detail";
 
 import {
+  ReviewCard,
+} from "@/components/reviews/review-card";
+
+import {
   getProduct,
   getProducts,
 } from "@/lib/catalog";
+
+import {
+  db,
+} from "@/lib/db";
 
 import {
   toProductDescriptionHtml,
@@ -32,6 +40,10 @@ import {
 import {
   serializePublicSizeChart,
 } from "@/lib/size-charts";
+
+import {
+  serializePublicReview,
+} from "@/lib/reviews";
 
 export const dynamic =
   "force-dynamic";
@@ -70,6 +82,62 @@ export async function generateMetadata({
     raw,
   } =
     result;
+
+  const productReviews =
+    await db.review.findMany({
+      where: {
+        productId:
+          product.id,
+
+        status:
+          "APPROVED",
+
+        approved:
+          true,
+      },
+
+      orderBy: [
+        {
+          featured:
+            "desc",
+        },
+
+        {
+          createdAt:
+            "desc",
+        },
+      ],
+
+      take:
+        6,
+
+      include: {
+        product: {
+          select: {
+            name:
+              true,
+
+            slug:
+              true,
+          },
+        },
+
+        images: {
+          orderBy: {
+            sortOrder:
+              "asc",
+          },
+
+          select: {
+            id:
+              true,
+
+            url:
+              true,
+          },
+        },
+      },
+    });
 
   const description =
     raw.seoDescription ??
@@ -387,6 +455,56 @@ export default async function ProductPage({
           sizeChart
         }
       />
+
+      {productReviews.length >
+      0 ? (
+        <section className="product-reviews-section">
+          <div className="container">
+            <div className="product-reviews-heading">
+              <div>
+                <span className="eyebrow">
+                  Customer Reviews
+                </span>
+
+                <h2 className="section-title">
+                  What Customers Say
+                </h2>
+              </div>
+
+              <Link
+                href="/reviews"
+                className="home-view-all"
+              >
+                View All
+
+                <span aria-hidden="true">
+                  ↗
+                </span>
+              </Link>
+            </div>
+
+            <div className="product-reviews-grid">
+              {productReviews.map(
+                (
+                  review,
+                ) => (
+                  <ReviewCard
+                    key={
+                      review.id
+                    }
+                    review={
+                      serializePublicReview(
+                        review,
+                      )
+                    }
+                    compact
+                  />
+                ),
+              )}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* ===================================================
           PRODUCT RECOMMENDATIONS
