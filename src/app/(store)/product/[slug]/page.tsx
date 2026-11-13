@@ -83,62 +83,6 @@ export async function generateMetadata({
   } =
     result;
 
-  const productReviews =
-    await db.review.findMany({
-      where: {
-        productId:
-          product.id,
-
-        status:
-          "APPROVED",
-
-        approved:
-          true,
-      },
-
-      orderBy: [
-        {
-          featured:
-            "desc",
-        },
-
-        {
-          createdAt:
-            "desc",
-        },
-      ],
-
-      take:
-        6,
-
-      include: {
-        product: {
-          select: {
-            name:
-              true,
-
-            slug:
-              true,
-          },
-        },
-
-        images: {
-          orderBy: {
-            sortOrder:
-              "asc",
-          },
-
-          select: {
-            id:
-              true,
-
-            url:
-              true,
-          },
-        },
-      },
-    });
-
   const description =
     raw.seoDescription ??
     raw.shortDescription ??
@@ -220,6 +164,62 @@ export default async function ProductPage({
     raw,
   } =
     result;
+
+  const productReviews =
+    await db.review.findMany({
+      where: {
+        productId:
+          product.id,
+
+        status:
+          "APPROVED",
+
+        approved:
+          true,
+      },
+
+      orderBy: [
+        {
+          featured:
+            "desc",
+        },
+
+        {
+          createdAt:
+            "desc",
+        },
+      ],
+
+      take:
+        6,
+
+      include: {
+        product: {
+          select: {
+            name:
+              true,
+
+            slug:
+              true,
+          },
+        },
+
+        images: {
+          orderBy: {
+            sortOrder:
+              "asc",
+          },
+
+          select: {
+            id:
+              true,
+
+            url:
+              true,
+          },
+        },
+      },
+    });
 
   /* =======================================================
      SIZE CHART
