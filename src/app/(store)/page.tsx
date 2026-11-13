@@ -12,8 +12,8 @@ import { PromotionPopup } from "@/components/home/promotion-popup";
 import { Section } from "@/components/home/section";
 
 import {
-  ReviewCard,
-} from "@/components/reviews/review-card";
+  HomeReviewRail,
+} from "@/components/reviews/home-review-rail";
 
 import {
   getCategoryTree,
@@ -99,7 +99,7 @@ export default async function Home() {
       ],
 
       take:
-        6,
+        12,
 
       include: {
         product: {
@@ -518,25 +518,13 @@ export default async function Home() {
 
           {customerReviews.length >
           0 ? (
-            <div className="home-reviews-grid">
-              {customerReviews.map(
-                (
-                  review,
-                ) => (
-                  <ReviewCard
-                    key={
-                      review.id
-                    }
-                    review={
-                      serializePublicReview(
-                        review,
-                      )
-                    }
-                    compact
-                  />
-                ),
-              )}
-            </div>
+            <HomeReviewRail
+              reviews={
+                customerReviews.map(
+                  serializePublicReview,
+                )
+              }
+            />
           ) : (
             <div className="home-reviews-empty">
               <strong>
