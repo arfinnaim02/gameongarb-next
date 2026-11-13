@@ -59,6 +59,14 @@ type StoreShellProps = {
     string,
     unknown
   >;
+
+  reviewRating: {
+    average:
+      number;
+
+    count:
+      number;
+  };
 };
 
 /* =========================================================
@@ -69,6 +77,7 @@ export function StoreShell({
   children,
   navCategories,
   settings,
+  reviewRating,
 }: StoreShellProps) {
   const pathname =
     usePathname();
@@ -239,6 +248,10 @@ export function StoreShell({
         settings={settings}
         navCategories={
           navCategories
+        }
+
+        reviewRating={
+          reviewRating
         }
       />
 
