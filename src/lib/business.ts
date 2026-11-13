@@ -588,6 +588,8 @@ export const permissions = {
     "integrations",
     "reports",
     "blogs",
+    "reviews",
+    "reviews",
     "users",
   ],
 
