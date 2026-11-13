@@ -196,7 +196,10 @@ export default async function ReviewsPage() {
           )}
         </div>
 
-        <aside className="reviews-form-panel">
+        <aside
+          id="write-review"
+          className="reviews-form-panel"
+        >
           <ReviewSubmitForm
             products={
               products
