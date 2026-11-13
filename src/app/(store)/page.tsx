@@ -488,33 +488,36 @@ export default async function Home() {
         <EmptyHomepage />
       )}
 
-      {customerReviews.length >
-      0 ? (
-        <section className="home-reviews-section">
-          <div className="container">
-            <div className="home-reviews-heading">
-              <div>
-                <span className="eyebrow">
-                  Customer Stories
-                </span>
+      <section className="home-reviews-section">
+        <div className="container">
+          <div className="home-reviews-heading">
+            <div>
+              <span className="eyebrow">
+                Customer Stories
+              </span>
 
-                <h2 className="section-title">
-                  Loved by Our Customers
-                </h2>
-              </div>
-
-              <Link
-                href="/reviews"
-                className="home-view-all"
-              >
-                Read All Reviews
-
-                <span aria-hidden="true">
-                  ↗
-                </span>
-              </Link>
+              <h2 className="section-title">
+                Loved by Our Customers
+              </h2>
             </div>
 
+            <Link
+              href="/reviews"
+              className="home-view-all"
+            >
+              {customerReviews.length >
+              0
+                ? "Read All Reviews"
+                : "Write a Review"}
+
+              <span aria-hidden="true">
+                ↗
+              </span>
+            </Link>
+          </div>
+
+          {customerReviews.length >
+          0 ? (
             <div className="home-reviews-grid">
               {customerReviews.map(
                 (
@@ -534,9 +537,19 @@ export default async function Home() {
                 ),
               )}
             </div>
-          </div>
-        </section>
-      ) : null}
+          ) : (
+            <div className="home-reviews-empty">
+              <strong>
+                Your experience matters.
+              </strong>
+
+              <p>
+                Be the first to share a GameOn Garb customer story.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
