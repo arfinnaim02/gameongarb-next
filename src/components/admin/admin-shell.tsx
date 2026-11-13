@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  MessageSquareText,
   Ruler,
   Settings,
   ShieldCheck,
@@ -150,6 +151,13 @@ const navigationGroups: NavigationGroup[] = [
         href: "/admin/blogs",
         permission: "blogs",
         icon: BookOpen,
+      },
+
+      {
+        label: "Customer Reviews",
+        href: "/admin/reviews",
+        permission: "reviews",
+        icon: MessageSquareText,
       },
     ],
   },
