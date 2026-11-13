@@ -117,8 +117,8 @@ export function HomeReviewRail({
   }
 
   const staticRail =
-    reviews.length <=
-    4;
+    reviews.length ===
+    1;
 
   const duration =
     Math.max(
