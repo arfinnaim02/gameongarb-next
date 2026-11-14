@@ -83,11 +83,6 @@ export const metadata: Metadata = {
 
   manifest:
     "/manifest.webmanifest",
-
-  alternates: {
-    canonical:
-      "/",
-  },
 };
 
 const organizationSchema = {
