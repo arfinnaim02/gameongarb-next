@@ -1,3 +1,7 @@
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
 import {
@@ -8,6 +12,20 @@ import {
 import {
   getCategoryTree,
 } from "@/lib/catalog";
+
+export const metadata:
+  Metadata = {
+  title:
+    "Shop by Category",
+
+  description:
+    "Browse GameOn Garb collections including sneakers, football jerseys, sportswear, polos, streetwear and everyday essentials.",
+
+  alternates: {
+    canonical:
+      "/categories",
+  },
+};
 
 export const dynamic =
   "force-dynamic";
