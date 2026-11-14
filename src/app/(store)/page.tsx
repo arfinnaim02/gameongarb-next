@@ -1,3 +1,7 @@
+import type {
+  Metadata,
+} from "next";
+
 import Link from "next/link";
 
 import {
@@ -25,6 +29,22 @@ import { db } from "@/lib/db";
 import {
   serializePublicReview,
 } from "@/lib/reviews";
+
+export const metadata:
+  Metadata = {
+  title: {
+    absolute:
+      "GameOn Garb | Sneakers, Jerseys & Sportswear in Bangladesh",
+  },
+
+  description:
+    "Shop sneakers, football jerseys, sportswear, polos and streetwear at GameOn Garb. Nationwide delivery across Bangladesh with COD and bKash.",
+
+  alternates: {
+    canonical:
+      "/",
+  },
+};
 
 export const dynamic =
   "force-dynamic";
