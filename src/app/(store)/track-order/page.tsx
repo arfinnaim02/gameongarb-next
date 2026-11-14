@@ -1,6 +1,21 @@
 ﻿import type { Metadata } from "next";
 import { TrackOrderClient } from "@/components/order/track-order-client";
-export const metadata: Metadata = { title: "Track Order" };
+export const metadata:
+  Metadata = {
+  title:
+    "Track Order",
+
+  description:
+    "Track your GameOn Garb order status securely using your order details.",
+
+  robots: {
+    index:
+      false,
+
+    follow:
+      false,
+  },
+};
 export default function TrackOrder() {
   return (
     <>
