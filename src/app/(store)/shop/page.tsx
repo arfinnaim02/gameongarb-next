@@ -26,10 +26,15 @@ import {
 export const metadata:
   Metadata = {
   title:
-    "Shop",
+    "Shop Sneakers, Jerseys & Sportswear",
 
   description:
-    "Shop premium GameOn Garb sports and lifestyle fashion.",
+    "Explore GameOn Garb sneakers, football jerseys, sportswear, polos and lifestyle fashion. Shop online with nationwide delivery across Bangladesh.",
+
+  alternates: {
+    canonical:
+      "/shop",
+  },
 };
 
 export const dynamic =
