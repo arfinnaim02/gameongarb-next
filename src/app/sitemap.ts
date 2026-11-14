@@ -6,7 +6,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.APP_URL ?? "https://www.gameongarb.com";
   const [
     products,
-    categories,
     blogPosts,
   ] = await Promise.all([
     db.product.findMany({
@@ -18,11 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       select: { slug: true, updatedAt: true },
     }),
-    db.category.findMany({
-      where: { active: true },
-      select: { slug: true, updatedAt: true },
-    }),
-
     db.blogPost.findMany({
       where: {
         status: "PUBLISHED",
@@ -40,7 +34,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "",
     "/shop",
     "/categories",
-    "/track-order",
     "/about",
     "/contact",
     "/shipping",
@@ -49,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/terms",
     "/faq",
     "/blog",
+    "/reviews",
   ];
   return [
     ...staticRoutes.map((url) => ({
@@ -61,12 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: p.updatedAt,
       changeFrequency: "weekly" as const,
     })),
-    ...categories.map((c) => ({
-      url: `${base}/shop?category=${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: "weekly" as const,
-    })),
-
     ...blogPosts.map((post) => ({
       url: `${base}/blog/${post.slug}`,
       lastModified: post.updatedAt,
