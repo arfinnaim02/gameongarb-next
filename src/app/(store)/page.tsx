@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   PackageCheck,
   RefreshCw,
+  Search,
   Truck,
 } from "lucide-react";
 
@@ -486,6 +487,41 @@ export default async function Home() {
 
   return (
     <div className="home-page">
+      <section
+        className="home-mobile-search"
+        aria-label="Search products"
+      >
+        <div className="container">
+          <form
+            className="home-mobile-search-form"
+            action="/shop"
+            method="get"
+          >
+            <Search
+              size={19}
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
+
+            <input
+              type="search"
+              name="q"
+              autoComplete="off"
+              enterKeyHint="search"
+              placeholder="Search products, jerseys, sneakers..."
+              aria-label="Search GameOn Garb products"
+            />
+
+            <button
+              type="submit"
+              aria-label="Search"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </section>
+
       <PromotionPopup
         enabled={
           promotionPopup.enabled
