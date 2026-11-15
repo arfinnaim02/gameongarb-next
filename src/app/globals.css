@@ -18992,3 +18992,89 @@ hr {
   }
 }
 
+
+
+/* =========================================================
+   HOMEPAGE MOBILE SEARCH
+   ========================================================= */
+
+.home-mobile-search {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .home-mobile-search {
+    display: block;
+    padding: 10px 0 9px;
+    background: #0b0d0c;
+    border-bottom: 1px solid rgb(255 255 255 / 7%);
+  }
+
+  .home-mobile-search-form {
+    min-height: 46px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 0 5px 0 13px;
+    border: 1px solid #2a2f2c;
+    background: #151817;
+    color: #aeb4af;
+  }
+
+  .home-mobile-search-form:focus-within {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 2px rgb(255 90 22 / 10%);
+  }
+
+  .home-mobile-search-form input {
+    min-width: 0;
+    height: 44px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+  }
+
+  .home-mobile-search-form input::placeholder {
+    color: #858c87;
+  }
+
+  .home-mobile-search-form button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 0;
+    background: var(--orange);
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+}
+
+@media (max-width: 390px) {
+  .home-mobile-search {
+    padding: 8px 0;
+  }
+
+  .home-mobile-search-form {
+    min-height: 44px;
+    gap: 7px;
+    padding-left: 11px;
+  }
+
+  .home-mobile-search-form input {
+    height: 42px;
+    font-size: 13px;
+  }
+
+  .home-mobile-search-form button {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+}
