@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -253,6 +257,9 @@ export function ProductCard({
         >
           <div className="product-card-media">
             <Image
+              loader={
+                productImageLoader
+              }
               src={
                 hovered &&
                 product.images[1]
