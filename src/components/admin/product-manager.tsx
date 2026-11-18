@@ -3,6 +3,10 @@
 import Image from "next/image";
 
 import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
+
+import {
   ArrowLeft,
   Boxes,
   ChevronLeft,
@@ -2750,6 +2754,9 @@ export function ProductManager({
                                 }
                               >
                                 <Image
+                                  loader={
+                                    productImageLoader
+                                  }
                                   src={
                                     product.image
                                   }
@@ -3686,6 +3693,9 @@ export function ProductManager({
                           </span>
 
                           <Image
+                            loader={
+                              productImageLoader
+                            }
                             src={
                               image.url
                             }
