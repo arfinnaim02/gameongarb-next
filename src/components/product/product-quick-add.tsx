@@ -3,6 +3,10 @@
 import Image from "next/image";
 
 import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
+
+import {
   Check,
   ShoppingBag,
   X,
@@ -347,6 +351,9 @@ export function ProductQuickAdd({
         <div className="quick-add-product">
           <div className="quick-add-image">
             <Image
+              loader={
+                productImageLoader
+              }
               src={
                 product.image
               }
