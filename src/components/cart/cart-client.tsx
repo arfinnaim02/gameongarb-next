@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -635,6 +639,9 @@ export function CartClient({
                         className={styles.image}
                       >
                         <Image
+                          loader={
+                            productImageLoader
+                          }
                           src={
                             image.url
                           }
