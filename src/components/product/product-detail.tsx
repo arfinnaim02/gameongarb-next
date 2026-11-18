@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -972,6 +976,9 @@ export function ProductDetail({
                     }
                   >
                     <Image
+                      loader={
+                        productImageLoader
+                      }
                       src={
                         image.url
                       }
@@ -1073,6 +1080,9 @@ export function ProductDetail({
                       }
                     >
                       <Image
+                        loader={
+                          productImageLoader
+                        }
                         src={
                           image.url
                         }
@@ -1774,6 +1784,9 @@ export function ProductDetail({
             }
           >
             <Image
+              loader={
+                productImageLoader
+              }
               src={
                 activeImage.url
               }
