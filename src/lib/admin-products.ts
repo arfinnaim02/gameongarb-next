@@ -640,6 +640,9 @@ export function serializeAdminProduct(
     trending:
       product.trending,
 
+    sortOrder:
+      product.sortOrder,
+
     seoTitle:
       product.seoTitle ??
       "",
