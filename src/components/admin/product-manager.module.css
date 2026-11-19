@@ -683,6 +683,45 @@
   background: #fafbfa;
 }
 
+.orderInput {
+  width: 64px;
+  height: 32px;
+
+  padding:
+    0 8px;
+
+  border:
+    1px solid
+    #dfe4de;
+
+  background: #fff;
+
+  color: #202521;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  text-align: center;
+
+  outline: none;
+}
+
+.orderInput:focus {
+  border-color:
+    var(--orange);
+
+  box-shadow:
+    0 0 0 2px
+    rgb(239 100 31 / 10%);
+}
+
+.orderInput:disabled {
+  opacity: .55;
+
+  cursor: wait;
+}
+
 .productCell {
   min-width: 250px;
 
