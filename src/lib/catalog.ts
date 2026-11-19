@@ -331,6 +331,9 @@ export function toStoreProduct(
       primaryImage?.url ??
       "/images/products/tshirt.svg",
 
+    createdAt:
+      product.createdAt.toISOString(),
+
     images:
       images.map(
         (
@@ -519,10 +522,16 @@ export async function getProducts(
         },
       },
 
-      orderBy: {
-        createdAt:
-          "desc",
-      },
+      orderBy: [
+        {
+          sortOrder:
+            "asc",
+        },
+        {
+          createdAt:
+            "desc",
+        },
+      ],
 
       take:
         options?.take,
