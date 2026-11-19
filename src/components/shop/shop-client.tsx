@@ -1006,44 +1006,31 @@ function sortProducts(
         sort ===
         "newest"
       ) {
+        const firstTime =
+          first.createdAt
+            ? Date.parse(
+                first.createdAt,
+              )
+            : 0;
+
+        const secondTime =
+          second.createdAt
+            ? Date.parse(
+                second.createdAt,
+              )
+            : 0;
+
         return (
-          (
-            originalOrder.get(
-              first.id,
-            ) ??
-            0
-          ) -
-          (
-            originalOrder.get(
-              second.id,
-            ) ??
-            0
-          )
+          secondTime -
+          firstTime
         );
       }
 
-      const featuredFirst =
-        first.badge ===
-        "FEATURED"
-          ? 1
-          : 0;
-
-      const featuredSecond =
-        second.badge ===
-        "FEATURED"
-          ? 1
-          : 0;
-
-      if (
-        featuredFirst !==
-        featuredSecond
-      ) {
-        return (
-          featuredSecond -
-          featuredFirst
-        );
-      }
-
+      /*
+       * "Featured" is the curated storefront order.
+       * The server already supplies products in the
+       * admin-controlled sortOrder sequence.
+       */
       return (
         (
           originalOrder.get(
