@@ -1224,6 +1224,19 @@ export function ProductManager({
 
             return true;
           },
+        ).sort(
+          (
+            first,
+            second,
+          ) =>
+            first.sortOrder -
+              second.sortOrder ||
+            new Date(
+              second.updatedAt,
+            ).getTime() -
+              new Date(
+                first.updatedAt,
+              ).getTime(),
         );
       },
       [
@@ -2054,6 +2067,122 @@ export function ProductManager({
     }
   }
 
+  async function updateProductOrder(
+    product:
+      AdminProductRecord,
+
+    nextOrder:
+      number,
+  ) {
+    const normalizedOrder =
+      Math.max(
+        0,
+        Math.trunc(
+          Number.isFinite(
+            nextOrder,
+          )
+            ? nextOrder
+            : product.sortOrder,
+        ),
+      );
+
+    if (
+      normalizedOrder ===
+      product.sortOrder
+    ) {
+      return;
+    }
+
+    setBusyProductId(
+      product.id,
+    );
+
+    setError("");
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/products/${product.id}/order`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                sortOrder:
+                  normalizedOrder,
+              }),
+          },
+        );
+
+      const data =
+        (await response.json()) as {
+          sortOrder?:
+            number;
+
+          message?:
+            string;
+
+          error?:
+            string;
+        };
+
+      if (
+        !response.ok ||
+        typeof data.sortOrder !==
+          "number"
+      ) {
+        throw new Error(
+          data.error ??
+            "Unable to update product order.",
+        );
+      }
+
+      setProducts(
+        (
+          current,
+        ) =>
+          current.map(
+            (
+              item,
+            ) =>
+              item.id ===
+                product.id
+                ? {
+                    ...item,
+
+                    sortOrder:
+                      data.sortOrder!,
+                  }
+                : item,
+          ),
+      );
+
+      setMessage(
+        data.message ??
+          "Product order updated.",
+      );
+    } catch (
+      orderError
+    ) {
+      setError(
+        orderError instanceof
+        Error
+          ? orderError.message
+          : "Unable to update product order.",
+      );
+    } finally {
+      setBusyProductId(
+        null,
+      );
+    }
+  }
+
   async function duplicateProduct(
     product:
       AdminProductRecord,
@@ -2699,6 +2828,10 @@ export function ProductManager({
                   <thead>
                     <tr>
                       <th>
+                        Order
+                      </th>
+
+                      <th>
                         Product
                       </th>
 
@@ -2742,6 +2875,46 @@ export function ProductManager({
                             product.id
                           }
                         >
+                          <td>
+                            <input
+                              key={`${product.id}-${product.sortOrder}`}
+                              className={
+                                styles.orderInput
+                              }
+                              type="number"
+                              min="0"
+                              max="999999"
+                              defaultValue={
+                                product.sortOrder
+                              }
+                              disabled={
+                                busyProductId ===
+                                product.id
+                              }
+                              aria-label={`Display order for ${product.name}`}
+                              onKeyDown={(
+                                event,
+                              ) => {
+                                if (
+                                  event.key ===
+                                  "Enter"
+                                ) {
+                                  event.currentTarget.blur();
+                                }
+                              }}
+                              onBlur={(
+                                event,
+                              ) =>
+                                updateProductOrder(
+                                  product,
+                                  Number(
+                                    event.currentTarget.value,
+                                  ),
+                                )
+                              }
+                            />
+                          </td>
+
                           <td>
                             <div
                               className={
