@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -3032,6 +3036,9 @@ export function InventoryManager({
                                     >
                                       {product.image ? (
                                         <Image
+                                          loader={
+                                            productImageLoader
+                                          }
                                           src={
                                             product.image
                                           }
