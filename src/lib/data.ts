@@ -49,6 +49,9 @@ export type Product = {
 
   image: string;
 
+  createdAt?:
+    string;
+
   images: {
     url: string;
     alt: string;
