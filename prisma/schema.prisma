@@ -300,6 +300,7 @@ model Product {
   featured         Boolean             @default(false)
   newArrival       Boolean             @default(false)
   trending         Boolean             @default(false)
+  sortOrder        Int                 @default(9999)
   seoTitle         String?
   seoDescription   String?
   images           ProductImage[]
@@ -315,7 +316,7 @@ model Product {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  @@index([status, createdAt])
+  @@index([status, sortOrder, createdAt])
   @@index([featured, newArrival, trending])
   @@index([sizeChartId])
 }
