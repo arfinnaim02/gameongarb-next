@@ -34,10 +34,16 @@ export default async function ProductsAdminPage() {
       include:
         adminProductInclude,
 
-      orderBy: {
-        updatedAt:
-          "desc",
-      },
+      orderBy: [
+        {
+          sortOrder:
+            "asc",
+        },
+        {
+          updatedAt:
+            "desc",
+        },
+      ],
     }),
 
     db.category.findMany({
