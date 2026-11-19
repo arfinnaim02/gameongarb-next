@@ -97,6 +97,9 @@ export type AdminProductRecord = {
   trending:
     boolean;
 
+  sortOrder:
+    number;
+
   seoTitle:
     string;
 
