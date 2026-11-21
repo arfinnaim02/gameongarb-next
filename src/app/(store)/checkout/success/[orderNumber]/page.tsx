@@ -1,4 +1,8 @@
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -686,6 +690,9 @@ export default async function OrderSuccessPage({
                   >
                     <div className={styles.itemImage}>
                       <Image
+                        loader={
+                          productImageLoader
+                        }
                         src={
                           item.image ??
                           "/images/products/tshirt.svg"
