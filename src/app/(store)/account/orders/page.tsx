@@ -1,4 +1,8 @@
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import type {
@@ -339,6 +343,9 @@ export default async function MyOrders({
                 >
                   <div className={styles.orderImage}>
                     <Image
+                      loader={
+                        productImageLoader
+                      }
                       src={
                         firstItem
                           ?.image ??
