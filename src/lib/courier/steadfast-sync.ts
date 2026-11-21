@@ -246,35 +246,27 @@ export async function syncSteadfastShipment({
     };
   }
 
-  /*
-   * Fetch status and tracking in parallel.
-   * This keeps manual refresh fast and lets
-   * the scheduled worker process several
-   * shipments within one function window.
-   *
-   * Tracking history is useful but should
-   * not make the whole status refresh fail
-   * if Steadfast cannot return events.
-   */
-  const [
-    statusResult,
-    trackingEvents,
-  ] =
-    await Promise.all([
-      steadfast
-        .getStatusWithReturnByConsignmentId(
-          order.shipment
-            .consignmentId,
-        ),
+  const statusResult =
+    await steadfast
+      .getStatusWithReturnByConsignmentId(
+        order.shipment
+          .consignmentId,
+      );
 
-      steadfast
-        .getTrackingsByInvoice(
-          order.number,
-        )
-        .catch(
-          () => [],
-        ),
-    ]);
+  /*
+   * Tracking history is useful but
+   * should not make the whole status
+   * refresh fail if Steadfast cannot
+   * return tracking events.
+   */
+  const trackingEvents =
+    await steadfast
+      .getTrackingsByInvoice(
+        order.number,
+      )
+      .catch(
+        () => [],
+      );
 
   const previousStatus =
     order.shipment
