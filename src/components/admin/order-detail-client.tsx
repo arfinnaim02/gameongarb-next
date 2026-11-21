@@ -12,6 +12,7 @@ import {
 } from "next/navigation";
 
 import {
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -674,6 +675,31 @@ export function OrderDetailClient({
 }) {
   const router =
     useRouter();
+
+  useEffect(
+    () => {
+      const timer =
+        window.setInterval(
+          () => {
+            if (
+              document.visibilityState ===
+              "visible"
+            ) {
+              router.refresh();
+            }
+          },
+          60_000,
+        );
+
+      return () =>
+        window.clearInterval(
+          timer,
+        );
+    },
+    [
+      router,
+    ],
+  );
 
   const [
     notes,
