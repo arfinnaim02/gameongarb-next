@@ -70,7 +70,7 @@ export const metadata: Metadata = {
           "/favicon.png",
 
         type:
-          "image/svg+xml",
+          "image/png",
       },
     ],
 
