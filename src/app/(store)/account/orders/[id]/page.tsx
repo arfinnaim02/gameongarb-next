@@ -1,4 +1,8 @@
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -92,6 +96,9 @@ export default async function CustomerOrderDetail({
               }}
             >
               <Image
+                loader={
+                  productImageLoader
+                }
                 src={item.image ?? "/images/products/tshirt.svg"}
                 alt={item.name}
                 fill
