@@ -7,6 +7,7 @@ import {
 } from "next/navigation";
 import {
   type FormEvent,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -364,6 +365,31 @@ export function OrdersDashboard({
 
   const searchParams =
     useSearchParams();
+
+  useEffect(
+    () => {
+      const timer =
+        window.setInterval(
+          () => {
+            if (
+              document.visibilityState ===
+              "visible"
+            ) {
+              router.refresh();
+            }
+          },
+          60_000,
+        );
+
+      return () =>
+        window.clearInterval(
+          timer,
+        );
+    },
+    [
+      router,
+    ],
+  );
 
   const [
     search,
