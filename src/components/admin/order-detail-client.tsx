@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+
+import {
+  productImageLoader,
+} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
@@ -1955,6 +1959,9 @@ const outsideDhakaCod =
                       }
                     >
                       <Image
+                        loader={
+                          productImageLoader
+                        }
                         src={
                           item.image ??
                           "/images/products/tshirt.svg"
