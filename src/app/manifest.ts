@@ -29,13 +29,13 @@ export default function manifest():
     icons: [
       {
         src:
-          "/favicon.svg",
+          "/favicon.png",
 
         sizes:
-          "any",
+          "500x500",
 
         type:
-          "image/svg+xml",
+          "image/png",
       },
     ],
   };
