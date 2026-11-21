@@ -29,7 +29,7 @@ export const maxDuration =
   60;
 
 const BATCH_SIZE =
-  20;
+  3;
 
 const TERMINAL_COURIER_STATUSES =
   new Set([
@@ -100,6 +100,14 @@ export async function GET(
           consignmentId: {
             not:
               null,
+          },
+
+          status: {
+            notIn: [
+              "delivered",
+              "cancelled",
+              "returned",
+            ],
           },
         },
 
