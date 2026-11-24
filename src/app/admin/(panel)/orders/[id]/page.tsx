@@ -101,13 +101,38 @@ shipment: {
   const editableVariants =
     await db.productVariant.findMany({
       where: {
-        active:
-          true,
+        OR: [
+          {
+            active:
+              true,
 
-        product: {
-          status:
-            "ACTIVE",
-        },
+            product: {
+              status:
+                "ACTIVE",
+            },
+          },
+
+          {
+            id: {
+              in:
+                order.items
+                  .map(
+                    (
+                      item,
+                    ) =>
+                      item.variantId,
+                  )
+                  .filter(
+                    (
+                      variantId,
+                    ): variantId is string =>
+                      Boolean(
+                        variantId,
+                      ),
+                  ),
+            },
+          },
+        ],
       },
 
       orderBy: [
