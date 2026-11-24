@@ -1563,8 +1563,14 @@
   .printInvoice {
     display: block !important;
     width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     color: #171918;
     background: #fff;
+    break-after: avoid-page;
+    page-break-after: avoid;
     font-family:
       Arial,
       Helvetica,
@@ -1822,11 +1828,13 @@
   }
 
   .invoiceFooter {
-    margin-top: 26px;
-    padding-top: 12px;
+    margin: 26px 0 0;
+    padding: 12px 0 0;
     border-top: 1px solid #dfe2de;
     text-align: center;
     break-inside: avoid;
+    break-after: avoid-page;
+    page-break-after: avoid;
   }
 
   .invoiceFooter p {
