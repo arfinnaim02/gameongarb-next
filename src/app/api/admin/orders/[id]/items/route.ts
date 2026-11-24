@@ -259,14 +259,6 @@ export async function PATCH(
                   in:
                     variantIds,
                 },
-
-                active:
-                  true,
-
-                product: {
-                  status:
-                    "ACTIVE",
-                },
               },
 
               include: {
@@ -320,6 +312,44 @@ export async function PATCH(
                 ],
               ),
             );
+
+          for (
+            const item
+            of input.items
+          ) {
+            const variant =
+              variantById.get(
+                item.variantId,
+              )!;
+
+            const existing =
+              item.orderItemId
+                ? existingById.get(
+                    item.orderItemId,
+                  )
+                : null;
+
+            const keepsExistingVariant =
+              Boolean(
+                existing &&
+                existing.variantId ===
+                  variant.id,
+              );
+
+            if (
+              !keepsExistingVariant &&
+              (
+                !variant.active ||
+                variant.product
+                  .status !==
+                  "ACTIVE"
+              )
+            ) {
+              throw new Error(
+                "A newly selected product variant is no longer available.",
+              );
+            }
+          }
 
           const oldQuantityByVariant =
             new Map<
