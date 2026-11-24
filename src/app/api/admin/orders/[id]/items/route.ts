@@ -25,6 +25,11 @@ import {
 } from "@/lib/db";
 
 import {
+  fromPaisa,
+  toPaisa,
+} from "@/lib/money";
+
+import {
   refreshTelegramOrderMessage,
 } from "@/lib/telegram";
 
@@ -563,19 +568,26 @@ export async function PATCH(
                       variant.id,
                   );
 
+                const unitPricePaisa =
+                  toPaisa(
+                    sameVariant
+                      ? Number(
+                          existing!
+                            .unitPrice,
+                        )
+                      : Number(
+                          variant.priceOverride ??
+                            variant.product
+                              .salePrice ??
+                            variant.product
+                              .regularPrice,
+                        ),
+                  );
+
                 const unitPrice =
-                  sameVariant
-                    ? Number(
-                        existing!
-                          .unitPrice,
-                      )
-                    : Number(
-                        variant.priceOverride ??
-                          variant.product
-                            .salePrice ??
-                          variant.product
-                            .regularPrice,
-                      );
+                  fromPaisa(
+                    unitPricePaisa,
+                  );
 
                 const name =
                   sameVariant
@@ -618,8 +630,10 @@ export async function PATCH(
                     item.quantity,
 
                   lineTotal:
-                    unitPrice *
-                    item.quantity,
+                    fromPaisa(
+                      unitPricePaisa *
+                        item.quantity,
+                    ),
 
                   categoryIds:
                     variant.product
@@ -633,21 +647,32 @@ export async function PATCH(
               },
             );
 
-          const subtotal =
+          const subtotalPaisa =
             nextItems.reduce(
               (
                 total,
                 item,
               ) =>
                 total +
-                item.lineTotal,
+                toPaisa(
+                  item.lineTotal,
+                ),
 
               0,
             );
 
+          const subtotal =
+            fromPaisa(
+              subtotalPaisa,
+            );
+
           const deliveryCharge =
-            Number(
-              order.deliveryCharge,
+            fromPaisa(
+              toPaisa(
+                Number(
+                  order.deliveryCharge,
+                ),
+              ),
             );
 
           let discount =
@@ -734,10 +759,12 @@ export async function PATCH(
                   0
               ) {
                 discount =
-                  couponDiscount(
-                    eligibleSubtotal,
-                    deliveryCharge,
-                    {
+                  fromPaisa(
+                    toPaisa(
+                      couponDiscount(
+                        eligibleSubtotal,
+                        deliveryCharge,
+                        {
                       type:
                         coupon.type ===
                         "FIXED"
@@ -752,13 +779,14 @@ export async function PATCH(
                           coupon.value,
                         ),
 
-                      maximum:
-                        coupon.maximumDiscount
-                          ? Number(
-                              coupon.maximumDiscount,
-                            )
-                          : undefined,
-                    },
+                        maximum:
+                          coupon.maximumDiscount
+                            ? Number(
+                                coupon.maximumDiscount,
+                              )
+                            : undefined,
+                      },
+                    ),
                   );
               }
             }
@@ -770,20 +798,28 @@ export async function PATCH(
              * exceed the updated subtotal + delivery.
              */
             discount =
-              Math.min(
-                Number(
-                  order.discount,
+              fromPaisa(
+                toPaisa(
+                  Math.min(
+                    Number(
+                      order.discount,
+                    ),
+                    subtotal +
+                      deliveryCharge,
+                  ),
                 ),
-                subtotal +
-                  deliveryCharge,
               );
           }
 
           const total =
-            orderTotal(
-              subtotal,
-              deliveryCharge,
-              discount,
+            fromPaisa(
+              toPaisa(
+                orderTotal(
+                  subtotal,
+                  deliveryCharge,
+                  discount,
+                ),
+              ),
             );
 
           if (
