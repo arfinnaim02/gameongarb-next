@@ -26,11 +26,14 @@ import {
   MapPin,
   MessageCircle,
   Package,
+  Pencil,
   Phone,
+  Plus,
   Printer,
   RefreshCw,
   Save,
   ShieldAlert,
+  Trash2,
   Truck,
   UserRound,
   WalletCards,
@@ -78,6 +81,52 @@ type OrderItemData = {
     number;
 
   lineTotal:
+    number;
+};
+
+type EditableVariantData = {
+  id:
+    string;
+
+  productId:
+    string;
+
+  productName:
+    string;
+
+  sku:
+    string;
+
+  size:
+    string |
+    null;
+
+  color:
+    string |
+    null;
+
+  stock:
+    number;
+
+  price:
+    number;
+
+  image:
+    string;
+};
+
+type EditableOrderItemDraft = {
+  key:
+    string;
+
+  orderItemId:
+    string |
+    null;
+
+  variantId:
+    string;
+
+  quantity:
     number;
 };
 
@@ -434,6 +483,9 @@ export type OrderDetailData = {
   items:
     OrderItemData[];
 
+  editableVariants:
+    EditableVariantData[];
+
   history:
     OrderHistoryData[];
 
@@ -676,6 +728,32 @@ export function OrderDetailClient({
     useRouter();
 
   const [
+    editingItems,
+    setEditingItems,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    savingItems,
+    setSavingItems,
+  ] =
+    useState(
+      false,
+    );
+
+  const [
+    itemDrafts,
+    setItemDrafts,
+  ] =
+    useState<
+      EditableOrderItemDraft[]
+    >(
+      [],
+    );
+
+  const [
     notes,
     setNotes,
   ] =
@@ -915,6 +993,23 @@ const outsideDhakaCod =
         .consignmentId,
     );
 
+  const canEditOrderItems =
+    [
+      "NEW",
+      "CONFIRMED",
+      "PACKING",
+      "READY_TO_SHIP",
+    ].includes(
+      data.order.status,
+    ) &&
+    data.order
+      .paymentStatus !==
+      "PAID" &&
+    !data.shipment
+      ?.consignmentId &&
+    !data.shipment
+      ?.trackingId;
+
   const itemQuantity =
     useMemo(
       () =>
@@ -956,7 +1051,244 @@ const outsideDhakaCod =
       : null;
 
 
-        async function checkFraud() {
+  function beginItemEdit() {
+    if (
+      !canEditOrderItems
+    ) {
+      return;
+    }
+
+    setItemDrafts(
+      data.items
+        .filter(
+          (
+            item,
+          ) =>
+            Boolean(
+              item.variantId,
+            ),
+        )
+        .map(
+          (
+            item,
+          ) => ({
+            key:
+              item.id,
+
+            orderItemId:
+              item.id,
+
+            variantId:
+              item.variantId!,
+
+            quantity:
+              item.quantity,
+          }),
+        ),
+    );
+
+    setEditingItems(
+      true,
+    );
+
+    setMessage(
+      "",
+    );
+
+    setError(
+      "",
+    );
+  }
+
+  function cancelItemEdit() {
+    setEditingItems(
+      false,
+    );
+
+    setItemDrafts(
+      [],
+    );
+
+    setError(
+      "",
+    );
+  }
+
+  function addItemDraft() {
+    const used =
+      new Set(
+        itemDrafts.map(
+          (
+            item,
+          ) =>
+            item.variantId,
+        ),
+      );
+
+    const available =
+      data.editableVariants.find(
+        (
+          variant,
+        ) =>
+          !used.has(
+            variant.id,
+          ) &&
+          variant.stock >
+            0,
+      );
+
+    if (
+      !available
+    ) {
+      setError(
+        "No additional in-stock product variant is available.",
+      );
+
+      return;
+    }
+
+    setItemDrafts(
+      (
+        current,
+      ) => [
+        ...current,
+
+        {
+          key:
+            `new-${Date.now()}-${available.id}`,
+
+          orderItemId:
+            null,
+
+          variantId:
+            available.id,
+
+          quantity:
+            1,
+        },
+      ],
+    );
+  }
+
+  async function saveOrderItems() {
+    if (
+      savingItems
+    ) {
+      return;
+    }
+
+    if (
+      itemDrafts.length ===
+      0
+    ) {
+      setError(
+        "An order must contain at least one item.",
+      );
+
+      return;
+    }
+
+    setSavingItems(
+      true,
+    );
+
+    setMessage(
+      "",
+    );
+
+    setError(
+      "",
+    );
+
+    try {
+      const response =
+        await fetch(
+          `/api/admin/orders/${data.order.id}/items`,
+          {
+            method:
+              "PATCH",
+
+            headers: {
+              "content-type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                items:
+                  itemDrafts.map(
+                    (
+                      item,
+                    ) => ({
+                      orderItemId:
+                        item.orderItemId,
+
+                      variantId:
+                        item.variantId,
+
+                      quantity:
+                        Math.max(
+                          1,
+                          Math.trunc(
+                            item.quantity,
+                          ),
+                        ),
+                    }),
+                  ),
+              }),
+          },
+        );
+
+      const result =
+        await response
+          .json()
+          .catch(
+            () => ({
+              error:
+                "Request failed.",
+            }),
+          );
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          result.error ??
+            "Unable to update order items.",
+        );
+      }
+
+      setEditingItems(
+        false,
+      );
+
+      setItemDrafts(
+        [],
+      );
+
+      setMessage(
+        result.message ??
+          "Order items updated.",
+      );
+
+      router.refresh();
+    } catch (
+      caught
+    ) {
+      setError(
+        caught instanceof
+          Error
+          ? caught.message
+          : "Unable to update order items.",
+      );
+    } finally {
+      setSavingItems(
+        false,
+      );
+    }
+  }
+
+  async function checkFraud() {
     if (
       fraudBusy
     ) {
@@ -1934,115 +2266,419 @@ const outsideDhakaCod =
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div
-              className={
-                styles.items
-              }
-            >
-              {data.items.map(
-                (
-                  item,
-                ) => (
-                  <article
-                    key={
-                      item.id
-                    }
-                    className={
-                      styles.item
-                    }
-                  >
-                    <div
+              {canEditOrderItems ? (
+                <div
+                  className={
+                    styles.itemEditActions
+                  }
+                >
+                  {editingItems ? (
+                    <>
+                      <button
+                        type="button"
+                        className={
+                          styles.itemActionSecondary
+                        }
+                        disabled={
+                          savingItems
+                        }
+                        onClick={
+                          cancelItemEdit
+                        }
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          styles.itemActionPrimary
+                        }
+                        disabled={
+                          savingItems
+                        }
+                        onClick={() =>
+                          void saveOrderItems()
+                        }
+                      >
+                        <Save
+                          size={
+                            14
+                          }
+                        />
+
+                        {savingItems
+                          ? "Saving..."
+                          : "Save Changes"}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
                       className={
-                        styles.itemImage
+                        styles.itemActionSecondary
+                      }
+                      onClick={
+                        beginItemEdit
                       }
                     >
-                      <Image
-                        loader={
-                          productImageLoader
+                      <Pencil
+                        size={
+                          14
                         }
-                        src={
-                          item.image ??
-                          "/images/products/tshirt.svg"
-                        }
-                        alt={
-                          item.name
-                        }
-                        fill
-                        sizes="76px"
                       />
-                    </div>
 
-                    <div
-                      className={
-                        styles.itemInfo
-                      }
-                    >
-                      <strong>
-                        {
-                          item.name
-                        }
-                      </strong>
-
-                      <span>
-                        SKU:{" "}
-                        {
-                          item.sku
-                        }
-                      </span>
-
-                      <span>
-                        {
-                          item.color ??
-                          "Default"
-                        }{" "}
-                        /{" "}
-                        {
-                          item.size ??
-                          "One Size"
-                        }
-                      </span>
-                    </div>
-
-                    <div
-                      className={
-                        styles.itemQty
-                      }
-                    >
-                      <span>
-                        Qty
-                      </span>
-
-                      <strong>
-                        {
-                          item.quantity
-                        }
-                      </strong>
-                    </div>
-
-                    <div
-                      className={
-                        styles.itemPrice
-                      }
-                    >
-                      <span>
-                        {formatBDT(
-                          item.unitPrice,
-                        )}{" "}
-                        each
-                      </span>
-
-                      <strong>
-                        {formatBDT(
-                          item.lineTotal,
-                        )}
-                      </strong>
-                    </div>
-                  </article>
-                ),
-              )}
+                      Edit Items
+                    </button>
+                  )}
+                </div>
+              ) : null}
             </div>
+
+            {editingItems ? (
+              <div
+                className={
+                  styles.itemEditor
+                }
+              >
+                {itemDrafts.map(
+                  (
+                    draft,
+                    index,
+                  ) => {
+                    const selected =
+                      data.editableVariants.find(
+                        (
+                          variant,
+                        ) =>
+                          variant.id ===
+                          draft.variantId,
+                      );
+
+                    return (
+                      <div
+                        key={
+                          draft.key
+                        }
+                        className={
+                          styles.itemEditRow
+                        }
+                      >
+                        <div
+                          className={
+                            styles.itemEditIndex
+                          }
+                        >
+                          {
+                            index +
+                            1
+                          }
+                        </div>
+
+                        <label
+                          className={
+                            styles.itemEditProduct
+                          }
+                        >
+                          <span>
+                            Product / Variant
+                          </span>
+
+                          <select
+                            value={
+                              draft.variantId
+                            }
+                            onChange={(
+                              event,
+                            ) => {
+                              const variantId =
+                                event.target
+                                  .value;
+
+                              setItemDrafts(
+                                (
+                                  current,
+                                ) =>
+                                  current.map(
+                                    (
+                                      item,
+                                    ) =>
+                                      item.key ===
+                                      draft.key
+                                        ? {
+                                            ...item,
+
+                                            variantId,
+                                          }
+                                        : item,
+                                  ),
+                              );
+                            }}
+                          >
+                            {data.editableVariants.map(
+                              (
+                                variant,
+                              ) => (
+                                <option
+                                  key={
+                                    variant.id
+                                  }
+                                  value={
+                                    variant.id
+                                  }
+                                >
+                                  {variant.productName}
+                                  {" · "}
+                                  {variant.color ||
+                                    "Default"}
+                                  {" · "}
+                                  {variant.size ||
+                                    "One Size"}
+                                  {" · "}
+                                  {variant.sku}
+                                  {" · Stock "}
+                                  {variant.stock}
+                                </option>
+                              ),
+                            )}
+                          </select>
+
+                          {selected ? (
+                            <small>
+                              {formatBDT(
+                                selected.price,
+                              )}{" "}
+                              current price
+                            </small>
+                          ) : null}
+                        </label>
+
+                        <label
+                          className={
+                            styles.itemEditQuantity
+                          }
+                        >
+                          <span>
+                            Quantity
+                          </span>
+
+                          <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={
+                              draft.quantity
+                            }
+                            onChange={(
+                              event,
+                            ) => {
+                              const quantity =
+                                Number(
+                                  event.target
+                                    .value,
+                                );
+
+                              setItemDrafts(
+                                (
+                                  current,
+                                ) =>
+                                  current.map(
+                                    (
+                                      item,
+                                    ) =>
+                                      item.key ===
+                                      draft.key
+                                        ? {
+                                            ...item,
+
+                                            quantity:
+                                              Number.isFinite(
+                                                quantity,
+                                              )
+                                                ? quantity
+                                                : 1,
+                                          }
+                                        : item,
+                                  ),
+                              );
+                            }}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className={
+                            styles.itemRemoveButton
+                          }
+                          aria-label="Remove item"
+                          disabled={
+                            itemDrafts.length ===
+                            1
+                          }
+                          onClick={() =>
+                            setItemDrafts(
+                              (
+                                current,
+                              ) =>
+                                current.filter(
+                                  (
+                                    item,
+                                  ) =>
+                                    item.key !==
+                                    draft.key,
+                                ),
+                            )
+                          }
+                        >
+                          <Trash2
+                            size={
+                              15
+                            }
+                          />
+                        </button>
+                      </div>
+                    );
+                  },
+                )}
+
+                <button
+                  type="button"
+                  className={
+                    styles.addItemButton
+                  }
+                  onClick={
+                    addItemDraft
+                  }
+                >
+                  <Plus
+                    size={
+                      14
+                    }
+                  />
+
+                  Add Item
+                </button>
+
+                <p
+                  className={
+                    styles.itemEditNote
+                  }
+                >
+                  Saving updates stock and recalculates the order bill automatically.
+                </p>
+              </div>
+            ) : (
+                          <div
+                            className={
+                              styles.items
+                            }
+                          >
+                            {data.items.map(
+                              (
+                                item,
+                              ) => (
+                                <article
+                                  key={
+                                    item.id
+                                  }
+                                  className={
+                                    styles.item
+                                  }
+                                >
+                                  <div
+                                    className={
+                                      styles.itemImage
+                                    }
+                                  >
+                                    <Image
+                                      loader={
+                                        productImageLoader
+                                      }
+                                      src={
+                                        item.image ??
+                                        "/images/products/tshirt.svg"
+                                      }
+                                      alt={
+                                        item.name
+                                      }
+                                      fill
+                                      sizes="76px"
+                                    />
+                                  </div>
+              
+                                  <div
+                                    className={
+                                      styles.itemInfo
+                                    }
+                                  >
+                                    <strong>
+                                      {
+                                        item.name
+                                      }
+                                    </strong>
+              
+                                    <span>
+                                      SKU:{" "}
+                                      {
+                                        item.sku
+                                      }
+                                    </span>
+              
+                                    <span>
+                                      {
+                                        item.color ??
+                                        "Default"
+                                      }{" "}
+                                      /{" "}
+                                      {
+                                        item.size ??
+                                        "One Size"
+                                      }
+                                    </span>
+                                  </div>
+              
+                                  <div
+                                    className={
+                                      styles.itemQty
+                                    }
+                                  >
+                                    <span>
+                                      Qty
+                                    </span>
+              
+                                    <strong>
+                                      {
+                                        item.quantity
+                                      }
+                                    </strong>
+                                  </div>
+              
+                                  <div
+                                    className={
+                                      styles.itemPrice
+                                    }
+                                  >
+                                    <span>
+                                      {formatBDT(
+                                        item.unitPrice,
+                                      )}{" "}
+                                      each
+                                    </span>
+              
+                                    <strong>
+                                      {formatBDT(
+                                        item.lineTotal,
+                                      )}
+                                    </strong>
+                                  </div>
+                                </article>
+                              ),
+                            )}
+                          </div>
+              
+              
+            )}
 
             <div
               className={
