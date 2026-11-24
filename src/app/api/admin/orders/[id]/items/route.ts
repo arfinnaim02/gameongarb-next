@@ -758,13 +758,11 @@ export async function PATCH(
                 eligibleSubtotal >
                   0
               ) {
-                discount =
-                  fromPaisa(
-                    toPaisa(
-                      couponDiscount(
-                        eligibleSubtotal,
-                        deliveryCharge,
-                        {
+                const rawDiscount =
+                  couponDiscount(
+                    eligibleSubtotal,
+                    deliveryCharge,
+                    {
                       type:
                         coupon.type ===
                         "FIXED"
@@ -779,13 +777,19 @@ export async function PATCH(
                           coupon.value,
                         ),
 
-                        maximum:
-                          coupon.maximumDiscount
-                            ? Number(
-                                coupon.maximumDiscount,
-                              )
-                            : undefined,
-                      },
+                      maximum:
+                        coupon.maximumDiscount
+                          ? Number(
+                              coupon.maximumDiscount,
+                            )
+                          : undefined,
+                    },
+                  );
+
+                discount =
+                  fromPaisa(
+                    toPaisa(
+                      rawDiscount,
                     ),
                   );
               }
