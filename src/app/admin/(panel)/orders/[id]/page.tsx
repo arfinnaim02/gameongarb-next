@@ -98,6 +98,91 @@ shipment: {
     notFound();
   }
 
+  const editableVariants =
+    await db.productVariant.findMany({
+      where: {
+        active:
+          true,
+
+        product: {
+          status:
+            "ACTIVE",
+        },
+      },
+
+      orderBy: [
+        {
+          product: {
+            name:
+              "asc",
+          },
+        },
+
+        {
+          sku:
+            "asc",
+        },
+      ],
+
+      select: {
+        id:
+          true,
+
+        sku:
+          true,
+
+        size:
+          true,
+
+        color:
+          true,
+
+        stock:
+          true,
+
+        priceOverride:
+          true,
+
+        product: {
+          select: {
+            id:
+              true,
+
+            name:
+              true,
+
+            regularPrice:
+              true,
+
+            salePrice:
+              true,
+
+            images: {
+              orderBy: [
+                {
+                  primary:
+                    "desc",
+                },
+
+                {
+                  sortOrder:
+                    "asc",
+                },
+              ],
+
+              take:
+                1,
+
+              select: {
+                url:
+                  true,
+              },
+            },
+          },
+        },
+      },
+    });
+
   const customerOrders =
     await db.order.findMany({
       where: {
@@ -318,6 +403,49 @@ shipment: {
             Number(
               item.lineTotal,
             ),
+        }),
+      ),
+
+    editableVariants:
+      editableVariants.map(
+        (
+          variant,
+        ) => ({
+          id:
+            variant.id,
+
+          productId:
+            variant.product.id,
+
+          productName:
+            variant.product.name,
+
+          sku:
+            variant.sku,
+
+          size:
+            variant.size,
+
+          color:
+            variant.color,
+
+          stock:
+            variant.stock,
+
+          price:
+            Number(
+              variant.priceOverride ??
+                variant.product
+                  .salePrice ??
+                variant.product
+                  .regularPrice,
+            ),
+
+          image:
+            variant.product
+              .images[0]
+              ?.url ??
+            "/images/products/tshirt.svg",
         }),
       ),
 
