@@ -1907,6 +1907,19 @@ const outsideDhakaCod =
     }
   }
 
+  const invoicePaidAmount =
+    fullBkashPaid
+      ? data.order.total
+      : data.order
+          .deliveryAdvancePaid;
+
+  const invoiceDueAmount =
+    Math.max(
+      0,
+      data.order.total -
+        invoicePaidAmount,
+    );
+
   const whatsapp =
     `https://wa.me/${whatsappPhone(
       data.order.phone,
@@ -1918,6 +1931,420 @@ const outsideDhakaCod =
         styles.page
       }
     >
+      <section
+        className={
+          styles.printInvoice
+        }
+        aria-hidden="true"
+      >
+        <header
+          className={
+            styles.invoiceHeader
+          }
+        >
+          <div
+            className={
+              styles.invoiceBrand
+            }
+          >
+            <Image
+              src="/brand/game-on-garb-logo.svg"
+              alt="Game On Garb"
+              width={
+                170
+              }
+              height={
+                64
+              }
+              unoptimized
+            />
+
+            <div>
+              <strong>
+                Game On Garb
+              </strong>
+
+              <span>
+                Premium Sports & Lifestyle Wear
+              </span>
+
+              <span>
+                www.gameongarb.com
+              </span>
+            </div>
+          </div>
+
+          <div
+            className={
+              styles.invoiceTitle
+            }
+          >
+            <span>
+              INVOICE
+            </span>
+
+            <strong>
+              #
+              {
+                data.order
+                  .number
+              }
+            </strong>
+
+            <small>
+              {formatDate(
+                data.order
+                  .createdAt,
+              )}
+            </small>
+          </div>
+        </header>
+
+        <div
+          className={
+            styles.invoiceMetaGrid
+          }
+        >
+          <section>
+            <span>
+              BILL TO
+            </span>
+
+            <strong>
+              {
+                data.order
+                  .customerName
+              }
+            </strong>
+
+            <p>
+              {
+                data.order
+                  .phone
+              }
+            </p>
+
+            {data.order.email ? (
+              <p>
+                {
+                  data.order
+                    .email
+                }
+              </p>
+            ) : null}
+
+            <p>
+              {
+                data.order
+                  .shippingAddress
+              }
+              {data.order.thana
+                ? `, ${data.order.thana}`
+                : ""}
+              {data.order.district
+                ? `, ${data.order.district}`
+                : ""}
+            </p>
+          </section>
+
+          <section>
+            <span>
+              ORDER DETAILS
+            </span>
+
+            <div
+              className={
+                styles.invoiceMetaRows
+              }
+            >
+              <p>
+                <b>
+                  Status
+                </b>
+
+                <strong>
+                  {humanize(
+                    data.order
+                      .status,
+                  )}
+                </strong>
+              </p>
+
+              <p>
+                <b>
+                  Payment
+                </b>
+
+                <strong>
+                  {
+                    paymentTypeLabel
+                  }
+                </strong>
+              </p>
+
+              <p>
+                <b>
+                  Payment Status
+                </b>
+
+                <strong>
+                  {
+                    collectionStatusLabel
+                  }
+                </strong>
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <table
+          className={
+            styles.invoiceTable
+          }
+        >
+          <thead>
+            <tr>
+              <th>
+                Item
+              </th>
+
+              <th>
+                SKU
+              </th>
+
+              <th>
+                Variant
+              </th>
+
+              <th>
+                Qty
+              </th>
+
+              <th>
+                Unit Price
+              </th>
+
+              <th>
+                Amount
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {data.items.map(
+              (
+                item,
+              ) => (
+                <tr
+                  key={
+                    item.id
+                  }
+                >
+                  <td>
+                    <strong>
+                      {
+                        item.name
+                      }
+                    </strong>
+                  </td>
+
+                  <td>
+                    {
+                      item.sku
+                    }
+                  </td>
+
+                  <td>
+                    {[
+                      item.color,
+                      item.size,
+                    ]
+                      .filter(
+                        Boolean,
+                      )
+                      .join(
+                        " / ",
+                      ) ||
+                      "Default"}
+                  </td>
+
+                  <td>
+                    {
+                      item.quantity
+                    }
+                  </td>
+
+                  <td>
+                    {formatBDT(
+                      item.unitPrice,
+                    )}
+                  </td>
+
+                  <td>
+                    {formatBDT(
+                      item.lineTotal,
+                    )}
+                  </td>
+                </tr>
+              ),
+            )}
+          </tbody>
+        </table>
+
+        <div
+          className={
+            styles.invoiceBottom
+          }
+        >
+          <section
+            className={
+              styles.invoicePayment
+            }
+          >
+            <span>
+              PAYMENT SUMMARY
+            </span>
+
+            <p>
+              <b>
+                Method
+              </b>
+
+              <strong>
+                {
+                  paymentTypeLabel
+                }
+              </strong>
+            </p>
+
+            <p>
+              <b>
+                Paid
+              </b>
+
+              <strong>
+                {formatBDT(
+                  invoicePaidAmount,
+                )}
+              </strong>
+            </p>
+
+            <p>
+              <b>
+                Amount Due
+              </b>
+
+              <strong>
+                {formatBDT(
+                  invoiceDueAmount,
+                )}
+              </strong>
+            </p>
+
+            {data.order
+              .deliveryAdvanceReference ? (
+              <p>
+                <b>
+                  Reference
+                </b>
+
+                <strong>
+                  {
+                    data.order
+                      .deliveryAdvanceReference
+                  }
+                </strong>
+              </p>
+            ) : null}
+          </section>
+
+          <section
+            className={
+              styles.invoiceTotals
+            }
+          >
+            <p>
+              <span>
+                Subtotal
+              </span>
+
+              <strong>
+                {formatBDT(
+                  data.order
+                    .subtotal,
+                )}
+              </strong>
+            </p>
+
+            {data.order
+              .discount >
+            0 ? (
+              <p>
+                <span>
+                  Discount
+                  {data.order
+                    .couponCode
+                    ? ` (${data.order.couponCode})`
+                    : ""}
+                </span>
+
+                <strong>
+                  −
+                  {formatBDT(
+                    data.order
+                      .discount,
+                  )}
+                </strong>
+              </p>
+            ) : null}
+
+            <p>
+              <span>
+                Delivery
+              </span>
+
+              <strong>
+                {formatBDT(
+                  data.order
+                    .deliveryCharge,
+                )}
+              </strong>
+            </p>
+
+            <p
+              className={
+                styles.invoiceGrandTotal
+              }
+            >
+              <span>
+                Total
+              </span>
+
+              <strong>
+                {formatBDT(
+                  data.order
+                    .total,
+                )}
+              </strong>
+            </p>
+          </section>
+        </div>
+
+        <footer
+          className={
+            styles.invoiceFooter
+          }
+        >
+          <p>
+            Thank you for shopping with Game On Garb.
+          </p>
+
+          <span>
+            This invoice was generated electronically and does not require a signature.
+          </span>
+        </footer>
+      </section>
+
       <div
         className={
           styles.topbar
