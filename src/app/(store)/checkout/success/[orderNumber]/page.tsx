@@ -1,18 +1,8 @@
-import Image from "next/image";
-
-import {
-  productImageLoader,
-} from "@/lib/product-image-loader";
 import Link from "next/link";
 
 import {
-  Banknote,
   Check,
-  Clock3,
-  CreditCard,
-  MapPin,
   PackageCheck,
-  ReceiptText,
   ShoppingBag,
   Truck,
 } from "lucide-react";
@@ -45,93 +35,27 @@ import {
 import styles from "./order-success.module.css";
 
 import {
-  PurchaseTracker,
-} from "@/components/tracking/purchase-tracker";
-
-import {
   DeliveryAdvanceBkashButton,
 } from "./delivery-advance-bkash-button";
 
 export const dynamic =
   "force-dynamic";
 
-/* =========================================================
-   STATUS
-   ========================================================= */
+function safeText(
+  value:
+    string |
+    null |
+    undefined,
 
-const STATUS_PROGRESS:
-  Record<
+  fallback:
     string,
-    number
-  > = {
-  NEW: 0,
-  CONFIRMED: 1,
-  PACKING: 2,
-  READY_TO_SHIP: 2,
-  SHIPPED: 3,
-  DELIVERED: 4,
-};
+) {
+  const clean =
+    value?.trim();
 
-const TIMELINE = [
-  {
-    label:
-      "Order Placed",
-
-    description:
-      "We received your order.",
-
-    icon:
-      Check,
-  },
-
-  {
-    label:
-      "Confirmed",
-
-    description:
-      "Order confirmation.",
-
-    icon:
-      Clock3,
-  },
-
-  {
-    label:
-      "Packing",
-
-    description:
-      "Preparing your items.",
-
-    icon:
-      PackageCheck,
-  },
-
-  {
-    label:
-      "Shipped",
-
-    description:
-      "Handed to delivery.",
-
-    icon:
-      Truck,
-  },
-
-  {
-    label:
-      "Delivered",
-
-    description:
-      "Order completed.",
-
-    icon:
-      Check,
-  },
-];
-
-/* =========================================================
-   PAGE
-   ========================================================= */
+  return clean ||
+    fallback;
+}
 
 export default async function OrderSuccessPage({
   params,
@@ -149,7 +73,7 @@ export default async function OrderSuccessPage({
 
   const request =
     new Request(
-      "http://local",
+      "https://www.gameongarb.com",
       {
         headers:
           await headers(),
@@ -162,7 +86,9 @@ export default async function OrderSuccessPage({
       orderNumber,
     );
 
-  if (!allowed) {
+  if (
+    !allowed
+  ) {
     notFound();
   }
 
@@ -176,167 +102,157 @@ export default async function OrderSuccessPage({
           },
 
           select: {
-        number:
-          true,
-
-        createdAt:
-          true,
-
-        status:
-          true,
-
-        paymentMethod:
-          true,
-
-        paymentStatus:
-          true,
-
-        customerName:
-          true,
-
-        phone:
-          true,
-
-        email:
-          true,
-
-        shippingAddress:
-          true,
-
-        district:
-          true,
-
-        subtotal:
-          true,
-
-        discount:
-          true,
-
-        deliveryCharge:
-          true,
-
-        deliveryAdvancePaid:
-          true,
-
-        total:
-          true,
-
-        shipment: {
-          select: {
-            consignmentId:
+            number:
               true,
 
-            trackingId:
-              true,
-          },
-        },
-
-        items: {
-          select: {
-            id:
+            createdAt:
               true,
 
-            productId:
+            status:
               true,
 
-            name:
+            paymentMethod:
               true,
 
-            sku:
+            paymentStatus:
               true,
 
-            size:
+            customerName:
               true,
 
-            color:
+            phone:
               true,
 
-            image:
+            email:
               true,
 
-            unitPrice:
+            shippingAddress:
               true,
 
-            quantity:
+            district:
               true,
 
-            lineTotal:
+            subtotal:
               true,
-          },
+
+            discount:
+              true,
+
+            deliveryCharge:
+              true,
+
+            deliveryAdvancePaid:
+              true,
+
+            total:
+              true,
+
+            shipment: {
+              select: {
+                consignmentId:
+                  true,
+
+                trackingId:
+                  true,
+              },
+            },
+
+            items: {
+              select: {
+                id:
+                  true,
+
+                name:
+                  true,
+
+                sku:
+                  true,
+
+                size:
+                  true,
+
+                color:
+                  true,
+
+                unitPrice:
+                  true,
+
+                quantity:
+                  true,
+
+                lineTotal:
+                  true,
+              },
             },
           },
         }),
     );
 
-  if (!order) {
+  if (
+    !order
+  ) {
     notFound();
   }
 
+  const customerName =
+    safeText(
+      order.customerName,
+      "Customer",
+    );
+
   const firstName =
-    order.customerName
-      .trim()
+    customerName
       .split(
         /\s+/,
       )[0] ||
     "there";
 
-  const progressIndex =
-    STATUS_PROGRESS[
-      order.status
-    ] ??
-    0;
-
-  const itemCount =
-    order.items.reduce(
-      (
-        total,
-        item,
-      ) =>
-        total +
-        item.quantity,
-
-      0,
+  const district =
+    safeText(
+      order.district,
+      "Bangladesh",
     );
 
-  const formattedDate =
-    (() => {
-      try {
-        return new Intl.DateTimeFormat(
-          "en-BD",
-          {
-            dateStyle:
-              "medium",
-
-            timeStyle:
-              "short",
-
-            timeZone:
-              "Asia/Dhaka",
-          },
-        ).format(
-          order.createdAt,
-        );
-      } catch {
-        return order.createdAt
-          .toISOString();
-      }
-    })();
-
-  const isOutsideDhaka =
-    order.district
-      .trim()
-      .toLowerCase() !==
-    "dhaka";
+  const shippingAddress =
+    safeText(
+      order.shippingAddress,
+      district,
+    );
 
   const deliveryCharge =
     Number(
       order.deliveryCharge,
-    );
+    ) ||
+    0;
 
   const deliveryAdvancePaid =
     Number(
       order.deliveryAdvancePaid,
-    );
+    ) ||
+    0;
+
+  const total =
+    Number(
+      order.total,
+    ) ||
+    0;
+
+  const subtotal =
+    Number(
+      order.subtotal,
+    ) ||
+    0;
+
+  const discount =
+    Number(
+      order.discount,
+    ) ||
+    0;
+
+  const isOutsideDhaka =
+    district
+      .toLowerCase() !==
+    "dhaka";
 
   const deliveryAdvanceComplete =
     deliveryAdvancePaid >=
@@ -350,11 +266,6 @@ export default async function OrderSuccessPage({
         ?.trackingId,
     );
 
-  const bkashAllowedForOrder =
-    isBkashAllowedForPhone(
-      order.phone,
-    );
-
   const canPayDeliveryAdvance =
     order.paymentMethod ===
       "COD" &&
@@ -363,155 +274,89 @@ export default async function OrderSuccessPage({
       0 &&
     !deliveryAdvanceComplete &&
     !courierCreated &&
-    bkashAllowedForOrder;
+    isBkashAllowedForPhone(
+      order.phone,
+    );
 
   const remainingCod =
     order.paymentMethod ===
       "COD"
       ? Math.max(
           0,
-          Number(
-            order.total,
-          ) -
+          total -
             deliveryAdvancePaid,
         )
       : 0;
 
-  const paymentLabel =
-    order.paymentMethod ===
-    "COD"
-      ? "Cash on Delivery"
-      : "bKash";
+  let formattedDate =
+    "";
 
-  const paymentMessage =
-    order.paymentMethod ===
-    "COD"
-      ? isOutsideDhaka
-        ? deliveryAdvanceComplete
-          ? `Delivery charge paid. Remaining COD: ${formatBDT(
-              remainingCod,
-            )}.`
-          : `Pay the ${formatBDT(
-              deliveryCharge,
-            )} delivery charge in advance via bKash. The remaining amount will be Cash on Delivery.`
-        : "Pay when your order arrives."
-      : order.paymentStatus ===
-          "PAID"
-        ? "Your bKash payment has been completed."
-        : `Payment status: ${formatStatus(
-            order.paymentStatus,
-          )}`;
+  try {
+    formattedDate =
+      new Intl.DateTimeFormat(
+        "en-BD",
+        {
+          dateStyle:
+            "medium",
 
-  /* =======================================================
-     PURCHASE TRACKING
-     ======================================================= */
+          timeStyle:
+            "short",
 
-  const purchaseEligible =
-    order.paymentMethod ===
-      "COD" ||
-    order.paymentStatus ===
-      "PAID";
-
-  const purchaseItems =
-    order.items.map(
-      (
-        item,
-      ) => ({
-        id:
-          item.productId ??
-          item.sku ??
-          item.id,
-
-        name:
-          item.name,
-
-        price:
-          Number(
-            item.unitPrice,
-          ),
-
-        quantity:
-          item.quantity,
-
-        variant: [
-          item.color,
-          item.size,
-        ]
-          .filter(
-            Boolean,
-          )
-          .join(
-            " / ",
-          ),
-
-        sku:
-          item.sku ??
-          undefined,
-      }),
-    );
+          timeZone:
+            "Asia/Dhaka",
+        },
+      ).format(
+        order.createdAt,
+      );
+  } catch {
+    formattedDate =
+      order.createdAt
+        .toISOString();
+  }
 
   return (
-    <>
-      <PurchaseTracker
-        orderNumber={
-          order.number
+    <main
+      className={
+        styles.page
+      }
+    >
+      <div
+        className={
+          styles.container
         }
-        total={
-          Number(
-            order.total,
-          )
-        }
-        eligible={
-          purchaseEligible
-        }
-        items={
-          purchaseItems
-        }
-      />
-
-      <main className={styles.page}>
-      <div className={styles.container}>
-        {/* =================================================
-            SUCCESS HERO
-            ================================================= */}
-
-        <section className={styles.hero}>
+      >
+        <section
+          className={
+            styles.hero
+          }
+        >
           <div
-            className={styles.successVisual}
+            className={
+              styles.successVisual
+            }
             aria-hidden="true"
           >
-            <span className={styles.ringOne} />
-            <span className={styles.ringTwo} />
-
-            <div className={styles.successCircle}>
+            <div
+              className={
+                styles.successCircle
+              }
+            >
               <Check
-                size={36}
+                size={
+                  36
+                }
                 strokeWidth={
                   2
                 }
               />
             </div>
-
-            <div className={styles.sparks}>
-              {Array.from({
-                length:
-                  8,
-              }).map(
-                (
-                  _,
-                  index,
-                ) => (
-                  <span
-                    key={
-                      index
-                    }
-                  />
-                ),
-              )}
-            </div>
           </div>
 
-          <span className={styles.eyebrow}>
+          <span
+            className={
+              styles.eyebrow
+            }
+          >
             Order Confirmed
           </span>
 
@@ -520,25 +365,19 @@ export default async function OrderSuccessPage({
             {firstName}!
           </h1>
 
-          <p className={styles.heroLead}>
-            Your order has
-            been placed
-            successfully.
+          <p
+            className={
+              styles.heroLead
+            }
+          >
+            Your order has been placed successfully.
           </p>
 
-          <p className={styles.heroText}>
-            We&apos;ve
-            received your
-            order and it is
-            now in our order
-            system. Keep your
-            order number safe
-            so you can track
-            its progress at any
-            time.
-          </p>
-
-          <div className={styles.orderNumber}>
+          <div
+            className={
+              styles.orderNumber
+            }
+          >
             <span>
               Order Number
             </span>
@@ -551,13 +390,23 @@ export default async function OrderSuccessPage({
             </strong>
           </div>
 
-          <div className={styles.heroActions}>
+          <div
+            className={
+              styles.heroActions
+            }
+          >
             <Link
-              href={`/track-order?order=${order.number}`}
-              className={styles.primaryAction}
+              href={`/track-order?order=${encodeURIComponent(
+                order.number,
+              )}`}
+              className={
+                styles.primaryAction
+              }
             >
               <Truck
-                size={16}
+                size={
+                  16
+                }
               />
 
               Track Order
@@ -565,10 +414,14 @@ export default async function OrderSuccessPage({
 
             <Link
               href="/shop"
-              className={styles.secondaryAction}
+              className={
+                styles.secondaryAction
+              }
             >
               <ShoppingBag
-                size={16}
+                size={
+                  16
+                }
               />
 
               Continue Shopping
@@ -576,99 +429,21 @@ export default async function OrderSuccessPage({
           </div>
         </section>
 
-        {/* =================================================
-            STATUS
-            ================================================= */}
-
-        <section className={styles.statusCard}>
-          <div className={styles.cardHeading}>
-            <div>
-              <span>
-                Order Status
-              </span>
-
-              <h2>
-                What Happens Next
-              </h2>
-            </div>
-
-            <strong className={styles.statusBadge}>
-              {formatStatus(
-                order.status,
-              )}
-            </strong>
-          </div>
-
-          <div className={styles.timeline}>
-            {TIMELINE.map(
-              (
-                step,
-                index,
-              ) => {
-                const Icon =
-                  step.icon;
-
-                const complete =
-                  index <=
-                  progressIndex;
-
-                const current =
-                  index ===
-                  progressIndex;
-
-                return (
-                  <div
-                    key={
-                      step.label
-                    }
-                    className={`${styles.timelineStep} ${
-                      complete
-                        ? styles.timelineComplete
-                        : ""
-                    } ${
-                      current
-                        ? styles.timelineCurrent
-                        : ""
-                    }`}
-                  >
-                    <div className={styles.timelineIcon}>
-                      <Icon
-                        size={17}
-                        strokeWidth={
-                          1.7
-                        }
-                      />
-                    </div>
-
-                    <strong>
-                      {
-                        step.label
-                      }
-                    </strong>
-
-                    <small>
-                      {
-                        step.description
-                      }
-                    </small>
-                  </div>
-                );
-              },
-            )}
-          </div>
-        </section>
-
-        {/* =================================================
-            ORDER INFORMATION
-            ================================================= */}
-
-        <div className={styles.contentGrid}>
-          {/* ===============================================
-              ITEMS
-              =============================================== */}
-
-          <section className={styles.detailCard}>
-            <div className={styles.cardHeading}>
+        <div
+          className={
+            styles.contentGrid
+          }
+        >
+          <section
+            className={
+              styles.detailCard
+            }
+          >
+            <div
+              className={
+                styles.cardHeading
+              }
+            >
               <div>
                 <span>
                   Your Order
@@ -678,17 +453,13 @@ export default async function OrderSuccessPage({
                   Ordered Items
                 </h2>
               </div>
-
-              <strong className={styles.itemCount}>
-                {itemCount}{" "}
-                {itemCount ===
-                1
-                  ? "item"
-                  : "items"}
-              </strong>
             </div>
 
-            <div className={styles.items}>
+            <div
+              className={
+                styles.items
+              }
+            >
               {order.items.map(
                 (
                   item,
@@ -697,27 +468,19 @@ export default async function OrderSuccessPage({
                     key={
                       item.id
                     }
-                    className={styles.item}
+                    className={
+                      styles.item
+                    }
+                    style={{
+                      gridTemplateColumns:
+                        "minmax(0, 1fr) auto",
+                    }}
                   >
-                    <div className={styles.itemImage}>
-                      <Image
-                        loader={
-                          productImageLoader
-                        }
-                        src={
-                          item.image?.trim()
-                            ? item.image
-                            : "/images/products/tshirt.svg"
-                        }
-                        alt={
-                          item.name
-                        }
-                        fill
-                        sizes="76px"
-                      />
-                    </div>
-
-                    <div className={styles.itemCopy}>
+                    <div
+                      className={
+                        styles.itemCopy
+                      }
+                    >
                       <strong>
                         {
                           item.name
@@ -725,19 +488,23 @@ export default async function OrderSuccessPage({
                       </strong>
 
                       <span>
-                        {item.color ||
+                        {[
+                          item.color,
+                          item.size,
+                        ]
+                          .filter(
+                            Boolean,
+                          )
+                          .join(
+                            " · ",
+                          ) ||
                           "Default"}
-
-                        {item.size
-                          ? ` · ${item.size}`
-                          : ""}
                       </span>
 
                       <small>
                         SKU:{" "}
-                        {
-                          item.sku
-                        }{" "}
+                        {item.sku ||
+                          "N/A"}{" "}
                         · Qty{" "}
                         {
                           item.quantity
@@ -745,12 +512,17 @@ export default async function OrderSuccessPage({
                       </small>
                     </div>
 
-                    <div className={styles.itemPrice}>
+                    <div
+                      className={
+                        styles.itemPrice
+                      }
+                    >
                       <strong>
                         {formatBDT(
                           Number(
                             item.lineTotal,
-                          ),
+                          ) ||
+                            0,
                         )}
                       </strong>
 
@@ -760,7 +532,8 @@ export default async function OrderSuccessPage({
                           {formatBDT(
                             Number(
                               item.unitPrice,
-                            ),
+                            ) ||
+                              0,
                           )}{" "}
                           each
                         </small>
@@ -772,17 +545,24 @@ export default async function OrderSuccessPage({
             </div>
           </section>
 
-          {/* ===============================================
-              DELIVERY / PAYMENT
-              =============================================== */}
-
-          <div className={styles.sideColumn}>
-            <section className={styles.detailCard}>
-              <div className={styles.smallHeading}>
-                <MapPin
-                  size={17}
-                  strokeWidth={
-                    1.6
+          <div
+            className={
+              styles.sideColumn
+            }
+          >
+            <section
+              className={
+                styles.detailCard
+              }
+            >
+              <div
+                className={
+                  styles.smallHeading
+                }
+              >
+                <PackageCheck
+                  size={
+                    17
                   }
                 />
 
@@ -791,10 +571,14 @@ export default async function OrderSuccessPage({
                 </h2>
               </div>
 
-              <div className={styles.deliveryDetails}>
+              <div
+                className={
+                  styles.deliveryDetails
+                }
+              >
                 <strong>
                   {
-                    order.customerName
+                    customerName
                   }
                 </strong>
 
@@ -814,47 +598,60 @@ export default async function OrderSuccessPage({
 
                 <p>
                   {
-                    order.shippingAddress
+                    shippingAddress
                   }
                 </p>
               </div>
             </section>
 
-            <section className={styles.detailCard}>
-              <div className={styles.smallHeading}>
-                {order.paymentMethod ===
-                "COD" ? (
-                  <Banknote
-                    size={17}
-                    strokeWidth={
-                      1.6
-                    }
-                  />
-                ) : (
-                  <CreditCard
-                    size={17}
-                    strokeWidth={
-                      1.6
-                    }
-                  />
-                )}
+            <section
+              className={
+                styles.detailCard
+              }
+            >
+              <div
+                className={
+                  styles.smallHeading
+                }
+              >
+                <PackageCheck
+                  size={
+                    17
+                  }
+                />
 
                 <h2>
                   Payment
                 </h2>
               </div>
 
-              <div className={styles.paymentInfo}>
+              <div
+                className={
+                  styles.paymentInfo
+                }
+              >
                 <strong>
-                  {
-                    paymentLabel
-                  }
+                  {order.paymentMethod ===
+                  "COD"
+                    ? "Cash on Delivery"
+                    : "bKash"}
                 </strong>
 
                 <span>
-                  {
-                    paymentMessage
-                  }
+                  {order.paymentMethod ===
+                  "COD"
+                    ? deliveryAdvancePaid >
+                      0
+                      ? `Advance paid: ${formatBDT(
+                          deliveryAdvancePaid,
+                        )}. Remaining COD: ${formatBDT(
+                          remainingCod,
+                        )}.`
+                      : "Pay when your order arrives."
+                    : order.paymentStatus ===
+                        "PAID"
+                      ? "Your bKash payment has been completed."
+                      : `Payment status: ${order.paymentStatus}`}
                 </span>
               </div>
 
@@ -872,16 +669,19 @@ export default async function OrderSuccessPage({
           </div>
         </div>
 
-        {/* =================================================
-            TOTALS
-            ================================================= */}
-
-        <section className={styles.totalCard}>
-          <div className={styles.receiptHeading}>
-            <ReceiptText
-              size={18}
-              strokeWidth={
-                1.6
+        <section
+          className={
+            styles.totalCard
+          }
+        >
+          <div
+            className={
+              styles.receiptHeading
+            }
+          >
+            <PackageCheck
+              size={
+                18
               }
             />
 
@@ -899,72 +699,95 @@ export default async function OrderSuccessPage({
             </div>
           </div>
 
-          <div className={styles.receipt}>
-            <SummaryRow
-              label="Subtotal"
-              value={
-                Number(
-                  order.subtotal,
-                )
+          <div
+            className={
+              styles.receipt
+            }
+          >
+            <div
+              className={
+                styles.summaryRow
               }
-            />
+            >
+              <span>
+                Subtotal
+              </span>
 
-            <SummaryRow
-              label="Delivery"
-              value={
-                Number(
-                  order.deliveryCharge,
-                )
+              <strong>
+                {formatBDT(
+                  subtotal,
+                )}
+              </strong>
+            </div>
+
+            <div
+              className={
+                styles.summaryRow
               }
-            />
+            >
+              <span>
+                Delivery
+              </span>
 
-            {Number(
-              order.discount,
-            ) >
+              <strong>
+                {formatBDT(
+                  deliveryCharge,
+                )}
+              </strong>
+            </div>
+
+            {discount >
             0 ? (
-              <SummaryRow
-                label="Discount"
-                value={
-                  -Number(
-                    order.discount,
-                  )
+              <div
+                className={
+                  styles.summaryRow
                 }
-                discount
-              />
+              >
+                <span>
+                  Discount
+                </span>
+
+                <strong>
+                  −
+                  {formatBDT(
+                    discount,
+                  )}
+                </strong>
+              </div>
             ) : null}
 
-            <div className={styles.grandTotal}>
+            <div
+              className={
+                styles.grandTotal
+              }
+            >
               <span>
                 Total
               </span>
 
               <strong>
                 {formatBDT(
-                  Number(
-                    order.total,
-                  ),
+                  total,
                 )}
               </strong>
             </div>
           </div>
         </section>
 
-        {/* =================================================
-            FINAL MESSAGE
-            ================================================= */}
-
-        <section className={styles.finalMessage}>
+        <section
+          className={
+            styles.finalMessage
+          }
+        >
           <PackageCheck
-            size={21}
-            strokeWidth={
-              1.5
+            size={
+              21
             }
           />
 
           <div>
             <strong>
-              Your order is
-              safely recorded.
+              Your order is safely recorded.
             </strong>
 
             <p>
@@ -975,86 +798,11 @@ export default async function OrderSuccessPage({
                   order.number
                 }
               </b>{" "}
-              for tracking. You
-              can return to the
-              Track Order page
-              anytime to check
-              the latest status.
+              for tracking.
             </p>
           </div>
         </section>
       </div>
-      </main>
-    </>
+    </main>
   );
-}
-
-/* =========================================================
-   SUMMARY ROW
-   ========================================================= */
-
-function SummaryRow({
-  label,
-  value,
-  discount = false,
-}: {
-  label:
-    string;
-
-  value:
-    number;
-
-  discount?:
-    boolean;
-}) {
-  return (
-    <div className={styles.summaryRow}>
-      <span>
-        {
-          label
-        }
-      </span>
-
-      <strong
-        className={
-          discount
-            ? styles.discount
-            : ""
-        }
-      >
-        {value <
-        0
-          ? "−"
-          : ""}
-
-        {formatBDT(
-          Math.abs(
-            value,
-          ),
-        )}
-      </strong>
-    </div>
-  );
-}
-
-/* =========================================================
-   FORMAT STATUS
-   ========================================================= */
-
-function formatStatus(
-  value: string,
-) {
-  return value
-    .toLowerCase()
-    .split("_")
-    .map(
-      (
-        word,
-      ) =>
-        word
-          .charAt(0)
-          .toUpperCase() +
-        word.slice(1),
-    )
-    .join(" ");
 }
