@@ -235,6 +235,9 @@ function sendMeta(
       unknown
     >,
 
+  eventId:
+    string,
+
   attempt =
     0,
 ) {
@@ -253,20 +256,15 @@ function sendMeta(
       "track",
       event,
       payload,
+      {
+        eventID:
+          eventId,
+      },
     );
 
     return;
   }
 
-  /*
-   * Meta's external fbevents script is
-   * asynchronous. A storefront event can
-   * occur just before the Pixel bootstrap
-   * finishes, especially on initial load.
-   *
-   * Retry briefly instead of silently
-   * losing the event.
-   */
   if (
     attempt <
     20
@@ -276,6 +274,7 @@ function sendMeta(
         sendMeta(
           event,
           payload,
+          eventId,
           attempt +
             1,
         );
@@ -284,6 +283,114 @@ function sendMeta(
       100,
     );
   }
+}
+
+function metaEventId(
+  prefix:
+    string,
+) {
+  const suffix =
+    typeof crypto !==
+      "undefined" &&
+    "randomUUID" in
+      crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random()
+          .toString(
+            36,
+          )
+          .slice(
+            2,
+          )}`;
+
+  return `${prefix}_${suffix}`;
+}
+
+export function metaPurchaseEventId(
+  transactionId:
+    string,
+) {
+  return `purchase_${transactionId}`;
+}
+
+function sendMetaServerCopy({
+  config,
+  eventName,
+  eventId,
+  customData,
+}: {
+  config:
+    TrackingConfig;
+
+  eventName:
+    | "PageView"
+    | "ViewContent"
+    | "Search"
+    | "AddToCart"
+    | "InitiateCheckout";
+
+  eventId:
+    string;
+
+  customData?:
+    Record<
+      string,
+      unknown
+    >;
+}) {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return;
+  }
+
+  void fetch(
+    "/api/tracking/meta",
+    {
+      method:
+        "POST",
+
+      headers: {
+        "content-type":
+          "application/json",
+      },
+
+      body:
+        JSON.stringify({
+          pixelId:
+            config.metaPixel
+              .pixelId,
+
+          eventName,
+
+          eventId,
+
+          eventSourceUrl:
+            window.location
+              .href,
+
+          ...(customData
+            ? {
+                customData,
+              }
+            : {}),
+        }),
+
+      keepalive:
+        true,
+
+      credentials:
+        "same-origin",
+    },
+  ).catch(
+    () => {
+      /*
+       * Tracking must never affect
+       * the customer experience.
+       */
+    },
+  );
 }
 
 function metaContents(
@@ -370,10 +477,25 @@ export function trackPageView() {
       config,
     )
   ) {
+    const eventId =
+      metaEventId(
+        "pageview",
+      );
+
     sendMeta(
       "PageView",
       {},
+      eventId,
     );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "PageView",
+
+      eventId,
+    });
 
     sent =
       true;
@@ -431,32 +553,52 @@ export function trackViewContent(
       config,
     )
   ) {
+    const payload = {
+      content_ids: [
+        item.id,
+      ],
+
+      content_name:
+        item.name,
+
+      content_type:
+        "product",
+
+      contents:
+        metaContents([
+          item,
+        ]),
+
+      value:
+        item.price *
+        item.quantity,
+
+      currency:
+        "BDT",
+    };
+
+    const eventId =
+      metaEventId(
+        "viewcontent",
+      );
+
     sendMeta(
       "ViewContent",
-      {
-        content_ids: [
-          item.id,
-        ],
-
-        content_name:
-          item.name,
-
-        content_type:
-          "product",
-
-        contents:
-          metaContents([
-            item,
-          ]),
-
-        value:
-          item.price *
-          item.quantity,
-
-        currency:
-          "BDT",
-      },
+      payload,
+      eventId,
     );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "ViewContent",
+
+      eventId,
+
+      customData:
+        payload,
+    });
 
     sent =
       true;
@@ -516,30 +658,50 @@ export function trackAddToCart(
       config,
     )
   ) {
+    const payload = {
+      content_ids: [
+        item.id,
+      ],
+
+      content_name:
+        item.name,
+
+      content_type:
+        "product",
+
+      contents:
+        metaContents([
+          item,
+        ]),
+
+      value,
+
+      currency:
+        "BDT",
+    };
+
+    const eventId =
+      metaEventId(
+        "addtocart",
+      );
+
     sendMeta(
       "AddToCart",
-      {
-        content_ids: [
-          item.id,
-        ],
-
-        content_name:
-          item.name,
-
-        content_type:
-          "product",
-
-        contents:
-          metaContents([
-            item,
-          ]),
-
-        value,
-
-        currency:
-          "BDT",
-      },
+      payload,
+      eventId,
     );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "AddToCart",
+
+      eventId,
+
+      customData:
+        payload,
+    });
 
     sent =
       true;
@@ -593,36 +755,138 @@ export function trackInitiateCheckout({
       config,
     )
   ) {
+    const payload = {
+      content_ids:
+        items.map(
+          (
+            item,
+          ) =>
+            item.id,
+        ),
+
+      content_type:
+        "product",
+
+      contents:
+        metaContents(
+          items,
+        ),
+
+      num_items:
+        itemCount(
+          items,
+        ),
+
+      value,
+
+      currency:
+        "BDT",
+    };
+
+    const eventId =
+      metaEventId(
+        "initiatecheckout",
+      );
+
     sendMeta(
       "InitiateCheckout",
-      {
-        content_ids:
-          items.map(
-            (
-              item,
-            ) =>
-              item.id,
-          ),
-
-        content_type:
-          "product",
-
-        contents:
-          metaContents(
-            items,
-          ),
-
-        num_items:
-          itemCount(
-            items,
-          ),
-
-        value,
-
-        currency:
-          "BDT",
-      },
+      payload,
+      eventId,
     );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "InitiateCheckout",
+
+      eventId,
+
+      customData:
+        payload,
+    });
+
+    sent =
+      true;
+  }
+
+  return sent;
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+export function trackSearch(
+  searchString:
+    string,
+) {
+  const config =
+    getConfig();
+
+  const clean =
+    searchString.trim();
+
+  if (
+    !clean ||
+    !config ||
+    !config.events.search
+  ) {
+    return false;
+  }
+
+  let sent =
+    false;
+
+  if (
+    canUseGtm(
+      config,
+    )
+  ) {
+    pushDataLayer({
+      event:
+        "search",
+
+      search_term:
+        clean,
+    });
+
+    sent =
+      true;
+  }
+
+  if (
+    canUseMeta(
+      config,
+    )
+  ) {
+    const payload = {
+      search_string:
+        clean,
+    };
+
+    const eventId =
+      metaEventId(
+        "search",
+      );
+
+    sendMeta(
+      "Search",
+      payload,
+      eventId,
+    );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "Search",
+
+      eventId,
+
+      customData:
+        payload,
+    });
 
     sent =
       true;
@@ -678,35 +942,43 @@ export function trackPurchase({
       config,
     )
   ) {
+    const payload = {
+      content_ids:
+        items.map(
+          (
+            item,
+          ) =>
+            item.id,
+        ),
+
+      content_type:
+        "product",
+
+      contents:
+        metaContents(
+          items,
+        ),
+
+      num_items:
+        itemCount(
+          items,
+        ),
+
+      value,
+
+      currency:
+        "BDT",
+
+      order_id:
+        transactionId,
+    };
+
     sendMeta(
       "Purchase",
-      {
-        content_ids:
-          items.map(
-            (
-              item,
-            ) =>
-              item.id,
-          ),
-
-        content_type:
-          "product",
-
-        contents:
-          metaContents(
-            items,
-          ),
-
-        num_items:
-          itemCount(
-            items,
-          ),
-
-        value,
-
-        currency:
-          "BDT",
-      },
+      payload,
+      metaPurchaseEventId(
+        transactionId,
+      ),
     );
 
     sent =
