@@ -60,16 +60,30 @@ export function PurchaseTracker({
          */
       }
 
-      const sent =
-        trackPurchase({
-          transactionId:
-            orderNumber,
+      let sent =
+        false;
 
-          value:
-            total,
+      try {
+        sent =
+          trackPurchase({
+            transactionId:
+              orderNumber,
 
-          items,
-        });
+            value:
+              total,
+
+            items,
+          });
+      } catch (
+        error
+      ) {
+        console.error(
+          "Purchase tracking failed:",
+          error,
+        );
+
+        return;
+      }
 
       if (
         !sent
