@@ -2252,8 +2252,6 @@ export async function POST(
               metaContext,
 
             eventSourceUrl:
-              metaContext
-                .eventSourceUrl ||
               `https://www.gameongarb.com/checkout/success/${encodeURIComponent(
                 order.number,
               )}`,
