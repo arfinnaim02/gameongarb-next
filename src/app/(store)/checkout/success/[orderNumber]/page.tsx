@@ -27,6 +27,7 @@ import {
 
 import {
   db,
+  withDatabaseRetry,
 } from "@/lib/db";
 
 import {
@@ -166,13 +167,15 @@ export default async function OrderSuccessPage({
   }
 
   const order =
-    await db.order.findUnique({
-      where: {
-        number:
-          orderNumber,
-      },
+    await withDatabaseRetry(
+      () =>
+        db.order.findUnique({
+          where: {
+            number:
+              orderNumber,
+          },
 
-      select: {
+          select: {
         number:
           true,
 
@@ -260,9 +263,9 @@ export default async function OrderSuccessPage({
             lineTotal:
               true,
           },
-        },
-      },
-    });
+          },
+        }),
+    );
 
   if (!order) {
     notFound();
@@ -295,21 +298,28 @@ export default async function OrderSuccessPage({
     );
 
   const formattedDate =
-    new Intl.DateTimeFormat(
-      "en-BD",
-      {
-        dateStyle:
-          "medium",
+    (() => {
+      try {
+        return new Intl.DateTimeFormat(
+          "en-BD",
+          {
+            dateStyle:
+              "medium",
 
-        timeStyle:
-          "short",
+            timeStyle:
+              "short",
 
-        timeZone:
-          "Asia/Dhaka",
-      },
-    ).format(
-      order.createdAt,
-    );
+            timeZone:
+              "Asia/Dhaka",
+          },
+        ).format(
+          order.createdAt,
+        );
+      } catch {
+        return order.createdAt
+          .toISOString();
+      }
+    })();
 
   const isOutsideDhaka =
     order.district
@@ -694,8 +704,9 @@ export default async function OrderSuccessPage({
                           productImageLoader
                         }
                         src={
-                          item.image ??
-                          "/images/products/tshirt.svg"
+                          item.image?.trim()
+                            ? item.image
+                            : "/images/products/tshirt.svg"
                         }
                         alt={
                           item.name
