@@ -979,23 +979,20 @@ export function trackPurchase({
         transactionId,
       );
 
+    /*
+     * Purchase has one authoritative server-side source:
+     * the committed order/payment backend.
+     *
+     * Keep the browser Pixel copy here with the same
+     * deterministic event_id so Meta can deduplicate
+     * Browser + Server without creating a second CAPI
+     * request from the success page.
+     */
     sendMeta(
       "Purchase",
       payload,
       eventId,
     );
-
-    sendMetaServerCopy({
-      config,
-
-      eventName:
-        "Purchase",
-
-      eventId,
-
-      customData:
-        payload,
-    });
 
     sent =
       true;
