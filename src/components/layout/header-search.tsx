@@ -29,6 +29,10 @@ import {
   formatBDT,
 } from "@/lib/money";
 
+import {
+  trackSearch,
+} from "@/lib/tracking";
+
 /* =========================================================
    TYPES
    ========================================================= */
@@ -470,6 +474,10 @@ export function HeaderSearch() {
     }
 
     rememberSearch(
+      clean,
+    );
+
+    trackSearch(
       clean,
     );
 
