@@ -38,6 +38,10 @@ import {
   DeliveryAdvanceBkashButton,
 } from "./delivery-advance-bkash-button";
 
+import {
+  PurchaseTracker,
+} from "@/components/tracking/purchase-tracker";
+
 export const dynamic =
   "force-dynamic";
 
@@ -160,6 +164,9 @@ export default async function OrderSuccessPage({
             items: {
               select: {
                 id:
+                  true,
+
+                productId:
                   true,
 
                 name:
@@ -314,8 +321,70 @@ export default async function OrderSuccessPage({
         .toISOString();
   }
 
+  const purchaseItems =
+    order.items.map(
+      (
+        item,
+      ) => ({
+        id:
+          item.productId ??
+          item.sku ??
+          item.id,
+
+        name:
+          item.name,
+
+        price:
+          Number(
+            item.unitPrice,
+          ) ||
+          0,
+
+        quantity:
+          item.quantity,
+
+        variant:
+          [
+            item.color,
+            item.size,
+          ]
+            .filter(
+              Boolean,
+            )
+            .join(
+              " / ",
+            ),
+
+        sku:
+          item.sku ||
+          undefined,
+      }),
+    );
+
+  const purchaseEligible =
+    order.paymentMethod ===
+      "COD" ||
+    order.paymentStatus ===
+      "PAID";
+
   return (
-    <main
+    <>
+      <PurchaseTracker
+        orderNumber={
+          order.number
+        }
+        total={
+          total
+        }
+        eligible={
+          purchaseEligible
+        }
+        items={
+          purchaseItems
+        }
+      />
+
+      <main
       className={
         styles.page
       }
@@ -804,5 +873,6 @@ export default async function OrderSuccessPage({
         </section>
       </div>
     </main>
+    </>
   );
 }
