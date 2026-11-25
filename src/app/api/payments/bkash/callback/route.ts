@@ -715,6 +715,37 @@ export async function GET(
     order.paymentStatus ===
       "PAID"
   ) {
+    const metaContext =
+      getMetaRequestContext(
+        req,
+      );
+
+    after(
+      async () => {
+        await sendMetaPurchaseForOrder({
+          orderId:
+            order.id,
+
+          context:
+            metaContext,
+
+          eventSourceUrl:
+            `https://www.gameongarb.com/checkout/success/${encodeURIComponent(
+              order.number,
+            )}`,
+        }).catch(
+          (
+            error,
+          ) => {
+            console.error(
+              "Meta CAPI idempotent bKash Purchase retry failed:",
+              error,
+            );
+          },
+        );
+      },
+    );
+
     return NextResponse.redirect(
       resultUrl(
         req,
