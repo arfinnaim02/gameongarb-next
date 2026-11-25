@@ -1,4 +1,5 @@
 import {
+  after,
   NextResponse,
 } from "next/server";
 
@@ -9,6 +10,11 @@ import {
 import {
   refreshTelegramOrderMessage,
 } from "@/lib/telegram";
+
+import {
+  getMetaRequestContext,
+  sendMetaPurchaseForOrder,
+} from "@/lib/meta-capi";
 
 import {
   handleDeliveryAdvanceBkashCallback,
@@ -1531,6 +1537,37 @@ const invoiceMatches =
       console.error(
         "Telegram refresh after bKash payment success failed:",
         error,
+      );
+    },
+  );
+
+  const metaContext =
+    getMetaRequestContext(
+      req,
+    );
+
+  after(
+    async () => {
+      await sendMetaPurchaseForOrder({
+        orderId:
+          order.id,
+
+        context:
+          metaContext,
+
+        eventSourceUrl:
+          `https://www.gameongarb.com/checkout/success/${encodeURIComponent(
+            order.number,
+          )}`,
+      }).catch(
+        (
+          error,
+        ) => {
+          console.error(
+            "Meta CAPI bKash Purchase failed:",
+            error,
+          );
+        },
       );
     },
   );
