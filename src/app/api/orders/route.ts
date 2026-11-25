@@ -77,6 +77,11 @@ import {
 } from "@/lib/telegram";
 
 import {
+  getMetaRequestContext,
+  sendMetaPurchaseForOrder,
+} from "@/lib/meta-capi";
+
+import {
   queueOrderPlacedNotifications,
 } from "@/lib/notifications/events";
 
@@ -2218,6 +2223,53 @@ export async function POST(
         },
 
       );
+
+    /* =====================================================
+       META PURCHASE — SERVER SIDE
+
+       COD purchases are emitted as soon as the order
+       transaction commits. The success page sends the
+       browser Pixel copy with the same deterministic
+       event_id, allowing Meta to deduplicate both copies.
+       ===================================================== */
+
+    if (
+      order.paymentMethod ===
+      "COD"
+    ) {
+      const metaContext =
+        getMetaRequestContext(
+          req,
+        );
+
+      after(
+        async () => {
+          await sendMetaPurchaseForOrder({
+            orderId:
+              order.id,
+
+            context:
+              metaContext,
+
+            eventSourceUrl:
+              metaContext
+                .eventSourceUrl ||
+              `https://www.gameongarb.com/checkout/success/${encodeURIComponent(
+                order.number,
+              )}`,
+          }).catch(
+            (
+              error,
+            ) => {
+              console.error(
+                "Meta CAPI COD Purchase failed:",
+                error,
+              );
+            },
+          );
+        },
+      );
+    }
 
     /* =====================================================
        CUSTOMER ORDER EMAIL
