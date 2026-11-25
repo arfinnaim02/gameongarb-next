@@ -28,6 +28,9 @@ export type TrackingConfig = {
     initiateCheckout:
       boolean;
 
+    search:
+      boolean;
+
     purchase:
       boolean;
   };
@@ -62,6 +65,9 @@ export const defaultTrackingConfig:
       true,
 
     initiateCheckout:
+      true,
+
+    search:
       true,
 
     purchase:
@@ -214,6 +220,12 @@ export function normalizeTrackingConfig(
       initiateCheckout:
         booleanValue(
           events.initiateCheckout,
+          true,
+        ),
+
+      search:
+        booleanValue(
+          events.search,
           true,
         ),
 
