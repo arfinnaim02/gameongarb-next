@@ -327,7 +327,8 @@ function sendMetaServerCopy({
     | "ViewContent"
     | "Search"
     | "AddToCart"
-    | "InitiateCheckout";
+    | "InitiateCheckout"
+    | "Purchase";
 
   eventId:
     string;
@@ -973,13 +974,28 @@ export function trackPurchase({
         transactionId,
     };
 
+    const eventId =
+      metaPurchaseEventId(
+        transactionId,
+      );
+
     sendMeta(
       "Purchase",
       payload,
-      metaPurchaseEventId(
-        transactionId,
-      ),
+      eventId,
     );
+
+    sendMetaServerCopy({
+      config,
+
+      eventName:
+        "Purchase",
+
+      eventId,
+
+      customData:
+        payload,
+    });
 
     sent =
       true;
