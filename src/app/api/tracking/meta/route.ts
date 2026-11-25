@@ -33,6 +33,7 @@ const schema =
         "Search",
         "AddToCart",
         "InitiateCheckout",
+        "Purchase",
       ]),
 
     eventId:
